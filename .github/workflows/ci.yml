@@ -33,7 +33,7 @@ jobs:
         with:
           node-version: '18'
       - name: Install and build
-        working-directory: agrisense_app/frontend
+        working-directory: agrisense_app/frontend/farm-fortune-frontend-main
         run: |
           npm ci || npm install
           npm run build || npm run -s build || true
