@@ -21,9 +21,10 @@ build/
 .env.*
 
 # Model/data artifacts (keep small .keras by default)
-**/*.joblib
+# Track certain model files via Git LFS (unignore)
+!**/*.joblib
+!**/*.onnx
 **/*.pkl
-**/*.onnx
 **/*.h5
 
 # OS
