@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Zap, Droplets, Thermometer, Gauge, Beaker, AlertCircle, CheckCircle, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-interface SensorData {
+import { api, type SensorReading, type BackendRecommendation, type PlantListItem } from "@/lib/api";
+
+interface SensorDataUI {
   temperature: string;
   humidity: string;
   soilMoisture: string;
@@ -19,16 +21,8 @@ interface SensorData {
   cropType: string;
 }
 
-interface Recommendation {
-  type: "irrigation" | "fertilizer" | "general";
-  priority: "high" | "medium" | "low";
-  title: string;
-  description: string;
-  action: string;
-}
-
 const Recommend = () => {
-  const [sensorData, setSensorData] = useState<SensorData>({
+  const [sensorData, setSensorData] = useState<SensorDataUI>({
     temperature: "",
     humidity: "",
     soilMoisture: "",
@@ -38,52 +32,52 @@ const Recommend = () => {
     potassium: "",
     cropType: "",
   });
-  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+  const [recommendation, setRecommendation] = useState<BackendRecommendation | null>(null);
   const [loading, setLoading] = useState(false);
+  const [plants, setPlants] = useState<PlantListItem[]>([]);
   const { toast } = useToast();
 
-  const handleInputChange = (field: keyof SensorData, value: string) => {
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await api.plants();
+        if (!cancelled) setPlants(res.items);
+      } catch {
+        // ignore
+      }
+    })();
+    return () => { cancelled = true };
+  }, []);
+
+  const handleInputChange = (field: keyof SensorDataUI, value: string) => {
     setSensorData(prev => ({ ...prev, [field]: value }));
   };
 
   const generateRecommendations = async () => {
     setLoading(true);
-    
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // Mock recommendations based on sensor data
-    const mockRecommendations: Recommendation[] = [
-      {
-        type: "irrigation",
-        priority: "high",
-        title: "Increase Irrigation",
-        description: `Soil moisture at ${sensorData.soilMoisture}% is below optimal range for ${sensorData.cropType}`,
-        action: "Apply 15-20mm irrigation within next 6 hours"
-      },
-      {
-        type: "fertilizer",
-        priority: "medium",
-        title: "Nitrogen Supplementation",
-        description: `Nitrogen levels (${sensorData.nitrogen}ppm) require adjustment for optimal growth`,
-        action: "Apply 50kg/ha nitrogen fertilizer in next application"
-      },
-      {
-        type: "general",
-        priority: "low",
-        title: "Monitor pH Levels",
-        description: `Current pH of ${sensorData.ph} is within acceptable range but trending toward acidic`,
-        action: "Schedule soil amendment in 2 weeks if trend continues"
-      }
-    ];
-
-    setRecommendations(mockRecommendations);
-    setLoading(false);
-    
-    toast({
-      title: "Analysis Complete",
-      description: "Smart recommendations generated based on your sensor data.",
-    });
+    try {
+      const payload: SensorReading = {
+        plant: sensorData.cropType || "generic",
+        soil_type: "loam",
+        area_m2: 100,
+        ph: parseFloat(sensorData.ph || "6.5"),
+        moisture_pct: parseFloat(sensorData.soilMoisture || "40"),
+        temperature_c: parseFloat(sensorData.temperature || "28"),
+        ec_dS_m: 1.0,
+        n_ppm: sensorData.nitrogen ? parseFloat(sensorData.nitrogen) : undefined,
+        p_ppm: sensorData.phosphorus ? parseFloat(sensorData.phosphorus) : undefined,
+        k_ppm: sensorData.potassium ? parseFloat(sensorData.potassium) : undefined,
+      };
+      const res = await api.recommend(payload);
+      setRecommendation(res);
+      toast({ title: "Analysis Complete", description: "Smart recommendations generated." });
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e)
+      toast({ title: "Request failed", description: msg, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getPriorityIcon = (priority: string) => {
@@ -225,12 +219,9 @@ const Recommend = () => {
                     <SelectValue placeholder="Select crop type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="wheat">Wheat</SelectItem>
-                    <SelectItem value="corn">Corn</SelectItem>
-                    <SelectItem value="rice">Rice</SelectItem>
-                    <SelectItem value="soybean">Soybean</SelectItem>
-                    <SelectItem value="tomato">Tomato</SelectItem>
-                    <SelectItem value="potato">Potato</SelectItem>
+                    {plants.map((p) => (
+                      <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -258,38 +249,55 @@ const Recommend = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {recommendations.length === 0 ? (
+              {!recommendation ? (
                 <div className="text-center py-12">
                   <Zap className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                   <p className="text-muted-foreground">Enter sensor data to receive personalized recommendations</p>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {recommendations.map((rec, index) => (
-                    <div 
-                      key={index} 
-                      className={`border-l-4 p-4 rounded-lg ${getPriorityColor(rec.priority)}`}
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <h4 className="font-semibold text-foreground flex items-center space-x-2">
-                          {getPriorityIcon(rec.priority)}
-                          <span>{rec.title}</span>
-                        </h4>
-                        <span className={`px-2 py-1 text-xs rounded-full ${
-                          rec.priority === 'high' ? 'bg-destructive/20 text-destructive' :
-                          rec.priority === 'medium' ? 'bg-accent text-accent-foreground' :
-                          'bg-primary/20 text-primary'
-                        }`}>
-                          {rec.priority} priority
-                        </span>
+                  <div className="border-l-4 p-4 rounded-lg bg-primary/5 border-l-primary">
+                    <div className="flex items-start justify-between mb-2">
+                      <h4 className="font-semibold text-foreground flex items-center space-x-2">
+                        {getPriorityIcon("high")}
+                        <span>Irrigation & Fertilizer Plan</span>
+                      </h4>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <div className="text-muted-foreground">Water (liters total)</div>
+                        <div className="text-foreground font-medium">{recommendation.water_liters}</div>
                       </div>
-                      <p className="text-sm text-muted-foreground mb-3">{rec.description}</p>
-                      <div className="bg-card p-3 rounded-md">
-                        <strong className="text-xs text-primary">Recommended Action:</strong>
-                        <p className="text-sm text-foreground mt-1">{rec.action}</p>
+                      <div>
+                        <div className="text-muted-foreground">Irrigation cycles</div>
+                        <div className="text-foreground font-medium">{recommendation.irrigation_cycles ?? '-'}</div>
+                      </div>
+                      <div>
+                        <div className="text-muted-foreground">N (g)</div>
+                        <div className="text-foreground font-medium">{recommendation.fert_n_g}</div>
+                      </div>
+                      <div>
+                        <div className="text-muted-foreground">P (g)</div>
+                        <div className="text-foreground font-medium">{recommendation.fert_p_g}</div>
+                      </div>
+                      <div>
+                        <div className="text-muted-foreground">K (g)</div>
+                        <div className="text-foreground font-medium">{recommendation.fert_k_g}</div>
+                      </div>
+                      <div>
+                        <div className="text-muted-foreground">Runtime (min)</div>
+                        <div className="text-foreground font-medium">{recommendation.suggested_runtime_min ?? '-'}</div>
                       </div>
                     </div>
-                  ))}
+                  </div>
+                  {recommendation.notes && recommendation.notes.length > 0 && (
+                    <div className="border-l-4 p-4 rounded-lg bg-accent border-l-accent-foreground">
+                      <div className="text-sm text-accent-foreground font-semibold mb-2">Notes</div>
+                      <ul className="list-disc ml-5 space-y-1 text-sm">
+                        {recommendation.notes.map((n, i) => (<li key={i}>{n}</li>))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>

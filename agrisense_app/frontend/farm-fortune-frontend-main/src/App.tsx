@@ -10,6 +10,8 @@ import SoilAnalysis from "./pages/SoilAnalysis";
 import Crops from "./pages/Crops";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
+import LiveStats from "./pages/LiveStats";
+import ImpactGraphs from "./pages/ImpactGraphs";
 
 const queryClient = new QueryClient();
 
@@ -18,7 +20,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+  <BrowserRouter basename="/ui">
         <div className="min-h-screen bg-background">
           <Navigation />
           <Routes>
@@ -26,7 +28,9 @@ const App = () => (
             <Route path="/recommend" element={<Recommend />} />
             <Route path="/soil-analysis" element={<SoilAnalysis />} />
             <Route path="/crops" element={<Crops />} />
+            <Route path="/live" element={<LiveStats />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/impact" element={<ImpactGraphs />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

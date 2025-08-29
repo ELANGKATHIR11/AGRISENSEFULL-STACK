@@ -1,118 +1,48 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Search, Wheat, Droplets, Thermometer, Sun, Calendar, TrendingUp } from "lucide-react";
 
-interface Crop {
-  id: string;
-  name: string;
-  scientificName: string;
-  category: string;
-  season: string;
-  waterRequirement: "Low" | "Medium" | "High";
-  tempRange: string;
-  phRange: string;
-  growthPeriod: string;
-  description: string;
-  tips: string[];
-}
+import { api, type CropCard } from "@/lib/api";
 
 const Crops = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [crops, setCrops] = useState<CropCard[]>([]);
 
-  // Mock crop data
-  const crops: Crop[] = [
-    {
-      id: "1",
-      name: "Wheat",
-      scientificName: "Triticum aestivum",
-      category: "Cereal",
-      season: "Winter",
-      waterRequirement: "Medium",
-      tempRange: "15-25°C",
-      phRange: "6.0-7.5",
-      growthPeriod: "120-150 days",
-      description: "A cereal grain that is a worldwide staple food and one of the most important crops.",
-      tips: ["Plant in well-drained soil", "Requires full sun exposure", "Monitor for rust diseases"]
-    },
-    {
-      id: "2", 
-      name: "Corn",
-      scientificName: "Zea mays",
-      category: "Cereal",
-      season: "Summer",
-      waterRequirement: "High",
-      tempRange: "20-30°C",
-      phRange: "6.0-6.8",
-      growthPeriod: "90-120 days",
-      description: "A large grain plant domesticated by indigenous peoples in Mesoamerica.",
-      tips: ["Needs warm weather", "Deep watering required", "Rich, fertile soil preferred"]
-    },
-    {
-      id: "3",
-      name: "Rice",
-      scientificName: "Oryza sativa",
-      category: "Cereal",
-      season: "Monsoon",
-      waterRequirement: "High",
-      tempRange: "22-32°C", 
-      phRange: "5.5-7.0",
-      growthPeriod: "105-150 days",
-      description: "A staple food crop for over half of the world's population.",
-      tips: ["Flooded field cultivation", "Warm, humid climate", "Regular water management"]
-    },
-    {
-      id: "4",
-      name: "Tomato",
-      scientificName: "Solanum lycopersicum",
-      category: "Vegetable",
-      season: "Summer",
-      waterRequirement: "Medium",
-      tempRange: "18-27°C",
-      phRange: "6.0-6.8",
-      growthPeriod: "70-100 days",
-      description: "A widely consumed vegetable rich in vitamins and antioxidants.",
-      tips: ["Support with stakes", "Consistent watering", "Mulch around plants"]
-    },
-    {
-      id: "5",
-      name: "Potato",
-      scientificName: "Solanum tuberosum",
-      category: "Vegetable",
-      season: "Winter",
-      waterRequirement: "Medium",
-      tempRange: "15-20°C",
-      phRange: "5.0-6.5",
-      growthPeriod: "70-120 days",
-      description: "A starchy tuber that is the world's fourth-largest food crop.",
-      tips: ["Hill soil around plants", "Avoid overwatering", "Harvest before frost"]
-    },
-    {
-      id: "6",
-      name: "Soybean",
-      scientificName: "Glycine max",
-      category: "Legume",
-      season: "Summer",
-      waterRequirement: "Medium",
-      tempRange: "20-30°C",
-      phRange: "6.0-7.0",
-      growthPeriod: "90-150 days",
-      description: "A species of legume that is an important source of protein and oil.",
-      tips: ["Nitrogen-fixing crop", "Rotate with cereals", "Avoid waterlogged soil"]
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await api.crops();
+        if (!cancelled) setCrops(res.items);
+      } catch {
+        // ignore for now
+      }
+    })();
+    return () => { cancelled = true };
+  }, []);
+
+  const categories = useMemo(() => {
+    const set = new Set<string>(["all"]);
+    for (const c of crops) {
+      if (c.category) set.add(c.category);
     }
-  ];
+    return Array.from(set);
+  }, [crops]);
 
-  const categories = ["all", "Cereal", "Vegetable", "Legume", "Fruit"];
-
-  const filteredCrops = crops.filter(crop => {
-    const matchesSearch = crop.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         crop.scientificName.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === "all" || crop.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  const filteredCrops = useMemo(() => {
+    const term = searchTerm.toLowerCase();
+    return crops.filter(crop => {
+      const nameHit = crop.name.toLowerCase().includes(term);
+      const sci = (crop.scientificName || "").toLowerCase();
+      const sciHit = sci.includes(term);
+      const matchesCategory = selectedCategory === "all" || crop.category === selectedCategory;
+      return (nameHit || sciHit) && matchesCategory;
+    });
+  }, [crops, searchTerm, selectedCategory]);
 
   const getWaterColor = (requirement: string) => {
     switch (requirement) {

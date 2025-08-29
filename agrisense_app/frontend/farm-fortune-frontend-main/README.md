@@ -1,3 +1,29 @@
+# farm-fortune-frontend-main
+
+## Development
+
+Environment variables:
+
+Create a `.env` file at project root if you want to point to a running backend in dev:
+
+```
+VITE_API_URL=http://127.0.0.1:8004
+```
+
+Run dev server on port 8080 (configured in `vite.config.ts`):
+
+```
+npm install
+npm run dev
+```
+
+Build for production:
+
+```
+npm run build
+```
+
+The built files will be emitted to `dist/`; the FastAPI server serves `/ui` from that folder when present.
 # Welcome to your Lovable project
 
 ## Project info

@@ -132,7 +132,30 @@ class SmartFarmingRecommendationSystem:
     def prepare_models(self) -> None:
         assert self.crop_data is not None, "Dataset not loaded"
 
-        # Encode categorical variables
+        # Attempt to load cached models/encoders first to avoid retraining on every cold start
+        yield_path = os.path.join(HERE, "yield_prediction_model.joblib")
+        clf_path = os.path.join(HERE, "crop_classification_model.joblib")
+        soil_enc_path = os.path.join(HERE, "soil_encoder.joblib")
+        crop_enc_path = os.path.join(HERE, "crop_encoder.joblib")
+        try:
+            if all(os.path.exists(p) for p in [yield_path, clf_path, soil_enc_path, crop_enc_path]):
+                self.yield_model = cast(Any, joblib).load(yield_path)  # type: ignore[attr-defined]
+                self.crop_classifier = cast(Any, joblib).load(clf_path)  # type: ignore[attr-defined]
+                self.soil_encoder = cast(Any, joblib).load(soil_enc_path)  # type: ignore[attr-defined]
+                self.crop_encoder = cast(Any, joblib).load(crop_enc_path)  # type: ignore[attr-defined]
+                # Also ensure encoded columns exist for feature building when needed
+                if "Soil_Type_Encoded" not in self.crop_data.columns:
+                    assert self.soil_encoder is not None
+                    self.crop_data["Soil_Type_Encoded"] = cast(LabelEncoder, self.soil_encoder).transform(self.crop_data["Soil_Type"])  # type: ignore[index]
+                if "Crop_Encoded" not in self.crop_data.columns:
+                    assert self.crop_encoder is not None
+                    self.crop_data["Crop_Encoded"] = cast(LabelEncoder, self.crop_encoder).transform(self.crop_data["Crop"])  # type: ignore[index]
+                print("Loaded cached ML models and encoders.")
+                return
+        except Exception as e:
+            print(f"Failed to load cached models, will retrain: {e}")
+
+        # Encode categorical variables for training
         soil_encoder: LabelEncoder = LabelEncoder()
         self.crop_data["Soil_Type_Encoded"] = soil_encoder.fit_transform(
             self.crop_data["Soil_Type"]
@@ -174,12 +197,12 @@ class SmartFarmingRecommendationSystem:
         self.soil_encoder = soil_encoder
         self.crop_encoder = crop_encoder
 
-        # Save models and encoders
+        # Save models and encoders for next runs
         jb: Any = joblib
-        jb.dump(self.yield_model, os.path.join(HERE, "yield_prediction_model.joblib"))
-        jb.dump(self.crop_classifier, os.path.join(HERE, "crop_classification_model.joblib"))
-        jb.dump(self.soil_encoder, os.path.join(HERE, "soil_encoder.joblib"))
-        jb.dump(self.crop_encoder, os.path.join(HERE, "crop_encoder.joblib"))
+        jb.dump(self.yield_model, yield_path)
+        jb.dump(self.crop_classifier, clf_path)
+        jb.dump(self.soil_encoder, soil_enc_path)
+        jb.dump(self.crop_encoder, crop_enc_path)
 
         print("ML models trained and saved successfully!")
 

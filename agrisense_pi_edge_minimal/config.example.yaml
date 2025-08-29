@@ -1,0 +1,42 @@
+zone_id: "Z1"
+backend_base_url: "http://localhost:8000"
+
+use_mqtt: false
+mqtt:
+  broker: "localhost"
+  port: 1883
+  capture_topic_pattern: "agrisense/+/capture_now"
+
+sensors:
+  dht22:
+    enabled: true
+    gpio: 4
+  rain:
+    enabled: true
+    gpio: 17
+  flow:
+    enabled: true
+    gpio: 27
+    pulses_per_liter: 450.0
+  level:
+    enabled: true
+    trig_gpio: 23
+    echo_gpio: 24
+    tank_depth_cm: 100.0
+  ads1115:
+    enabled: true
+    i2c_bus: 1
+    address: 0x48
+    ph_channel: 0
+    ec_channel: 1
+    ph_cal:
+      v7: 2.5
+      slope: -0.18
+    ec_cal:
+      k_cell: 1.0
+      v1_413: 1.2
+      slope: 1.0
+  rs485:
+    enabled: false
+    port: "/dev/ttyUSB0"
+    baudrate: 9600

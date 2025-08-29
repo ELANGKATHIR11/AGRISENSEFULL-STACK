@@ -14,9 +14,7 @@ import {
   TrendingUp, 
   Sprout, 
   Star,
-  MapPin,
   Calendar,
-  ThermometerSun,
   CheckCircle2,
   AlertTriangle,
   Info
@@ -32,8 +30,6 @@ interface SoilData {
   potassium: string;
   organicMatter: string;
   moisture: string;
-  location: string;
-  climate: string;
 }
 
 interface CropRecommendation {
@@ -58,9 +54,7 @@ const SoilAnalysis = () => {
     phosphorus: "",
     potassium: "",
     organicMatter: "",
-    moisture: "",
-    location: "",
-    climate: ""
+  moisture: ""
   });
 
   const [recommendations, setRecommendations] = useState<CropRecommendation[]>([]);
@@ -72,9 +66,7 @@ const SoilAnalysis = () => {
     "Clay", "Sandy", "Loam", "Silt", "Sandy Loam", "Clay Loam", "Silty Loam", "Sandy Clay", "Silty Clay", "Sandy Clay Loam"
   ];
 
-  const climateTypes = [
-    "Tropical", "Subtropical", "Temperate", "Arid", "Semi-Arid", "Mediterranean", "Continental", "Oceanic"
-  ];
+  // Removed location/region and climate inputs per request
 
   const handleInputChange = (field: keyof SoilData, value: string) => {
     setSoilData(prev => ({ ...prev, [field]: value }));
@@ -94,7 +86,7 @@ const SoilAnalysis = () => {
         scientificName: "Triticum aestivum",
         suitabilityScore: 94,
         expectedYield: "4.5-6.2 tons/hectare",
-        reasons: [
+  reasons: [
           `Excellent pH match (${soilData.ph}) for wheat cultivation`,
           `${soilData.soilType} soil provides good drainage and root penetration`,
           "Optimal nitrogen levels support strong vegetative growth"
@@ -121,7 +113,7 @@ const SoilAnalysis = () => {
         reasons: [
           "High organic matter content supports corn's nutrient demands",
           "Good potassium levels promote strong stalks and ears",
-          `${soilData.climate} climate suitable for corn production`
+          "Suitable environmental conditions for corn production"
         ],
         challenges: [
           "Requires consistent water supply during tasseling",
@@ -326,35 +318,7 @@ const SoilAnalysis = () => {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="location" className="flex items-center space-x-2">
-                      <MapPin className="w-4 h-4" />
-                      <span>Location/Region</span>
-                    </Label>
-                    <Input
-                      id="location"
-                      placeholder="e.g., Punjab, India"
-                      value={soilData.location}
-                      onChange={(e) => handleInputChange("location", e.target.value)}
-                      className="transition-all duration-200 focus:shadow-glow"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="climate" className="flex items-center space-x-2">
-                      <ThermometerSun className="w-4 h-4" />
-                      <span>Climate Zone</span>
-                    </Label>
-                    <Select value={soilData.climate} onValueChange={(value) => handleInputChange("climate", value)}>
-                      <SelectTrigger className="transition-all duration-200 focus:shadow-glow">
-                        <SelectValue placeholder="Select climate" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-card border shadow-strong z-50">
-                        {climateTypes.map(climate => (
-                          <SelectItem key={climate} value={climate}>{climate}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                    {/* Location/Region and Climate Zone removed */}
                 </div>
               </div>
 

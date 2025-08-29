@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { Sprout, Home, Zap, Wheat, Settings } from "lucide-react";
+import { Sprout, Home, Zap, Wheat, Settings, LineChart } from "lucide-react";
 
 const Navigation = () => {
   const navItems = [
@@ -7,6 +7,8 @@ const Navigation = () => {
     { to: "/recommend", icon: Zap, label: "Recommend" },
     { to: "/soil-analysis", icon: Sprout, label: "Soil Analysis" },
     { to: "/crops", icon: Wheat, label: "Crops" },
+    { to: "/live", icon: Zap, label: "Live" },
+  { to: "/impact", icon: LineChart, label: "Impact" },
     { to: "/admin", icon: Settings, label: "Admin" },
   ];
 
