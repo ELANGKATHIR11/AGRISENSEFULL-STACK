@@ -1,14 +1,18 @@
 from fastapi import FastAPI, Request
+from fastapi import Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, RedirectResponse, JSONResponse
 from fastapi import HTTPException
+from starlette.middleware.gzip import GZipMiddleware  # type: ignore
 import logging
 import time
 import os
 import sys
 import csv
 import json
+import uuid
+import threading
 from typing import Dict, Any, List, Optional, Union, cast, Protocol, runtime_checkable, Set
 from pydantic import BaseModel
 
@@ -50,13 +54,38 @@ logger = logging.getLogger("agrisense")
 if not logger.handlers:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
-# Log request durations
+# In-process counters for a lightweight /metrics endpoint
+_metrics_lock = threading.Lock()
+_metrics: Dict[str, Any] = {
+    "started_at": time.time(),
+    "requests_total": 0,
+    "errors_total": 0,
+    "by_path": {},  # path -> count
+}
+
+# Request ID + timing + counters middleware
 @app.middleware("http")
 async def log_requests(request: Request, call_next):  # type: ignore[no-redef]
+    req_id = request.headers.get("x-request-id") or uuid.uuid4().hex
     start = time.perf_counter()
-    response = await call_next(request)
-    duration_ms = (time.perf_counter() - start) * 1000.0
-    logger.info("%s %s -> %s in %.1fms", request.method, request.url.path, response.status_code, duration_ms)
+    try:
+        response = await call_next(request)
+    finally:
+        duration_ms = (time.perf_counter() - start) * 1000.0
+    # update counters
+    with _metrics_lock:
+        _metrics["requests_total"] += 1
+        by_path: Dict[str, int] = _metrics.setdefault("by_path", {})  # type: ignore[assignment]
+        path = request.url.path
+        by_path[path] = int(by_path.get(path, 0)) + 1
+    # log and annotate response
+    status = getattr(response, "status_code", 0)
+    if status >= 500:
+        with _metrics_lock:
+            _metrics["errors_total"] += 1
+    response.headers.setdefault("X-Request-ID", req_id)
+    response.headers.setdefault("Server-Timing", f"app;dur={duration_ms:.1f}")
+    logger.info("%s %s -> %s in %.1fms rid=%s", request.method, request.url.path, status, duration_ms, req_id)
     return response
 
 # Consistent JSON error shapes
@@ -93,6 +122,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Enable gzip compression for larger responses
+app.add_middleware(GZipMiddleware, minimum_size=500)
 
 # Optionally mount Flask-based storage server under /storage via WSGI
 try:
@@ -163,7 +195,7 @@ def ready() -> Dict[str, Any]:
     return {"status": "ready", "water_model": engine.water_model is not None, "fert_model": engine.fert_model is not None}
 
 @app.post("/admin/reset")
-def admin_reset() -> Dict[str, bool]:
+def admin_reset(_=Depends(require_admin)) -> Dict[str, bool]:
     """Erase all stored data. Irreversible."""
     reset_database()
     return {"ok": True}
@@ -176,12 +208,13 @@ def admin_weather_refresh(
     days: int = 7,
     cache_path: str = os.getenv("AGRISENSE_WEATHER_CACHE", "weather_cache.csv"),
 ) -> Dict[str, Any]:
+    _ = require_admin()
     path = fetch_and_cache_weather(lat=lat, lon=lon, days=days, cache_path=cache_path)
     latest = read_latest_from_cache(path)
     return {"ok": True, "cache_path": str(path), "latest": latest}
 
 @app.post("/admin/notify")
-def admin_notify(title: str = "Test Alert", message: str = "This is a test notification.") -> Dict[str, Any]:
+def admin_notify(title: str = "Test Alert", message: str = "This is a test notification.", _=Depends(require_admin)) -> Dict[str, Any]:
     ok = send_alert(title, message)
     return {"ok": ok}
 
@@ -684,15 +717,31 @@ FRONTEND_DIST_NESTED = os.path.join(ROOT, "..", "frontend", "farm-fortune-fronte
 FRONTEND_DIST = os.path.join(ROOT, "..", "frontend", "dist")
 FRONTEND_LEGACY = os.path.join(ROOT, "..", "frontend")
 frontend_root: Optional[str] = None
+
+class StaticFilesWithCache(StaticFiles):
+    async def get_response(self, path: str, scope):  # type: ignore[override]
+        response = await super().get_response(path, scope)  # type: ignore[arg-type]
+        # Apply cache headers to non-HTML assets; keep HTML short to allow quick updates
+        try:
+            # path like "assets/app.js" or "index.html"
+            if isinstance(path, str) and not path.endswith(".html"):
+                response.headers.setdefault("Cache-Control", "public, max-age=604800, immutable")
+            else:
+                # cache for a minute for index.html to reduce flashing
+                response.headers.setdefault("Cache-Control", "public, max-age=60")
+        except Exception:
+            pass
+        return response
+
 if os.path.isdir(FRONTEND_DIST_NESTED):
     frontend_root = FRONTEND_DIST_NESTED
-    app.mount("/ui", StaticFiles(directory=FRONTEND_DIST_NESTED, html=True), name="frontend")
+    app.mount("/ui", StaticFilesWithCache(directory=FRONTEND_DIST_NESTED, html=True), name="frontend")
 elif os.path.isdir(FRONTEND_DIST):
     frontend_root = FRONTEND_DIST
-    app.mount("/ui", StaticFiles(directory=FRONTEND_DIST, html=True), name="frontend")
+    app.mount("/ui", StaticFilesWithCache(directory=FRONTEND_DIST, html=True), name="frontend")
 elif os.path.isdir(FRONTEND_LEGACY):
     frontend_root = FRONTEND_LEGACY
-    app.mount("/ui", StaticFiles(directory=FRONTEND_LEGACY, html=True), name="frontend")
+    app.mount("/ui", StaticFilesWithCache(directory=FRONTEND_LEGACY, html=True), name="frontend")
 
 @app.get("/")
 def root() -> RedirectResponse:
@@ -713,3 +762,30 @@ def serve_spa(path: str):
 def api_prefix_redirect(path: str) -> RedirectResponse:
     # Preserve path and querystring; FastAPI/Starlette keeps query intact on redirect
     return RedirectResponse(url=f"/{path}", status_code=307)
+
+# --- Admin protection helper ---
+class AdminGuard:
+    def __init__(self, env_var: str = "AGRISENSE_ADMIN_TOKEN") -> None:
+        self.env_var = env_var
+
+    def __call__(self, x_admin_token: Optional[str] = Header(default=None)) -> None:
+        token = os.getenv(self.env_var)
+        if not token:
+            return  # no guard configured
+        if not x_admin_token or x_admin_token != token:
+            raise HTTPException(status_code=401, detail="Unauthorized: missing or invalid admin token")
+
+require_admin = AdminGuard()
+
+# --- Lightweight metrics ---
+@app.get("/metrics")
+def metrics() -> Dict[str, Any]:
+    with _metrics_lock:
+        out = dict(_metrics)
+    # Compute uptime seconds on the fly
+    out["uptime_s"] = round(time.time() - float(out.get("started_at", time.time())), 3)
+    return out
+
+@app.get("/version")
+def version() -> Dict[str, Any]:
+    return {"name": app.title, "version": app.version}

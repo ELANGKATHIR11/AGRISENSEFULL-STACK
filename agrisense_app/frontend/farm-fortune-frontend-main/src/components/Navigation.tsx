@@ -21,7 +21,7 @@ const Navigation = () => {
           {/* Logo */}
           <div className="flex items-center space-x-3">
             <div className="relative flex items-center justify-center w-10 h-10 rounded-lg shadow-medium logo-pulse overflow-hidden bg-transparent">
-              <img src="/logo-agrisense-mark-v2.svg" alt="AgriSense" className="w-10 h-10 select-none" draggable={false} />
+              <img src={`${import.meta.env.BASE_URL}logo-agrisense-mark-v2.svg`} alt="AgriSense" className="w-10 h-10 select-none" draggable={false} />
             </div>
             <div>
               <h1 className="text-xl font-bold text-foreground">AgriSense</h1>

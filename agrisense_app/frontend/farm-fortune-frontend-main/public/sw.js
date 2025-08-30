@@ -1,10 +1,11 @@
 // Simple service worker for offline shell and caching latest weather
-const CACHE_NAME = 'agrisense-cache-v1';
+const CACHE_NAME = 'agrisense-cache-v2';
+const BASE = self.registration.scope.endsWith('/') ? self.registration.scope : self.registration.scope + '/';
 const APP_SHELL = [
-  '/',
-  '/index.html',
-  '/logo-agrisense-mark-v2.svg',
-  '/manifest.webmanifest',
+  BASE,
+  BASE + 'index.html',
+  BASE + 'logo-agrisense-mark-v2.svg',
+  BASE + 'manifest.webmanifest',
 ];
 
 self.addEventListener('install', (event) => {

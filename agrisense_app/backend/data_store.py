@@ -2,10 +2,20 @@ import os, sqlite3, datetime as dt
 from typing import Dict, Any, List, Optional
 
 HERE = os.path.dirname(__file__)
-DB_PATH = os.path.join(HERE, "sensors.db")
+# Allow overriding the database path for containerized deployments.
+# Prefer explicit AGRISENSE_DB_PATH, else use AGRISENSE_DATA_DIR/sensors.db, else default next to this file.
+_DATA_DIR = os.getenv("AGRISENSE_DATA_DIR")
+if _DATA_DIR:
+    os.makedirs(_DATA_DIR, exist_ok=True)
+DB_PATH = os.getenv("AGRISENSE_DB_PATH") or os.path.join(_DATA_DIR or HERE, "sensors.db")
 
 def get_conn():
-    os.makedirs(HERE, exist_ok=True)
+    # Ensure directory for DB exists (covers default and custom locations)
+    try:
+        os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+    except Exception:
+        # Fallback to module directory
+        os.makedirs(HERE, exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
     conn.execute('''
     CREATE TABLE IF NOT EXISTS readings(
