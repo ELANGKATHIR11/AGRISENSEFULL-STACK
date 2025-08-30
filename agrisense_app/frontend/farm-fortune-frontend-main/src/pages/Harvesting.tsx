@@ -2,8 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { api, type WeatherCacheRow } from "@/lib/api";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Harvesting() {
+    const { toast } = useToast();
     const [lat, setLat] = useState<string>(() => localStorage.getItem("lat") || "27.3");
     const [lon, setLon] = useState<string>(() => localStorage.getItem("lon") || "88.6");
     const [latest, setLatest] = useState<WeatherCacheRow | null>(null);
@@ -29,13 +31,19 @@ export default function Harvesting() {
         localStorage.setItem("geo_highacc", highAcc ? "1" : "0");
     }, [highAcc]);
 
+    const [lastUpdated, setLastUpdated] = useState<number | null>(null);
+
     const refresh = async () => {
         setBusy(true);
         try {
             const data = await api.adminWeatherRefresh(Number(lat), Number(lon), 10);
             setLatest(data.latest ?? null);
+            setLastUpdated(Date.now());
+            toast({ title: "Weather refreshed", description: `ET0 ${data.latest?.et0_mm_day ?? "—"} mm/day` });
         } catch (e) {
             console.error(e);
+            const msg = e instanceof Error ? e.message : String(e);
+            toast({ title: "Failed to refresh", description: msg, variant: "destructive" });
         } finally {
             setBusy(false);
         }
@@ -205,9 +213,15 @@ export default function Harvesting() {
                             <input id="highacc" name="highacc" type="checkbox" className="w-4 h-4" checked={highAcc} onChange={(e) => setHighAcc(e.target.checked)} />
                             <label htmlFor="highacc" className="text-sm" title="Enable GPS for best accuracy (more battery)">High accuracy</label>
                         </div>
+                        {/* Status chip */}
+                        <div className={`text-xs px-2 py-1 rounded-full ${live ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-700"}`} title={highAcc ? "High accuracy enabled" : undefined}>
+                            Live: {live ? (highAcc ? "On (high)" : "On") : "Off"}
+                        </div>
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                        Location access requires a secure context (HTTPS) on non-localhost sites. {geoMsg ?? ""}
+                    <div className="text-xs text-muted-foreground flex items-center gap-2">
+                        <span>Location access requires a secure context (HTTPS) on non-localhost sites.</span>
+                        {geoMsg ? <span className="text-destructive">{geoMsg}</span> : null}
+                        {lastUpdated ? <span className="opacity-80">Last updated: {new Date(lastUpdated).toLocaleTimeString()}</span> : null}
                     </div>
                     {latest ? (
                         <div className="grid grid-cols-2 gap-4 text-sm">

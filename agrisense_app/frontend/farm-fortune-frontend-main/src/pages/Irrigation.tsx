@@ -36,6 +36,14 @@ export default function Irrigation() {
   }, [refresh]);
 
   const start = async (force = false) => {
+    if (!zone.trim()) {
+      toast({ title: "Zone required", description: "Please enter a zone id (e.g., Z1)", variant: "destructive" });
+      return;
+    }
+    if (duration == null || duration <= 0) {
+      toast({ title: "Duration required", description: "Please set a positive duration in seconds", variant: "destructive" });
+      return;
+    }
     setLoading(true);
     try {
       const r: IrrigationAck = await api.irrigationStart(zone, duration, force);
@@ -107,7 +115,7 @@ export default function Irrigation() {
           <CardTitle>Irrigation control</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-wrap items-center gap-4">
             <label htmlFor="zone" className="text-sm">Zone</label>
             <input
               id="zone"
@@ -119,26 +127,33 @@ export default function Irrigation() {
               onChange={(e) => setZone(e.target.value)}
             />
             <label htmlFor="duration" className="text-sm">Duration (s)</label>
-            <input
-              id="duration"
-              name="duration"
-              type="number"
-              className="border px-3 py-2 rounded-md w-28"
-              placeholder="seconds"
-              title="Irrigation duration in seconds"
-              value={duration ?? ""}
-              onChange={(e) => setDuration(e.target.value ? Number(e.target.value) : undefined)}
-            />
+            <div className="relative">
+              <input
+                id="duration"
+                name="duration"
+                type="number"
+                className="border px-3 py-2 rounded-md w-32 pr-10"
+                placeholder="seconds"
+                title="Irrigation duration in seconds"
+                value={duration ?? ""}
+                onChange={(e) => setDuration(e.target.value ? Math.max(0, Number(e.target.value)) : undefined)}
+                min={0}
+              />
+              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">s</span>
+            </div>
           </div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             Quick: {([60, 120, 300, 600] as const).map((d) => (
               <Button key={d} size="sm" variant="outline" onClick={() => setDuration(d)}>{d}s</Button>
             ))}
           </div>
+          <div className="text-xs text-muted-foreground">
+            {duration == null || duration <= 0 ? "Set a duration to enable Start" : ""}
+          </div>
           <div className="flex items-center space-x-3">
-            <Button onClick={() => start(false)} disabled={loading}>Start</Button>
+            <Button onClick={() => start(false)} disabled={loading || duration == null || duration <= 0}>Start</Button>
             <Button variant="destructive" onClick={stop} disabled={loading}>Stop</Button>
-            <Button variant="outline" onClick={() => start(true)} disabled={loading}>Force Start</Button>
+            <Button variant="outline" onClick={() => start(true)} disabled={loading || duration == null || duration <= 0}>Force Start</Button>
             <span className={`text-sm ${isRunning ? "text-green-600" : "text-muted-foreground"}`}>
               Status: {isRunning ? "Running" : "Idle"}
             </span>

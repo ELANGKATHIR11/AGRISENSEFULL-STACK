@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navigation from "./components/Navigation";
 import Home from "./pages/Home";
+import Dashboard from "@/pages/Dashboard";
 import Recommend from "./pages/Recommend";
 import SoilAnalysis from "./pages/SoilAnalysis";
 import Crops from "./pages/Crops";
@@ -30,7 +31,7 @@ const App = () => (
         <div className="min-h-screen bg-background">
           <Navigation />
           <Routes>
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<Dashboard />} />
             <Route path="/recommend" element={<Recommend />} />
             <Route path="/soil-analysis" element={<SoilAnalysis />} />
             <Route path="/crops" element={<Crops />} />
