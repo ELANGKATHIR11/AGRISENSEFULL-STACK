@@ -1,11 +1,11 @@
 import { NavLink } from "react-router-dom";
-import { Sprout, Home, Zap, Wheat, Settings, LineChart, Droplets, CloudRain } from "lucide-react";
+import { Home, Zap, Wheat, Settings, LineChart, Droplets, CloudRain } from "lucide-react";
 
 const Navigation = () => {
   const navItems = [
     { to: "/", icon: Home, label: "Home" },
     { to: "/recommend", icon: Zap, label: "Recommend" },
-    { to: "/soil-analysis", icon: Sprout, label: "Soil Analysis" },
+    { to: "/soil-analysis", icon: Wheat, label: "Soil Analysis" },
     { to: "/crops", icon: Wheat, label: "Crops" },
     { to: "/live", icon: Zap, label: "Live" },
     { to: "/irrigation", icon: Droplets, label: "Irrigation" },
@@ -20,8 +20,8 @@ const Navigation = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center space-x-3">
-            <div className="flex items-center justify-center w-10 h-10 bg-gradient-primary rounded-lg shadow-medium">
-              <Sprout className="w-6 h-6 text-primary-foreground" />
+            <div className="relative flex items-center justify-center w-10 h-10 rounded-lg shadow-medium logo-pulse overflow-hidden bg-transparent">
+              <img src="/logo-agrisense-mark-v2.svg" alt="AgriSense" className="w-10 h-10 select-none" draggable={false} />
             </div>
             <div>
               <h1 className="text-xl font-bold text-foreground">AgriSense</h1>
