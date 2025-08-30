@@ -106,8 +106,9 @@ export default function LiveStats() {
       // refresh recent now
       const data = await api.recent(zone, 200);
       setRows((data.items || []).slice().reverse());
-    } catch (e: any) {
-      toast({ title: "Capture failed", description: e?.message ?? String(e) });
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      toast({ title: "Capture failed", description: msg });
     } finally {
       setCapturing(false);
     }

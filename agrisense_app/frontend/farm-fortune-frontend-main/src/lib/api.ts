@@ -60,13 +60,18 @@ export type CropCard = {
   tips: string[];
 };
 
+export type EdgeCaptureResponse = {
+  reading: SensorReading & { zone_id: string };
+  recommendation: BackendRecommendation;
+};
+
 export const api = {
   health: () => http<{ status: string }>(`/health`),
   edgeHealth: () => http<{ status: string; edge_module?: boolean }>(`/edge/health`),
   plants: () => http<{ items: PlantListItem[] }>(`/plants`),
   crops: () => http<{ items: CropCard[] }>(`/crops`),
   edgeCapture: (zone_id?: string) =>
-    http<{ reading: any; recommendation: import("./api").BackendRecommendation }>(`/edge/capture`, {
+    http<EdgeCaptureResponse>(`/edge/capture`, {
       method: "POST",
       body: JSON.stringify({ zone_id }),
     }),
