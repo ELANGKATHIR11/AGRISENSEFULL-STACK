@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { api } from "@/lib/api";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // Simple mini chart using inline SVG to avoid extra deps.
@@ -46,6 +48,9 @@ export default function LiveStats() {
   const [rows, setRows] = useState<RecentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [edgeOk, setEdgeOk] = useState<boolean | null>(null);
+  const [capturing, setCapturing] = useState(false);
+  const { toast } = useToast();
 
   // poll recent readings every 5s
   useEffect(() => {
@@ -72,6 +77,42 @@ export default function LiveStats() {
     };
   }, [zone]);
 
+  // poll edge health every 15s
+  useEffect(() => {
+    let mounted = true;
+    const ping = async () => {
+      try {
+        const h = await api.edgeHealth();
+        if (!mounted) return;
+        setEdgeOk(h.status === "ok");
+      } catch {
+        if (!mounted) return;
+        setEdgeOk(false);
+      }
+    };
+    ping();
+    const id = setInterval(ping, 15000);
+    return () => {
+      mounted = false;
+      clearInterval(id);
+    };
+  }, []);
+
+  const doCapture = async () => {
+    setCapturing(true);
+    try {
+      const res = await api.edgeCapture(zone);
+      toast({ title: "Capture complete", description: `Water: ${res.recommendation.water_liters.toFixed?.(1) ?? res.recommendation.water_liters} L` });
+      // refresh recent now
+      const data = await api.recent(zone, 200);
+      setRows((data.items || []).slice().reverse());
+    } catch (e: any) {
+      toast({ title: "Capture failed", description: e?.message ?? String(e) });
+    } finally {
+      setCapturing(false);
+    }
+  };
+
   const series = useMemo(() => {
     const ts = rows.map((r) => r.ts);
     const moisture = rows.map((r) => Number(r.moisture_pct ?? 0));
@@ -85,14 +126,22 @@ export default function LiveStats() {
     <div className="container mx-auto p-4 space-y-4">
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold">Live Farm Stats</h1>
-        <Select value={zone} onValueChange={setZone}>
-          <SelectTrigger className="w-32"><SelectValue placeholder="Zone" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Z1">Z1</SelectItem>
-            <SelectItem value="Z2">Z2</SelectItem>
-            <SelectItem value="Z3">Z3</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <div className={`text-sm ${edgeOk === false ? "text-red-600" : edgeOk === true ? "text-green-600" : "text-muted-foreground"}`}>
+            Edge: {edgeOk === null ? "…" : edgeOk ? "connected" : "unavailable"}
+          </div>
+          <Select value={zone} onValueChange={setZone}>
+            <SelectTrigger className="w-32"><SelectValue placeholder="Zone" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Z1">Z1</SelectItem>
+              <SelectItem value="Z2">Z2</SelectItem>
+              <SelectItem value="Z3">Z3</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button disabled={capturing || edgeOk === false} onClick={doCapture}>
+            {capturing ? "Capturing…" : "Capture now"}
+          </Button>
+        </div>
       </div>
 
       {error && <div className="text-sm text-red-600">{error}</div>}

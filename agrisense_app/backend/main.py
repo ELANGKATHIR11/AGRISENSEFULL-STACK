@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi import HTTPException
 import os
+import sys
 import csv
 import json
 from typing import Dict, Any, List, Optional, Union, cast, Protocol, runtime_checkable, Set
@@ -33,6 +34,28 @@ app.add_middleware(
 
 engine = RecoEngine()
 
+# ---- Optional Edge integration (SensorReader) ----
+# Allow importing the minimal edge module without extra setup by adding repo root to sys.path.
+try:
+    _BACKEND_DIR = os.path.dirname(__file__)
+    _REPO_ROOT = os.path.abspath(os.path.join(_BACKEND_DIR, "..", ".."))
+    if _REPO_ROOT not in sys.path:
+        sys.path.append(_REPO_ROOT)
+except Exception:
+    _REPO_ROOT = None  # type: ignore[assignment]
+
+try:
+    # Import SensorReader and util from the edge module if available
+    from agrisense_pi_edge_minimal.edge.reader import SensorReader  # type: ignore[reportMissingImports]
+    from agrisense_pi_edge_minimal.edge.util import load_config  # type: ignore[reportMissingImports]
+    _edge_available = True
+except Exception:
+    SensorReader = None  # type: ignore[assignment]
+    load_config = None  # type: ignore[assignment]
+    _edge_available = False
+
+_edge_reader: Optional["SensorReader"] = None  # type: ignore[name-defined]
+
 @runtime_checkable
 class HasCropRecommender(Protocol):
     def get_crop_recommendations(self, sensor_data: Dict[str, Union[float, str]]) -> Optional[List[Dict[str, Any]]]:
@@ -56,12 +79,75 @@ def ready() -> Dict[str, Any]:
     # Ready if engine constructed and models (optional) loaded fine
     return {"status": "ready", "water_model": engine.water_model is not None, "fert_model": engine.fert_model is not None}
 
+
+@app.get("/edge/health")
+def edge_health() -> Dict[str, Any]:
+    """Report basic availability of the optional Edge reader on the server.
+    This does not require the edge API process; it uses the SensorReader class if present.
+    """
+    ok = bool(_edge_available)
+    return {"status": "ok" if ok else "unavailable", "edge_module": _edge_available}
+
     
 
 @app.post("/ingest")
 def ingest(reading: SensorReading) -> Dict[str, bool]:
     insert_reading(reading.model_dump())
     return {"ok": True}
+
+
+@app.post("/edge/capture")
+def edge_capture(body: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """Capture a reading using the local SensorReader (if available),
+    ingest it, and return the reading with a fresh recommendation.
+    Optional body: {"zone_id":"Z1"}
+    """
+    if not _edge_available:
+        raise HTTPException(status_code=503, detail="Edge reader not available on server")
+    global _edge_reader
+    if _edge_reader is None:
+        # Load config via edge util; fallback to defaults
+        cfg: Dict[str, Any] = {}
+        try:
+            if load_config is not None:
+                cfg = load_config()  # type: ignore[misc]
+        except Exception:
+            cfg = {}
+        try:
+            _edge_reader = SensorReader(cfg)  # type: ignore[call-arg]
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to init edge reader: {e}")
+
+    zone_id = str((body or {}).get("zone_id", "Z1"))
+    try:
+        reading_raw = _edge_reader.capture(zone_id)  # type: ignore[union-attr]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Edge capture failed: {e}")
+
+    # Normalize to SensorReading model fields expected by our backend
+    reading_map: Dict[str, Any] = {}
+    if isinstance(reading_raw, dict):
+        # trust shape and cast for typing
+        reading_map = cast(Dict[str, Any], reading_raw)
+    payload: Dict[str, Any] = {
+        "zone_id": reading_map.get("zone_id", zone_id),
+        "plant": reading_map.get("plant", "tomato"),
+        "soil_type": reading_map.get("soil_type", "loam"),
+        "area_m2": reading_map.get("area_m2", 120),
+        "ph": reading_map.get("ph", 6.5),
+        "moisture_pct": reading_map.get("moisture_pct", 35.0),
+        "temperature_c": reading_map.get("temperature_c", 28.0),
+        "ec_dS_m": reading_map.get("ec_dS_m", 1.0),
+        "n_ppm": reading_map.get("n_ppm"),
+        "p_ppm": reading_map.get("p_ppm"),
+        "k_ppm": reading_map.get("k_ppm"),
+    }
+    # Validate through Pydantic
+    reading = SensorReading.model_validate(payload)
+    # Persist then compute rec
+    insert_reading(reading.model_dump())
+    rec: Dict[str, Any] = engine.recommend(reading.model_dump())
+    return {"reading": reading.model_dump(), "recommendation": rec}
 
 @app.get("/recent")
 def get_recent(zone_id: str = "Z1", limit: int = 50) -> Dict[str, Any]:
