@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "@/lib/api";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -97,6 +97,20 @@ export default function LiveStats() {
       clearInterval(id);
     };
   }, []);
+
+  // toast when edge connectivity changes
+  const prevEdgeOk = useRef<boolean | null>(null);
+  useEffect(() => {
+    if (edgeOk === prevEdgeOk.current) return;
+    if (prevEdgeOk.current !== null) {
+      if (edgeOk) {
+        toast({ title: "Edge connected", description: "Edge reader is available." });
+      } else if (edgeOk === false) {
+        toast({ title: "Edge unavailable", description: "Edge reader not detected." });
+      }
+    }
+    prevEdgeOk.current = edgeOk;
+  }, [edgeOk, toast]);
 
   const doCapture = async () => {
     setCapturing(true);
