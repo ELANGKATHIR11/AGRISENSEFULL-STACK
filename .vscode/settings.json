@@ -1,0 +1,16 @@
+{
+  "python.defaultInterpreterPath": "D:/AGRISENSE FULL-STACK/.venv/Scripts/python.exe",
+  "python.venvPath": "D:/AGRISENSE FULL-STACK/.venv",
+  "python.analysis.extraPaths": [
+    "D:/AGRISENSE FULL-STACK/AGRISENSEFULL-STACK",
+    "D:/AGRISENSE FULL-STACK/AGRISENSEFULL-STACK/agrisense_app",
+    "D:/AGRISENSE FULL-STACK/AGRISENSEFULL-STACK/agrisense_pi_edge_minimal"
+  ],
+  "python.analysis.diagnosticMode": "workspace",
+  "python.analysis.typeCheckingMode": "basic",
+  "python.analysis.stubPath": "typings",
+  "python.testing.pytestEnabled": true,
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestArgs": ["scripts"],
+  "terminal.integrated.defaultProfile.windows": "PowerShell"
+}
