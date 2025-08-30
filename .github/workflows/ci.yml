@@ -33,7 +33,7 @@ jobs:
           pytest -q scripts/test_backend_inprocess.py scripts/test_edge_endpoints.py
 
   frontend:
-    name: Frontend build
+    name: Frontend lint, typecheck, and build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -44,8 +44,17 @@ jobs:
           node-version: '18'
           cache: 'npm'
           cache-dependency-path: agrisense_app/frontend/farm-fortune-frontend-main/package-lock.json
-      - name: Install and build frontend
+      - name: Install dependencies
         working-directory: agrisense_app/frontend/farm-fortune-frontend-main
         run: |
           npm ci || npm install
+      - name: Lint (no warnings allowed)
+        working-directory: agrisense_app/frontend/farm-fortune-frontend-main
+        run: npm run lint:ci
+      - name: Typecheck
+        working-directory: agrisense_app/frontend/farm-fortune-frontend-main
+        run: npm run typecheck
+      - name: Build frontend
+        working-directory: agrisense_app/frontend/farm-fortune-frontend-main
+        run: |
           npm run build

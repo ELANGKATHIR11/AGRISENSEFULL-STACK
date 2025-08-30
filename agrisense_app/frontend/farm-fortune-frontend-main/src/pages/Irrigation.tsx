@@ -108,10 +108,27 @@ export default function Irrigation() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center space-x-4">
-            <label className="text-sm">Zone</label>
-            <input className="border px-3 py-2 rounded-md" value={zone} onChange={(e) => setZone(e.target.value)} />
-            <label className="text-sm">Duration (s)</label>
-            <input type="number" className="border px-3 py-2 rounded-md w-28" value={duration ?? ""} onChange={(e) => setDuration(e.target.value ? Number(e.target.value) : undefined)} />
+            <label htmlFor="zone" className="text-sm">Zone</label>
+            <input
+              id="zone"
+              name="zone"
+              className="border px-3 py-2 rounded-md"
+              placeholder="e.g., Z1"
+              title="Irrigation zone id"
+              value={zone}
+              onChange={(e) => setZone(e.target.value)}
+            />
+            <label htmlFor="duration" className="text-sm">Duration (s)</label>
+            <input
+              id="duration"
+              name="duration"
+              type="number"
+              className="border px-3 py-2 rounded-md w-28"
+              placeholder="seconds"
+              title="Irrigation duration in seconds"
+              value={duration ?? ""}
+              onChange={(e) => setDuration(e.target.value ? Number(e.target.value) : undefined)}
+            />
           </div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             Quick: {([60, 120, 300, 600] as const).map((d) => (

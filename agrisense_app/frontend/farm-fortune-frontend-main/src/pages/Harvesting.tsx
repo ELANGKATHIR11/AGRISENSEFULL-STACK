@@ -37,10 +37,26 @@ export default function Harvesting() {
                         Set your farm location to compute daily reference ET0 and cache weather. Use this to size your tank and plan irrigation in dry spells.
                     </div>
                     <div className="flex items-center gap-3">
-                        <label className="text-sm">Lat</label>
-                        <input className="border px-3 py-2 rounded-md w-28" value={lat} onChange={(e) => setLat(e.target.value)} />
-                        <label className="text-sm">Lon</label>
-                        <input className="border px-3 py-2 rounded-md w-28" value={lon} onChange={(e) => setLon(e.target.value)} />
+                        <label htmlFor="lat" className="text-sm">Lat</label>
+                        <input
+                            id="lat"
+                            name="lat"
+                            placeholder="e.g., 27.3"
+                            className="border px-3 py-2 rounded-md w-28"
+                            value={lat}
+                            onChange={(e) => setLat(e.target.value)}
+                            inputMode="decimal"
+                        />
+                        <label htmlFor="lon" className="text-sm">Lon</label>
+                        <input
+                            id="lon"
+                            name="lon"
+                            placeholder="e.g., 88.6"
+                            className="border px-3 py-2 rounded-md w-28"
+                            value={lon}
+                            onChange={(e) => setLon(e.target.value)}
+                            inputMode="decimal"
+                        />
                         <Button onClick={refresh} disabled={busy}>{busy ? "Refreshing…" : "Refresh Weather"}</Button>
                     </div>
                     {latest ? (

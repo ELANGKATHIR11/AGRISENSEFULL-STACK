@@ -31,17 +31,14 @@ export type BackendRecommendation = {
 };
 
 // Determine API base URL
-// Priority: explicit VITE_API_URL -> Vite dev proxy (when on port 8080) -> same-origin
+// Priority: explicit VITE_API_URL -> Vite dev proxy (any dev port) -> same-origin
 const determineApiBase = (): string => {
   const fromEnv = import.meta.env.VITE_API_URL as string | undefined;
   if (fromEnv && fromEnv.trim().length > 0) return fromEnv.trim();
-  // In Vite dev, the UI runs on port 8080. Default backend is uvicorn on 8004.
-  if (typeof window !== "undefined") {
-    const port = window.location.port;
-    if (port === "8080") {
-      // Use Vite dev proxy; see vite.config.{ts,mjs}
-      return "/api";
-    }
+  // In Vite dev, always use the proxy regardless of the chosen port.
+  if (import.meta.env.DEV) {
+    // Use Vite dev proxy; see vite.config.{ts,mjs}
+    return "/api";
   }
   // Same-origin (works when UI is served by FastAPI under /ui in production)
   return "";
