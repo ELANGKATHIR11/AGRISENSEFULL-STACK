@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api, type WeatherCacheRow } from "@/lib/api";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,11 +10,24 @@ export default function Harvesting() {
     const [busy, setBusy] = useState(false);
     const [geoBusy, setGeoBusy] = useState(false);
     const [geoMsg, setGeoMsg] = useState<string | null>(null);
+    const [live, setLive] = useState<boolean>(() => localStorage.getItem("geo_live") === "1");
+    const [highAcc, setHighAcc] = useState<boolean>(() => localStorage.getItem("geo_highacc") === "1");
+    const watchIdRef = useRef<number | null>(null);
+    const lastRefreshAtRef = useRef<number>(0);
+    const lastCoordsRef = useRef<{ lat: number; lon: number } | null>(null);
 
     useEffect(() => {
         localStorage.setItem("lat", lat);
         localStorage.setItem("lon", lon);
     }, [lat, lon]);
+
+    useEffect(() => {
+        localStorage.setItem("geo_live", live ? "1" : "0");
+    }, [live]);
+
+    useEffect(() => {
+        localStorage.setItem("geo_highacc", highAcc ? "1" : "0");
+    }, [highAcc]);
 
     const refresh = async () => {
         setBusy(true);
@@ -62,9 +75,64 @@ export default function Harvesting() {
                         setGeoMsg("Failed to get location. Try again.");
                 }
             },
-            { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+            { enableHighAccuracy: highAcc, timeout: 10000, maximumAge: 60000 }
         );
     };
+
+    // Live location tracking using watchPosition
+    useEffect(() => {
+        if (!("geolocation" in navigator)) {
+            if (live) setGeoMsg("Geolocation is not supported by this browser.");
+            return;
+        }
+        const stopWatch = () => {
+            if (watchIdRef.current != null) {
+                navigator.geolocation.clearWatch(watchIdRef.current);
+                watchIdRef.current = null;
+            }
+        };
+        if (live) {
+            setGeoMsg(null);
+            watchIdRef.current = navigator.geolocation.watchPosition(
+                (pos) => {
+                    const { latitude, longitude } = pos.coords;
+                    const la = Number(latitude.toFixed(5));
+                    const lo = Number(longitude.toFixed(5));
+                    setLat(String(la));
+                    setLon(String(lo));
+                    const now = Date.now();
+                    const last = lastRefreshAtRef.current;
+                    const prev = lastCoordsRef.current;
+                    const movedEnough = prev ? (Math.abs(prev.lat - la) > 0.001 || Math.abs(prev.lon - lo) > 0.001) : true;
+                    if (movedEnough || now - last > 60_000) {
+                        lastCoordsRef.current = { lat: la, lon: lo };
+                        lastRefreshAtRef.current = now;
+                        refresh();
+                    }
+                },
+                (err) => {
+                    switch (err.code) {
+                        case err.PERMISSION_DENIED:
+                            setGeoMsg("Location permission denied. Disable live tracking or allow access.");
+                            break;
+                        case err.POSITION_UNAVAILABLE:
+                            setGeoMsg("Location unavailable. Ensure GPS is on and try again.");
+                            break;
+                        case err.TIMEOUT:
+                            setGeoMsg("Timed out watching location.");
+                            break;
+                        default:
+                            setGeoMsg("Failed to watch location.");
+                    }
+                },
+                { enableHighAccuracy: highAcc, timeout: 10000, maximumAge: 0 }
+            );
+        } else {
+            stopWatch();
+        }
+        return stopWatch;
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [live, highAcc]);
 
     // If permission already granted, auto-fill on load without prompting
     useEffect(() => {
@@ -119,6 +187,10 @@ export default function Harvesting() {
                         <Button variant="secondary" onClick={getMyLocation} disabled={geoBusy} title="Use your current GPS location">
                             {geoBusy ? "Getting location…" : "Use my location"}
                         </Button>
+                        <label htmlFor="live" className="text-sm ml-2">Live location</label>
+                        <input id="live" name="live" type="checkbox" className="w-4 h-4" checked={live} onChange={(e) => setLive(e.target.checked)} />
+                        <label htmlFor="highacc" className="text-sm ml-2" title="Enable GPS for best accuracy (more battery)">High accuracy</label>
+                        <input id="highacc" name="highacc" type="checkbox" className="w-4 h-4" checked={highAcc} onChange={(e) => setHighAcc(e.target.checked)} />
                     </div>
                     <div className="text-xs text-muted-foreground">
                         Location access requires a secure context (HTTPS) on non-localhost sites. {geoMsg ?? ""}
