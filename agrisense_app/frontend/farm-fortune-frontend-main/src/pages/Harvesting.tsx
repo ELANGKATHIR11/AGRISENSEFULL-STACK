@@ -160,37 +160,51 @@ export default function Harvesting() {
                     <div className="text-sm text-muted-foreground">
                         Set your farm location to compute daily reference ET0 and cache weather. Use this to size your tank and plan irrigation in dry spells.
                     </div>
-                    <div className="flex items-center gap-3">
-                        <label htmlFor="lat" className="text-sm">Lat</label>
-                        <input
-                            id="lat"
-                            name="lat"
-                            placeholder="e.g., 27.3"
-                            className="border px-3 py-2 rounded-md w-28"
-                            value={lat}
-                            onChange={(e) => setLat(e.target.value)}
-                            inputMode="decimal"
-                        />
-                        <label htmlFor="lon" className="text-sm">Lon</label>
-                        <input
-                            id="lon"
-                            name="lon"
-                            placeholder="e.g., 88.6"
-                            className="border px-3 py-2 rounded-md w-28"
-                            value={lon}
-                            onChange={(e) => setLon(e.target.value)}
-                            inputMode="decimal"
-                        />
-                        <Button onClick={refresh} disabled={busy} title="Fetch latest weather for the given location">
-                            {busy ? "Refreshing…" : "Refresh Weather"}
-                        </Button>
-                        <Button variant="secondary" onClick={getMyLocation} disabled={geoBusy} title="Use your current GPS location">
-                            {geoBusy ? "Getting location…" : "Use my location"}
-                        </Button>
-                        <label htmlFor="live" className="text-sm ml-2">Live location</label>
-                        <input id="live" name="live" type="checkbox" className="w-4 h-4" checked={live} onChange={(e) => setLive(e.target.checked)} />
-                        <label htmlFor="highacc" className="text-sm ml-2" title="Enable GPS for best accuracy (more battery)">High accuracy</label>
-                        <input id="highacc" name="highacc" type="checkbox" className="w-4 h-4" checked={highAcc} onChange={(e) => setHighAcc(e.target.checked)} />
+                    <div className="flex flex-wrap items-center gap-3">
+                        {/* Lat */}
+                        <div className="flex items-center gap-2 min-w-[180px] sm:min-w-0">
+                            <label htmlFor="lat" className="text-sm">Lat</label>
+                            <input
+                                id="lat"
+                                name="lat"
+                                placeholder="e.g., 27.3"
+                                className="border px-3 py-2 rounded-md w-full sm:w-28"
+                                value={lat}
+                                onChange={(e) => setLat(e.target.value)}
+                                inputMode="decimal"
+                            />
+                        </div>
+                        {/* Lon */}
+                        <div className="flex items-center gap-2 min-w-[180px] sm:min-w-0">
+                            <label htmlFor="lon" className="text-sm">Lon</label>
+                            <input
+                                id="lon"
+                                name="lon"
+                                placeholder="e.g., 88.6"
+                                className="border px-3 py-2 rounded-md w-full sm:w-28"
+                                value={lon}
+                                onChange={(e) => setLon(e.target.value)}
+                                inputMode="decimal"
+                            />
+                        </div>
+                        {/* Actions */}
+                        <div className="flex gap-2">
+                            <Button onClick={refresh} disabled={busy} title="Fetch latest weather for the given location">
+                                {busy ? "Refreshing…" : "Refresh Weather"}
+                            </Button>
+                            <Button variant="secondary" onClick={getMyLocation} disabled={geoBusy} title="Use your current GPS location">
+                                {geoBusy ? "Getting location…" : "Use my location"}
+                            </Button>
+                        </div>
+                        {/* Toggles */}
+                        <div className="flex items-center gap-2">
+                            <input id="live" name="live" type="checkbox" className="w-4 h-4" checked={live} onChange={(e) => setLive(e.target.checked)} />
+                            <label htmlFor="live" className="text-sm">Live location</label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <input id="highacc" name="highacc" type="checkbox" className="w-4 h-4" checked={highAcc} onChange={(e) => setHighAcc(e.target.checked)} />
+                            <label htmlFor="highacc" className="text-sm" title="Enable GPS for best accuracy (more battery)">High accuracy</label>
+                        </div>
                     </div>
                     <div className="text-xs text-muted-foreground">
                         Location access requires a secure context (HTTPS) on non-localhost sites. {geoMsg ?? ""}
