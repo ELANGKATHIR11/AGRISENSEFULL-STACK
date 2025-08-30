@@ -24,8 +24,53 @@ def get_conn():
         yield_potential REAL
     )
     ''')
+    # Water tank levels (for rainwater harvesting storage)
+    conn.execute('''
+    CREATE TABLE IF NOT EXISTS tank_levels(
+        ts TEXT, tank_id TEXT, level_pct REAL, volume_l REAL, rainfall_mm REAL
+    )
+    ''')
+    # Valve actuation history for irrigation control
+    conn.execute('''
+    CREATE TABLE IF NOT EXISTS valve_events(
+        ts TEXT, zone_id TEXT, action TEXT, duration_s REAL, status TEXT
+    )
+    ''')
+    # Alerts log (SMS/app)
+    conn.execute('''
+    CREATE TABLE IF NOT EXISTS alerts(
+        ts TEXT, zone_id TEXT, category TEXT, message TEXT, sent INTEGER
+    )
+    ''')
     conn.commit()
     return conn
+
+def reset_database() -> None:
+    """Erase all stored data by deleting the SQLite database file.
+    Tables will be recreated on next connection.
+    """
+    try:
+        if os.path.exists(DB_PATH):
+            # Close any lingering connections by opening and closing quickly
+            try:
+                conn = sqlite3.connect(DB_PATH)
+                conn.close()
+            except Exception:
+                pass
+            os.remove(DB_PATH)
+    except Exception:
+        # Fallback: truncate tables if file removal fails
+        try:
+            conn = sqlite3.connect(DB_PATH)
+            for tbl in ("readings", "reco_history", "tank_levels", "valve_events", "alerts"):
+                try:
+                    conn.execute(f"DELETE FROM {tbl}")
+                except Exception:
+                    pass
+            conn.commit()
+            conn.close()
+        except Exception:
+            pass
 
 def insert_reading(r: Dict[str, Any]):
     conn = get_conn()
@@ -72,6 +117,63 @@ def recent_reco(zone_id: str, limit: int = 100) -> List[Dict[str, Any]]:
         "SELECT * FROM reco_history WHERE zone_id=? ORDER BY ts DESC LIMIT ?",
         (zone_id, limit),
     )
+    cols = [c[0] for c in cur.description]
+    rows = [dict(zip(cols, row)) for row in cur.fetchall()]
+    conn.close()
+    return rows
+
+# --- Tank levels ---
+def insert_tank_level(tank_id: str, level_pct: float, volume_l: float, rainfall_mm: float = 0.0) -> None:
+    conn = get_conn()
+    ts = dt.datetime.now(dt.timezone.utc).isoformat()
+    conn.execute("INSERT INTO tank_levels VALUES (?,?,?,?,?)", (ts, tank_id, float(level_pct), float(volume_l), float(rainfall_mm)))
+    conn.commit()
+    conn.close()
+
+def latest_tank_level(tank_id: str = "T1") -> Optional[Dict[str, Any]]:
+    conn = get_conn()
+    cur = conn.execute("SELECT * FROM tank_levels WHERE tank_id=? ORDER BY ts DESC LIMIT 1", (tank_id,))
+    row = cur.fetchone()
+    result = None
+    if row is not None:
+        cols = [c[0] for c in cur.description]
+        result = dict(zip(cols, row))
+    conn.close()
+    return result
+
+# --- Valve events ---
+def log_valve_event(zone_id: str, action: str, duration_s: float = 0.0, status: str = "queued") -> None:
+    conn = get_conn()
+    ts = dt.datetime.now(dt.timezone.utc).isoformat()
+    conn.execute("INSERT INTO valve_events VALUES (?,?,?,?,?)", (ts, zone_id, action, float(duration_s), status))
+    conn.commit()
+    conn.close()
+
+def recent_valve_events(zone_id: Optional[str] = None, limit: int = 50) -> List[Dict[str, Any]]:
+    conn = get_conn()
+    if zone_id:
+        cur = conn.execute("SELECT * FROM valve_events WHERE zone_id=? ORDER BY ts DESC LIMIT ?", (zone_id, limit))
+    else:
+        cur = conn.execute("SELECT * FROM valve_events ORDER BY ts DESC LIMIT ?", (limit,))
+    cols = [c[0] for c in cur.description]
+    rows = [dict(zip(cols, row)) for row in cur.fetchall()]
+    conn.close()
+    return rows
+
+# --- Alerts ---
+def insert_alert(zone_id: str, category: str, message: str, sent: bool = False) -> None:
+    conn = get_conn()
+    ts = dt.datetime.now(dt.timezone.utc).isoformat()
+    conn.execute("INSERT INTO alerts VALUES (?,?,?,?,?)", (ts, zone_id, category, message, 1 if sent else 0))
+    conn.commit()
+    conn.close()
+
+def recent_alerts(zone_id: Optional[str] = None, limit: int = 50) -> List[Dict[str, Any]]:
+    conn = get_conn()
+    if zone_id:
+        cur = conn.execute("SELECT * FROM alerts WHERE zone_id=? ORDER BY ts DESC LIMIT ?", (zone_id, limit))
+    else:
+        cur = conn.execute("SELECT * FROM alerts ORDER BY ts DESC LIMIT ?", (limit,))
     cols = [c[0] for c in cur.description]
     rows = [dict(zip(cols, row)) for row in cur.fetchall()]
     conn.close()

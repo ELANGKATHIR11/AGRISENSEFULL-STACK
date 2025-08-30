@@ -2,57 +2,50 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ main ]
+    branches: [ "main" ]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   backend:
+    name: Backend tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-      - name: Install backend deps
-        working-directory: agrisense_app/backend
+          python-version: '3.9'
+      - name: Install backend dependencies
         run: |
           python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          pip install flake8
-      - name: Lint backend
-        working-directory: agrisense_app/backend
+          pip install -r agrisense_app/backend/requirements-dev.txt
+          pip install pytest
+      - name: Run backend smoke tests
+        env:
+          AGRISENSE_DISABLE_ML: '1'
         run: |
-          flake8 --max-line-length=120 --extend-ignore=E203 . || true
+          pytest -q scripts/test_backend_inprocess.py scripts/test_edge_endpoints.py
 
   frontend:
+    name: Frontend build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
-      - name: Install and build
+          cache: 'npm'
+          cache-dependency-path: agrisense_app/frontend/farm-fortune-frontend-main/package-lock.json
+      - name: Install and build frontend
         working-directory: agrisense_app/frontend/farm-fortune-frontend-main
         run: |
           npm ci || npm install
-          npm run build || npm run -s build || true
-
-  smoke:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - name: Install backend deps
-        working-directory: agrisense_app/backend
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-      - name: Run API smoke
-        working-directory: agrisense_app
-        run: |
-          uvicorn backend.main:app --port 8004 &
-          sleep 3
-          python scripts/smoke_test.py || true
+          npm run build

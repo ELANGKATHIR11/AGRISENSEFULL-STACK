@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { Sprout, Home, Zap, Wheat, Settings, LineChart } from "lucide-react";
+import { Sprout, Home, Zap, Wheat, Settings, LineChart, Droplets, CloudRain } from "lucide-react";
 
 const Navigation = () => {
   const navItems = [
@@ -8,7 +8,9 @@ const Navigation = () => {
     { to: "/soil-analysis", icon: Sprout, label: "Soil Analysis" },
     { to: "/crops", icon: Wheat, label: "Crops" },
     { to: "/live", icon: Zap, label: "Live" },
-  { to: "/impact", icon: LineChart, label: "Impact" },
+    { to: "/irrigation", icon: Droplets, label: "Irrigation" },
+    { to: "/harvesting", icon: CloudRain, label: "Harvesting" },
+    { to: "/impact", icon: LineChart, label: "Impact" },
     { to: "/admin", icon: Settings, label: "Admin" },
   ];
 
@@ -34,10 +36,9 @@ const Navigation = () => {
                 key={item.to}
                 to={item.to}
                 className={({ isActive }) =>
-                  `flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-300 transform hover:scale-105 ${
-                    isActive
-                      ? "bg-gradient-primary text-primary-foreground shadow-glow animate-pulse-glow"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary hover:shadow-soft"
+                  `flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-300 transform hover:scale-105 ${isActive
+                    ? "bg-gradient-primary text-primary-foreground shadow-glow animate-pulse-glow"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary hover:shadow-soft"
                   }`
                 }
               >

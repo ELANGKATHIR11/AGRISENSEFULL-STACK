@@ -17,6 +17,7 @@ import {
   Zap
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { api } from "@/lib/api";
 
 interface SystemMetric {
   label: string;
@@ -97,6 +98,20 @@ const Admin = () => {
     });
   };
 
+  const handleResetAll = async () => {
+    if (!confirm("This will erase ALL stored data (readings, tank levels, events, alerts). Continue?")) return;
+    setLoading(true);
+    try {
+      await api.adminReset();
+      toast({ title: "All data erased", description: "Storage reset completed." });
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      toast({ title: "Reset failed", description: msg, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "success": return <CheckCircle2 className="w-4 h-4 text-primary" />;
@@ -167,6 +182,10 @@ const Admin = () => {
                   <Button variant="outline">
                     <Settings className="w-4 h-4 mr-2" />
                     Config
+                  </Button>
+                  <Button onClick={handleResetAll} variant="destructive" disabled={loading}>
+                    <Database className="w-4 h-4 mr-2" />
+                    Erase All Data
                   </Button>
                 </div>
               </CardContent>

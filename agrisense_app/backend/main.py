@@ -1,8 +1,10 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.responses import FileResponse, RedirectResponse, JSONResponse
 from fastapi import HTTPException
+import logging
+import time
 import os
 import sys
 import csv
@@ -14,25 +16,106 @@ from pydantic import BaseModel
 try:
     from .models import SensorReading, Recommendation
     from .engine import RecoEngine
-    from .data_store import insert_reading, recent, insert_reco_snapshot, recent_reco
+    from .data_store import (
+        insert_reading, recent, insert_reco_snapshot, recent_reco,
+        insert_tank_level, latest_tank_level,
+        log_valve_event, recent_valve_events,
+        insert_alert, recent_alerts, reset_database,
+    )
     from .smart_farming_ml import SmartFarmingRecommendationSystem
+    from .weather import fetch_and_cache_weather, read_latest_from_cache
 except ImportError:  # no parent package context
     from models import SensorReading, Recommendation
     from engine import RecoEngine
-    from data_store import insert_reading, recent, insert_reco_snapshot, recent_reco
+    from data_store import (
+        insert_reading, recent, insert_reco_snapshot, recent_reco,
+        insert_tank_level, latest_tank_level,
+        log_valve_event, recent_valve_events,
+        insert_alert, recent_alerts, reset_database,
+    )
     from smart_farming_ml import SmartFarmingRecommendationSystem
+    from weather import fetch_and_cache_weather, read_latest_from_cache
+
+# Load environment from .env if present (development convenience)
+try:
+    from dotenv import load_dotenv  # type: ignore
+    load_dotenv()
+except Exception:
+    pass
 
 app = FastAPI(title="Agri-Sense API", version="0.2.0")
 
+# Basic structured logger
+logger = logging.getLogger("agrisense")
+if not logger.handlers:
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+
+# Log request durations
+@app.middleware("http")
+async def log_requests(request: Request, call_next):  # type: ignore[no-redef]
+    start = time.perf_counter()
+    response = await call_next(request)
+    duration_ms = (time.perf_counter() - start) * 1000.0
+    logger.info("%s %s -> %s in %.1fms", request.method, request.url.path, response.status_code, duration_ms)
+    return response
+
+# Consistent JSON error shapes
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):  # type: ignore[no-redef]
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "status": exc.status_code,
+            "error": exc.detail if isinstance(exc.detail, str) else str(exc.detail),
+            "path": request.url.path,
+        },
+    )
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):  # type: ignore[no-redef]
+    logger.exception("Unhandled error on %s %s", request.method, request.url.path)
+    return JSONResponse(
+        status_code=500,
+        content={
+            "status": 500,
+            "error": "Internal Server Error",
+            "path": request.url.path,
+        },
+    )
+
+# CORS: allow all in dev by default; allow configuring specific origins via env
+_origins_env = os.getenv("ALLOWED_ORIGINS", "*")
+_allow_origins = [o.strip() for o in _origins_env.split(",") if o.strip()] or ["*"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# Optionally mount Flask-based storage server under /storage via WSGI
+try:
+    from starlette.middleware.wsgi import WSGIMiddleware  # type: ignore
+    try:
+        if __package__:
+            from .storage_server import create_storage_app  # type: ignore
+        else:
+            from storage_server import create_storage_app  # type: ignore
+        _flask_app = create_storage_app()  # type: ignore[assignment]
+        app.mount("/storage", WSGIMiddleware(_flask_app))  # type: ignore[arg-type]
+    except Exception:
+        # Flask not installed or failed to initialize; ignore silently
+        pass
+except Exception:
+    pass
+
 engine = RecoEngine()
+try:
+    from .notifier import send_alert  # type: ignore
+except Exception:
+    def send_alert(title: str, message: str, extra: Optional[Dict[str, Any]] = None) -> bool:  # type: ignore
+        return False
 
 # ---- Optional Edge integration (SensorReader) ----
 # Allow importing the minimal edge module without extra setup by adding repo root to sys.path.
@@ -78,6 +161,29 @@ def live() -> Health:
 def ready() -> Dict[str, Any]:
     # Ready if engine constructed and models (optional) loaded fine
     return {"status": "ready", "water_model": engine.water_model is not None, "fert_model": engine.fert_model is not None}
+
+@app.post("/admin/reset")
+def admin_reset() -> Dict[str, bool]:
+    """Erase all stored data. Irreversible."""
+    reset_database()
+    return {"ok": True}
+
+
+@app.post("/admin/weather/refresh")
+def admin_weather_refresh(
+    lat: float = float(os.getenv("AGRISENSE_LAT", "27.3")),
+    lon: float = float(os.getenv("AGRISENSE_LON", "88.6")),
+    days: int = 7,
+    cache_path: str = os.getenv("AGRISENSE_WEATHER_CACHE", "weather_cache.csv"),
+) -> Dict[str, Any]:
+    path = fetch_and_cache_weather(lat=lat, lon=lon, days=days, cache_path=cache_path)
+    latest = read_latest_from_cache(path)
+    return {"ok": True, "cache_path": str(path), "latest": latest}
+
+@app.post("/admin/notify")
+def admin_notify(title: str = "Test Alert", message: str = "This is a test notification.") -> Dict[str, Any]:
+    ok = send_alert(title, message)
+    return {"ok": ok}
 
 
 @app.get("/edge/health")
@@ -176,6 +282,35 @@ class SuggestCropResponse(BaseModel):
     soil_type: str
     top: List[CropSuggestion]
 
+# --- Sikkim smart irrigation additions ---
+class TankLevel(BaseModel):
+    tank_id: str = "T1"
+    level_pct: Optional[float] = None
+    volume_l: Optional[float] = None
+    rainfall_mm: Optional[float] = None
+
+class TankStatus(BaseModel):
+    tank_id: str
+    level_pct: Optional[float] = None
+    volume_l: Optional[float] = None
+    last_update: Optional[str] = None
+
+class IrrigationCommand(BaseModel):
+    zone_id: str = "Z1"
+    duration_s: Optional[int] = None  # required for start
+    force: bool = False
+
+class IrrigationAck(BaseModel):
+    ok: bool
+    status: str
+    note: Optional[str] = None
+
+class AlertItem(BaseModel):
+    zone_id: str = "Z1"
+    category: str
+    message: str
+    sent: bool = False
+
 @app.post("/suggest_crop")
 def suggest_crop(payload: Dict[str, Any]) -> SuggestCropResponse:
     """
@@ -234,6 +369,90 @@ def suggest_crop(payload: Dict[str, Any]) -> SuggestCropResponse:
         recs.append(item)
     # Return compact top items
     return SuggestCropResponse(soil_type=soil_ds, top=recs[:5])
+
+# --- Tank and irrigation endpoints ---
+@app.post("/tank/level")
+def post_tank_level(body: TankLevel) -> Dict[str, bool]:
+    insert_tank_level(body.tank_id, float(body.level_pct or 0.0), float(body.volume_l or 0.0), float(body.rainfall_mm or 0.0))
+    return {"ok": True}
+
+@app.get("/tank/status")
+def get_tank_status(tank_id: str = "T1") -> TankStatus:
+    row = latest_tank_level(tank_id) or {}
+    return TankStatus(
+        tank_id=tank_id,
+        level_pct=cast(Optional[float], row.get("level_pct")),
+        volume_l=cast(Optional[float], row.get("volume_l")),
+        last_update=cast(Optional[str], row.get("ts")),
+    )
+
+@app.get("/valves/events")
+def get_valve_events(zone_id: Optional[str] = None, limit: int = 50) -> Dict[str, Any]:
+    return {"items": recent_valve_events(zone_id, limit)}
+
+def _has_water_for(liters: float) -> bool:
+    row = latest_tank_level("T1")
+    if not row:
+        return True  # assume connected to mains
+    try:
+        vol = float(row.get("volume_l") or 0.0)
+        return vol >= max(0.0, liters)
+    except Exception:
+        return True
+
+try:
+    from .mqtt_publish import publish_command  # type: ignore
+except Exception:
+    def publish_command(zone_id: str, payload: Dict[str, Any]) -> bool:  # type: ignore
+        return False
+
+@app.post("/irrigation/start")
+def irrigation_start(cmd: IrrigationCommand) -> IrrigationAck:
+    # Compute water need for zone and enforce tank constraint unless forced
+    # Approximate: use last reading for zone if any; else default reading
+    need: float = 20.0 * engine.defaults.get("area_m2", 100)  # fallback
+    try:
+        last = recent(cmd.zone_id, 1)
+        if last:
+            need = float(engine.recommend(last[0]).get("water_liters", need))
+    except Exception:
+        pass
+    if not cmd.force and not _has_water_for(need):
+        msg = f"Tank insufficient for planned irrigation: need ~{need:.0f} L"
+        insert_alert(cmd.zone_id, "water_low", msg)
+        try:
+            send_alert("Water low", msg, {"zone_id": cmd.zone_id, "need_l": round(need, 1)})
+        except Exception:
+            pass
+        log_valve_event(cmd.zone_id, "start", float(cmd.duration_s or 0), status="blocked")
+        return IrrigationAck(ok=False, status="blocked", note="Insufficient water in tank")
+    duration = int(cmd.duration_s or max(1, int(need / max(1e-6, engine.pump_flow_lpm)) * 60))
+    ok = publish_command(cmd.zone_id, {"action": "open", "duration_s": duration})
+    log_valve_event(cmd.zone_id, "start", float(duration), status="sent" if ok else "queued")
+    try:
+        send_alert("Irrigation start", f"Zone {cmd.zone_id} for {duration}s", {"zone_id": cmd.zone_id, "duration_s": duration})
+    except Exception:
+        pass
+    return IrrigationAck(ok=ok, status="sent" if ok else "queued", note=f"Duration {duration}s")
+
+@app.post("/irrigation/stop")
+def irrigation_stop(cmd: IrrigationCommand) -> IrrigationAck:
+    ok = publish_command(cmd.zone_id, {"action": "close"})
+    log_valve_event(cmd.zone_id, "stop", 0.0, status="sent" if ok else "queued")
+    try:
+        send_alert("Irrigation stop", f"Zone {cmd.zone_id}", {"zone_id": cmd.zone_id})
+    except Exception:
+        pass
+    return IrrigationAck(ok=ok, status="sent" if ok else "queued")
+
+@app.get("/alerts")
+def get_alerts(zone_id: Optional[str] = None, limit: int = 50) -> Dict[str, Any]:
+    return {"items": recent_alerts(zone_id, limit)}
+
+@app.post("/alerts")
+def post_alert(alert: AlertItem) -> Dict[str, bool]:
+    insert_alert(alert.zone_id, alert.category, alert.message, alert.sent)
+    return {"ok": True}
 
 class PlantItem(BaseModel):
     value: str
@@ -488,3 +707,9 @@ def serve_spa(path: str):
         if os.path.exists(index_file):
             return FileResponse(index_file)
     raise HTTPException(status_code=404, detail="UI not found")
+
+# Accept '/api/*' paths by redirecting to the same path without the '/api' prefix
+@app.api_route("/api/{path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"])  # type: ignore[list-item]
+def api_prefix_redirect(path: str) -> RedirectResponse:
+    # Preserve path and querystring; FastAPI/Starlette keeps query intact on redirect
+    return RedirectResponse(url=f"/{path}", status_code=307)

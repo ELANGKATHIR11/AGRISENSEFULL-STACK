@@ -1,8 +1,7 @@
 {
-  "$schema": "https://json.schemastore.org/pyrightconfig.json",
   "pythonVersion": "3.9",
-  "venvPath": "",
-  "venv": "",
+  "venvPath": "D:/AGRISENSE FULL-STACK",
+  "venv": ".venv",
   "typeCheckingMode": "basic",
   "include": [
     "agrisense_app",

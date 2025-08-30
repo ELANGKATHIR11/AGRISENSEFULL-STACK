@@ -3,6 +3,10 @@ import yaml
 from typing import Dict, Any, Tuple, List, Optional, Union
 import numpy as np  # type: ignore
 from joblib import load  # type: ignore
+try:
+    from . import et0 as et
+except Exception:  # fallback when running without package context
+    import et0 as et  # type: ignore
 
 HERE: str = os.path.dirname(__file__)
 
@@ -147,6 +151,25 @@ class RecoEngine:
 
         # Baseline water
         water_lpm2: float = self._baseline_water_lpm2(pcfg, soil_type, moisture, temp)
+
+        # Optional climate adjustment via ET0 (Hargreaves) if minimal inputs present.
+        # Provide latitude and today’s Tmax/Tmin via env or defaults to tune baseline slightly.
+        try:
+            lat = float(os.getenv("AGRISENSE_LAT", "27.3"))  # Sikkim approx
+            # Prefer reading-provided extremes if available
+            tmax = float(os.getenv("AGRISENSE_TMAX_C", str(max(temp, float(reading.get("tmax_c", temp))))))
+            tmin = float(os.getenv("AGRISENSE_TMIN_C", str(min(temp, float(reading.get("tmin_c", temp-5))))))
+            tmean = (tmax + tmin) / 2.0
+            import datetime as _dt
+            j = int(os.getenv("AGRISENSE_DOY", str((_dt.date.today() - _dt.date(_dt.date.today().year,1,1)).days + 1)))
+            ra = et.extraterrestrial_radiation_ra(lat, j)
+            et0 = et.et0_hargreaves(tmin, tmax, tmean, ra)
+            # Convert ET0 mm/day to an adjustment factor around 1.0 using a mild scaling
+            # Typical ET0 3..7 mm/day; scale 0.9..1.2 range
+            adj = 1.0 + max(-0.2, min(0.2, (et0 - 5.0) * 0.05))
+            water_lpm2 *= adj
+        except Exception:
+            pass
 
         # ML water blend
         soil_ix: int = {"sand": 0, "loam": 1, "clay": 2}.get(soil_type.strip().lower(), 1)

@@ -1,16 +1,18 @@
 {
-  "python.defaultInterpreterPath": "C:/Users/elang_znkyeeo/AppData/Local/Microsoft/WindowsApps/PythonSoftwareFoundation.Python.3.9_qbz5n2kfra8p0/python.exe",
-  "python.venvPath": "",
-  "python.analysis.extraPaths": [
-    "D:/AGRISENSE FULL-STACK/AGRISENSEFULL-STACK",
-    "D:/AGRISENSE FULL-STACK/AGRISENSEFULL-STACK/agrisense_app",
-    "D:/AGRISENSE FULL-STACK/AGRISENSEFULL-STACK/agrisense_pi_edge_minimal"
-  ],
-  "python.analysis.diagnosticMode": "workspace",
+  "python.defaultInterpreterPath": "D:/AGRISENSE FULL-STACK/.venv/Scripts/python.exe",
+  "python.venvPath": "D:/AGRISENSE FULL-STACK",
   "python.analysis.typeCheckingMode": "basic",
   "python.analysis.stubPath": "typings",
   "python.testing.pytestEnabled": true,
   "python.testing.unittestEnabled": false,
   "python.testing.pytestArgs": ["scripts"],
-  "terminal.integrated.defaultProfile.windows": "PowerShell"
+  "terminal.integrated.defaultProfile.windows": "PowerShell",
+  "python.terminal.activateEnvironment": true,
+  "python.languageServer": "Pylance",
+  "python.analysis.diagnosticMode": "workspace",
+  "python.analysis.extraPaths": [
+    "D:/AGRISENSE FULL-STACK/AGRISENSEFULL-STACK",
+    "D:/AGRISENSE FULL-STACK/AGRISENSEFULL-STACK/agrisense_app",
+    "D:/AGRISENSE FULL-STACK/AGRISENSEFULL-STACK/agrisense_pi_edge_minimal"
+  ]
 }

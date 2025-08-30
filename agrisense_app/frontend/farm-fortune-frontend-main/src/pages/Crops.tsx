@@ -90,6 +90,9 @@ const Crops = () => {
                   ))}
                 </div>
               </div>
+              <div className="mt-3 text-xs text-muted-foreground text-right">
+                Showing {filteredCrops.length} of {crops.length} crops
+              </div>
             </CardContent>
           </Card>
         </div>
