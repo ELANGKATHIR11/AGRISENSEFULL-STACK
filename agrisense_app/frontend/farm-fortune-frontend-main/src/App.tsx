@@ -17,12 +17,16 @@ import Harvesting from "@/pages/Harvesting";
 
 const queryClient = new QueryClient();
 
+// Use '/ui' only in production when the UI is served by FastAPI under /ui.
+// In Vite dev (http://localhost:8080), use root basename to avoid route mismatch.
+const routerBasename = import.meta.env.PROD ? "/ui" : "/";
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter basename="/ui">
+      <BrowserRouter basename={routerBasename}>
         <div className="min-h-screen bg-background">
           <Navigation />
           <Routes>
