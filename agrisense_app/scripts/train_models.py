@@ -19,7 +19,11 @@ def main() -> None:
         sys.path.insert(0, BACKEND)
 
     # Paths
+    # Prefer Sikkim dataset if present, else India dataset
+    sikkim_csv = os.path.join(REPO, 'sikkim_crop_dataset.csv')
     csv_path = os.path.join(BACKEND, 'india_crop_dataset.csv')
+    if os.path.exists(sikkim_csv):
+        csv_path = sikkim_csv
     if args.csv_override:
         # Accept absolute or relative paths; resolve relative to workspace root
         csv_candidate = args.csv_override

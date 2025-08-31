@@ -1,4 +1,52 @@
 {
 	"version": "2.0.0",
-	"tasks": []
+	"tasks": [
+		{
+			"label": "Run Backend (Uvicorn)",
+			"type": "shell",
+			"command": "cd '${workspaceFolder}/AGRISENSEFULL-STACK'; .venv\\Scripts\\python.exe -m uvicorn agrisense_app.backend.main:app --reload --port 8004",
+			"group": "build",
+			"dependsOn": "Prepare Backend Env"
+		},
+		{
+			"label": "Run Frontend (Vite)",
+			"type": "shell",
+			"command": "cd '${workspaceFolder}/AGRISENSEFULL-STACK/agrisense_app/frontend/farm-fortune-frontend-main'; npm run dev",
+			"isBackground": true,
+			"dependsOn": "Prepare Frontend Env"
+		},
+		{
+			"label": "Prepare Frontend Env",
+			"type": "shell",
+			"command": "cd '${workspaceFolder}/AGRISENSEFULL-STACK/agrisense_app/frontend/farm-fortune-frontend-main'; if (!(Test-Path node_modules)) { if (Test-Path package-lock.json) { npm ci } else { npm install } }",
+			"problemMatcher": []
+		},
+		{
+			"label": "Prepare Backend Env",
+			"type": "shell",
+			"command": "cd '${workspaceFolder}/AGRISENSEFULL-STACK'; if (!(Test-Path .venv)) { if (Get-Command py -ErrorAction SilentlyContinue) { py -3 -m venv .venv } else { python -m venv .venv } }; .venv\\Scripts\\python.exe -m pip install -U pip; .venv\\Scripts\\pip.exe install -r agrisense_app/backend/requirements.txt",
+			"problemMatcher": []
+		},
+		{
+			"label": "Start Dev (Backend+Frontend)",
+			"dependsOn": [
+				"Run Backend (Uvicorn)",
+				"Run Frontend (Vite)"
+			],
+			"dependsOrder": "parallel",
+			"group": "build",
+			"problemMatcher": []
+		},
+		{
+			"label": "Train ML Models",
+			"type": "shell",
+			"command": "cd '${workspaceFolder}/AGRISENSEFULL-STACK'; .venv\\Scripts\\python.exe agrisense_app/scripts/train_models.py"
+		},
+		{
+			"label": "Train TF Models",
+			"type": "shell",
+			"command": "cd '${workspaceFolder}/AGRISENSEFULL-STACK'; .venv\\Scripts\\python.exe agrisense_app/backend/tf_train.py",
+			"problemMatcher": []
+		}
+	]
 }

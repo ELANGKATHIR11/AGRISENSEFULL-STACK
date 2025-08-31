@@ -3,7 +3,7 @@ from typing import Any, Dict, List, TypedDict, cast
 
 import requests  # type: ignore
 
-BASE = "http://127.0.0.1:8006"
+BASE = "http://127.0.0.1:8004"
 
 
 def wait_ready(timeout: float = 5.0) -> None:

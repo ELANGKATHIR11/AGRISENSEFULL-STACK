@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useI18n } from "@/i18n";
 
 // Simple mini chart using inline SVG to avoid extra deps.
 function Sparkline({ points, color = "#16a34a" }: { points: number[]; color?: string }) {
@@ -44,6 +45,7 @@ type RecentItem = {
 };
 
 export default function LiveStats() {
+  const { t } = useI18n();
   const [zone, setZone] = useState("Z1");
   const [rows, setRows] = useState<RecentItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -104,13 +106,13 @@ export default function LiveStats() {
     if (edgeOk === prevEdgeOk.current) return;
     if (prevEdgeOk.current !== null) {
       if (edgeOk) {
-        toast({ title: "Edge connected", description: "Edge reader is available." });
+        toast({ title: t("edge_label") + " " + t("connected"), description: t("edge_label") + " " + t("available") });
       } else if (edgeOk === false) {
-        toast({ title: "Edge unavailable", description: "Edge reader not detected." });
+        toast({ title: t("edge_label") + " " + t("unavailable"), description: t("edge_label") + " " + t("not_detected") });
       }
     }
     prevEdgeOk.current = edgeOk;
-  }, [edgeOk, toast]);
+  }, [edgeOk, toast, t]);
 
   const doCapture = async () => {
     setCapturing(true);
@@ -140,13 +142,13 @@ export default function LiveStats() {
   return (
     <div className="container mx-auto p-4 space-y-4">
       <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">Live Farm Stats</h1>
+        <h1 className="text-2xl font-semibold">{t("live_farm_stats")}</h1>
         <div className="flex items-center gap-2">
           <div className={`text-sm ${edgeOk === false ? "text-red-600" : edgeOk === true ? "text-green-600" : "text-muted-foreground"}`}>
-            Edge: {edgeOk === null ? "…" : edgeOk ? "connected" : "unavailable"}
+            {t("edge_label")}: {edgeOk === null ? "…" : edgeOk ? t("connected") : t("unavailable")}
           </div>
           <Select value={zone} onValueChange={setZone}>
-            <SelectTrigger className="w-32"><SelectValue placeholder="Zone" /></SelectTrigger>
+            <SelectTrigger className="w-32"><SelectValue placeholder={t("zone_label")} /></SelectTrigger>
             <SelectContent>
               <SelectItem value="Z1">Z1</SelectItem>
               <SelectItem value="Z2">Z2</SelectItem>
@@ -154,7 +156,7 @@ export default function LiveStats() {
             </SelectContent>
           </Select>
           <Button disabled={capturing || edgeOk === false} onClick={doCapture}>
-            {capturing ? "Capturing…" : "Capture now"}
+            {capturing ? t("capturing") : t("capture_now")}
           </Button>
         </div>
       </div>
@@ -163,10 +165,10 @@ export default function LiveStats() {
 
       <Tabs defaultValue="moisture" className="w-full">
         <TabsList>
-          <TabsTrigger value="moisture">Moisture %</TabsTrigger>
-          <TabsTrigger value="ph">Soil pH</TabsTrigger>
-          <TabsTrigger value="temp">Temperature °C</TabsTrigger>
-          <TabsTrigger value="ec">EC dS/m</TabsTrigger>
+          <TabsTrigger value="moisture">{t("moisture_pct")}</TabsTrigger>
+          <TabsTrigger value="ph">{t("soil_ph")}</TabsTrigger>
+          <TabsTrigger value="temp">{t("temperature_c")}</TabsTrigger>
+          <TabsTrigger value="ec">{t("ec_ds_m")}</TabsTrigger>
         </TabsList>
         <TabsContent value="moisture">
           <Card className="p-4">
@@ -192,7 +194,8 @@ export default function LiveStats() {
 
       <Card className="p-4">
         <div className="text-sm text-muted-foreground">
-          These live graphs help showcase reduced water usage and fertilizer needs over time as soil moisture stabilizes and pH stays in the optimal band. Add more metrics from recommendations if you persist them.
+          {/* Translators: helper text for live stats page */}
+          These live graphs help showcase reduced water usage and fertilizer needs over time as soil moisture stabilizes and pH stays in the optimal band.
         </div>
       </Card>
     </div>

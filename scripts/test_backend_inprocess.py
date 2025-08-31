@@ -47,6 +47,8 @@ def test_plants_and_recommend() -> None:
     data = r2.json()
     for key in ("water_liters", "fert_n_g", "fert_p_g", "fert_k_g"):
         assert key in data
+    # New field from plan
+    assert data.get("water_source") in ("tank", "groundwater", None)
 
 
 def test_crops_full_list() -> None:
@@ -55,7 +57,23 @@ def test_crops_full_list() -> None:
     payload = cast(Dict[str, Any], r.json())
     items = cast(List[Dict[str, Any]], payload.get("items", []))
     assert isinstance(items, list)
-    assert len(items) >= 40, f"Expected >= 40 crops, got {len(items)}"
+    # Accept smaller datasets (e.g., Sikkim) with at least a few entries
+    assert len(items) >= 5, f"Expected >= 5 crops, got {len(items)}"
+
+
+def test_tank_and_edge_ingest() -> None:
+    # Post a tank level
+    r = client.post("/tank/level", json={"tank_id": "T1", "level_pct": 50.0, "volume_l": 500.0})
+    assert r.status_code == 200
+    # Get status
+    r2 = client.get("/tank/status", params={"tank_id": "T1"})
+    assert r2.status_code == 200
+    st = r2.json()
+    assert st.get("level_pct") is not None
+    # Edge ingest minimal payload
+    payload = {"zone_id": "Z9", "soil_moisture": 30, "temp_c": 26.5, "ph": 6.7, "ec": 1.1, "tank_percent": 50}
+    r3 = client.post("/edge/ingest", json=payload)
+    assert r3.status_code == 200
 
 
 if __name__ == "__main__":

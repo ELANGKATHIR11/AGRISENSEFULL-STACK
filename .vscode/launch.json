@@ -1,0 +1,25 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Backend (Uvicorn)",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "uvicorn",
+            "args": [
+                "agrisense_app.backend.main:app",
+                "--host",
+                "127.0.0.1",
+                "--port",
+                "8004"
+            ],
+            "cwd": "${workspaceFolder}/AGRISENSEFULL-STACK",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "preLaunchTask": "Prepare Backend Env",
+            "env": {
+                "PYTHONUNBUFFERED": "1"
+            }
+        }
+    ]
+}

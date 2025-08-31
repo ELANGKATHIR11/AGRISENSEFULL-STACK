@@ -13,18 +13,39 @@ import csv
 import json
 import uuid
 import threading
-from typing import Dict, Any, List, Optional, Union, cast, Protocol, runtime_checkable, Set
-from pydantic import BaseModel
+from typing import (
+    Dict,
+    Any,
+    List,
+    Optional,
+    Union,
+    cast,
+    Protocol,
+    runtime_checkable,
+    Set,
+)
+from pydantic import BaseModel, Field
 
 # Support running as a package (uvicorn backend.main:app) or as a module from backend folder (uvicorn main:app)
 try:
     from .models import SensorReading, Recommendation
     from .engine import RecoEngine
     from .data_store import (
-        insert_reading, recent, insert_reco_snapshot, recent_reco,
-        insert_tank_level, latest_tank_level,
-        log_valve_event, recent_valve_events,
-        insert_alert, recent_alerts, reset_database,
+        insert_reading,
+        recent,
+        insert_reco_snapshot,
+        recent_reco,
+        insert_tank_level,
+        latest_tank_level,
+        log_valve_event,
+        recent_valve_events,
+        insert_alert,
+        recent_alerts,
+        reset_database,
+        rainwater_summary,
+        insert_rainwater_entry,
+        recent_rainwater,
+        mark_alert_ack,
     )
     from .smart_farming_ml import SmartFarmingRecommendationSystem
     from .weather import fetch_and_cache_weather, read_latest_from_cache
@@ -32,10 +53,21 @@ except ImportError:  # no parent package context
     from models import SensorReading, Recommendation
     from engine import RecoEngine
     from data_store import (
-        insert_reading, recent, insert_reco_snapshot, recent_reco,
-        insert_tank_level, latest_tank_level,
-        log_valve_event, recent_valve_events,
-        insert_alert, recent_alerts, reset_database,
+        insert_reading,
+        recent,
+        insert_reco_snapshot,
+        recent_reco,
+        insert_tank_level,
+        latest_tank_level,
+        log_valve_event,
+        recent_valve_events,
+        insert_alert,
+        recent_alerts,
+        reset_database,
+        rainwater_summary,
+        insert_rainwater_entry,
+        recent_rainwater,
+        mark_alert_ack,
     )
     from smart_farming_ml import SmartFarmingRecommendationSystem
     from weather import fetch_and_cache_weather, read_latest_from_cache
@@ -43,6 +75,7 @@ except ImportError:  # no parent package context
 # Load environment from .env if present (development convenience)
 try:
     from dotenv import load_dotenv  # type: ignore
+
     load_dotenv()
 except Exception:
     pass
@@ -52,7 +85,9 @@ app = FastAPI(title="Agri-Sense API", version="0.2.0")
 # Basic structured logger
 logger = logging.getLogger("agrisense")
 if not logger.handlers:
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s"
+    )
 
 # In-process counters for a lightweight /metrics endpoint
 _metrics_lock = threading.Lock()
@@ -62,6 +97,7 @@ _metrics: Dict[str, Any] = {
     "errors_total": 0,
     "by_path": {},  # path -> count
 }
+
 
 # Request ID + timing + counters middleware
 @app.middleware("http")
@@ -85,8 +121,16 @@ async def log_requests(request: Request, call_next):  # type: ignore[no-redef]
             _metrics["errors_total"] += 1
     response.headers.setdefault("X-Request-ID", req_id)
     response.headers.setdefault("Server-Timing", f"app;dur={duration_ms:.1f}")
-    logger.info("%s %s -> %s in %.1fms rid=%s", request.method, request.url.path, status, duration_ms, req_id)
+    logger.info(
+        "%s %s -> %s in %.1fms rid=%s",
+        request.method,
+        request.url.path,
+        status,
+        duration_ms,
+        req_id,
+    )
     return response
+
 
 # Consistent JSON error shapes
 @app.exception_handler(HTTPException)
@@ -100,6 +144,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):  # type:
         },
     )
 
+
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(request: Request, exc: Exception):  # type: ignore[no-redef]
     logger.exception("Unhandled error on %s %s", request.method, request.url.path)
@@ -111,6 +156,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception):  # type
             "path": request.url.path,
         },
     )
+
 
 # CORS: allow all in dev by default; allow configuring specific origins via env
 _origins_env = os.getenv("ALLOWED_ORIGINS", "*")
@@ -129,6 +175,7 @@ app.add_middleware(GZipMiddleware, minimum_size=500)
 # Optionally mount Flask-based storage server under /storage via WSGI
 try:
     from starlette.middleware.wsgi import WSGIMiddleware  # type: ignore
+
     try:
         if __package__:
             from .storage_server import create_storage_app  # type: ignore
@@ -142,12 +189,33 @@ try:
 except Exception:
     pass
 
+# --- Admin protection helper (defined early to allow dependency use) ---
+
+
+class AdminGuard:
+    def __init__(self, env_var: str = "AGRISENSE_ADMIN_TOKEN") -> None:
+        self.env_var = env_var
+
+    def __call__(self, x_admin_token: Optional[str] = Header(default=None)) -> None:
+        token = os.getenv(self.env_var)
+        if not token:
+            return  # no guard configured
+        if not x_admin_token or x_admin_token != token:
+            raise HTTPException(
+                status_code=401, detail="Unauthorized: missing or invalid admin token"
+            )
+
+
+require_admin = AdminGuard()
+
 engine = RecoEngine()
 try:
     from .notifier import send_alert  # type: ignore
 except Exception:
+
     def send_alert(title: str, message: str, extra: Optional[Dict[str, Any]] = None) -> bool:  # type: ignore
         return False
+
 
 # ---- Optional Edge integration (SensorReader) ----
 # Allow importing the minimal edge module without extra setup by adding repo root to sys.path.
@@ -163,6 +231,7 @@ try:
     # Import SensorReader and util from the edge module if available
     from agrisense_pi_edge_minimal.edge.reader import SensorReader  # type: ignore[reportMissingImports]
     from agrisense_pi_edge_minimal.edge.util import load_config  # type: ignore[reportMissingImports]
+
     _edge_available = True
 except Exception:
     SensorReader = None  # type: ignore[assignment]
@@ -171,28 +240,42 @@ except Exception:
 
 _edge_reader: Optional["SensorReader"] = None  # type: ignore[name-defined]
 
+
 @runtime_checkable
 class HasCropRecommender(Protocol):
-    def get_crop_recommendations(self, sensor_data: Dict[str, Union[float, str]]) -> Optional[List[Dict[str, Any]]]:
-        ...
+    def get_crop_recommendations(
+        self, sensor_data: Dict[str, Union[float, str]]
+    ) -> Optional[List[Dict[str, Any]]]: ...
 
-farming_system: Optional[HasCropRecommender] = None  # lazy init to avoid longer cold start
+
+farming_system: Optional[HasCropRecommender] = (
+    None  # lazy init to avoid longer cold start
+)
+
 
 class Health(BaseModel):
     status: str
+
 
 @app.get("/health")
 def health() -> Health:
     return Health(status="ok")
 
+
 @app.get("/live")
 def live() -> Health:
     return Health(status="live")
 
+
 @app.get("/ready")
 def ready() -> Dict[str, Any]:
     # Ready if engine constructed and models (optional) loaded fine
-    return {"status": "ready", "water_model": engine.water_model is not None, "fert_model": engine.fert_model is not None}
+    return {
+        "status": "ready",
+        "water_model": engine.water_model is not None,
+        "fert_model": engine.fert_model is not None,
+    }
+
 
 @app.post("/admin/reset")
 def admin_reset(_=Depends(require_admin)) -> Dict[str, bool]:
@@ -213,8 +296,13 @@ def admin_weather_refresh(
     latest = read_latest_from_cache(path)
     return {"ok": True, "cache_path": str(path), "latest": latest}
 
+
 @app.post("/admin/notify")
-def admin_notify(title: str = "Test Alert", message: str = "This is a test notification.", _=Depends(require_admin)) -> Dict[str, Any]:
+def admin_notify(
+    title: str = "Test Alert",
+    message: str = "This is a test notification.",
+    _=Depends(require_admin),
+) -> Dict[str, Any]:
     ok = send_alert(title, message)
     return {"ok": ok}
 
@@ -227,7 +315,6 @@ def edge_health() -> Dict[str, Any]:
     ok = bool(_edge_available)
     return {"status": "ok" if ok else "unavailable", "edge_module": _edge_available}
 
-    
 
 @app.post("/ingest")
 def ingest(reading: SensorReading) -> Dict[str, bool]:
@@ -242,7 +329,9 @@ def edge_capture(body: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     Optional body: {"zone_id":"Z1"}
     """
     if not _edge_available:
-        raise HTTPException(status_code=503, detail="Edge reader not available on server")
+        raise HTTPException(
+            status_code=503, detail="Edge reader not available on server"
+        )
     global _edge_reader
     if _edge_reader is None:
         # Load config via edge util; fallback to defaults
@@ -255,7 +344,9 @@ def edge_capture(body: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         try:
             _edge_reader = SensorReader(cfg)  # type: ignore[call-arg]
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to init edge reader: {e}")
+            raise HTTPException(
+                status_code=500, detail=f"Failed to init edge reader: {e}"
+            )
 
     zone_id = str((body or {}).get("zone_id", "Z1"))
     try:
@@ -286,34 +377,76 @@ def edge_capture(body: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     # Persist then compute rec
     insert_reading(reading.model_dump())
     rec: Dict[str, Any] = engine.recommend(reading.model_dump())
+    # Augment recommendation with water source decision based on tank volume
+    try:
+        need_l = float(rec.get("water_liters", 0.0))
+    except Exception:
+        need_l = 0.0
+    rec["water_source"] = _select_water_source(need_l)
     return {"reading": reading.model_dump(), "recommendation": rec}
+
 
 @app.get("/recent")
 def get_recent(zone_id: str = "Z1", limit: int = 50) -> Dict[str, Any]:
     return {"items": recent(zone_id, limit)}
+
 
 @app.post("/recommend")
 def recommend(reading: SensorReading, request: Request) -> Recommendation:
     # don't persist automatically; clients can call /ingest
     payload = reading.model_dump()
     rec: Dict[str, Any] = engine.recommend(payload)
+    # Decide water source (tank vs groundwater) based on latest tank volume
+    try:
+        need_l = float(rec.get("water_liters", 0.0))
+    except Exception:
+        need_l = 0.0
+    rec["water_source"] = _select_water_source(need_l)
+    # Optionally send a recommendation alert
+    if os.getenv("AGRISENSE_ALERT_ON_RECOMMEND", "0") not in (
+        "0",
+        "false",
+        "False",
+        "no",
+    ):
+        try:
+            insert_alert(
+                payload.get("zone_id", "Z1"),
+                "RECOMMENDATION",
+                f"Water {need_l:.0f} L, source {rec['water_source']}",
+            )
+            send_alert(
+                "Recommendation",
+                f"Water {need_l:.0f} L via {rec['water_source']}",
+                {"zone_id": payload.get("zone_id", "Z1")},
+            )
+        except Exception:
+            pass
     # Optionally log snapshots if flag set
     if os.getenv("AGRISENSE_LOG_RECO", "0") not in ("0", "false", "False", "no"):
         try:
-            insert_reco_snapshot(payload.get("zone_id", "Z1"), str(payload.get("plant", "generic")), rec, None)
+            insert_reco_snapshot(
+                payload.get("zone_id", "Z1"),
+                str(payload.get("plant", "generic")),
+                rec,
+                None,
+            )
         except Exception:
             pass
     # Pydantic will coerce Dict[str, Any] -> Recommendation
     return Recommendation.model_validate(rec)
+
 
 class CropSuggestion(BaseModel):
     crop: str
     suitability_score: float
     expected_yield: Optional[float] = None
 
+
 class SuggestCropResponse(BaseModel):
     soil_type: str
     top: List[CropSuggestion]
+
 
 # --- Sikkim smart irrigation additions ---
 class TankLevel(BaseModel):
@@ -322,27 +455,33 @@ class TankLevel(BaseModel):
     volume_l: Optional[float] = None
     rainfall_mm: Optional[float] = None
 
+
 class TankStatus(BaseModel):
     tank_id: str
     level_pct: Optional[float] = None
     volume_l: Optional[float] = None
     last_update: Optional[str] = None
+    capacity_liters: Optional[float] = None
+
 
 class IrrigationCommand(BaseModel):
     zone_id: str = "Z1"
     duration_s: Optional[int] = None  # required for start
     force: bool = False
 
+
 class IrrigationAck(BaseModel):
     ok: bool
     status: str
     note: Optional[str] = None
+
 
 class AlertItem(BaseModel):
     zone_id: str = "Z1"
     category: str
     message: str
     sent: bool = False
+
 
 @app.post("/suggest_crop")
 def suggest_crop(payload: Dict[str, Any]) -> SuggestCropResponse:
@@ -355,9 +494,14 @@ def suggest_crop(payload: Dict[str, Any]) -> SuggestCropResponse:
         # Initialize on first use, honor optional env var for dataset path
         ds_override = os.getenv("AGRISENSE_DATASET") or os.getenv("DATASET_CSV")
         if ds_override:
-            farming_system = cast(HasCropRecommender, SmartFarmingRecommendationSystem(dataset_path=ds_override))
+            farming_system = cast(
+                HasCropRecommender,
+                SmartFarmingRecommendationSystem(dataset_path=ds_override),
+            )
         else:
-            farming_system = cast(HasCropRecommender, SmartFarmingRecommendationSystem())
+            farming_system = cast(
+                HasCropRecommender, SmartFarmingRecommendationSystem()
+            )
 
     soil_in = str(payload.get("soil_type", "loam")).strip().lower()
     # Map internal simple soil types to dataset soil categories
@@ -377,7 +521,9 @@ def suggest_crop(payload: Dict[str, Any]) -> SuggestCropResponse:
         "nitrogen": float(payload.get("nitrogen", 100)),
         "phosphorus": float(payload.get("phosphorus", 40)),
         "potassium": float(payload.get("potassium", 40)),
-        "temperature": float(payload.get("temperature", payload.get("temperature_c", 25))),
+        "temperature": float(
+            payload.get("temperature", payload.get("temperature_c", 25))
+        ),
         "water_level": float(payload.get("water_level", 500)),
         "moisture": float(payload.get("moisture", payload.get("moisture_pct", 60))),
         "humidity": float(payload.get("humidity", 70)),
@@ -386,7 +532,7 @@ def suggest_crop(payload: Dict[str, Any]) -> SuggestCropResponse:
     # Typed via Protocol so Pylance understands shapes
     recs_raw: Optional[List[Dict[str, Any]]] = farming_system.get_crop_recommendations(sensor_data)  # type: ignore[reportUnknownMemberType]
     recs: List[CropSuggestion] = []
-    for r in (recs_raw or []):
+    for r in recs_raw or []:
         score_val = r.get("suitability_score", r.get("score", 0.0))
         try:
             score = float(score_val)  # type: ignore[arg-type]
@@ -403,11 +549,30 @@ def suggest_crop(payload: Dict[str, Any]) -> SuggestCropResponse:
     # Return compact top items
     return SuggestCropResponse(soil_type=soil_ds, top=recs[:5])
 
+
 # --- Tank and irrigation endpoints ---
 @app.post("/tank/level")
 def post_tank_level(body: TankLevel) -> Dict[str, bool]:
-    insert_tank_level(body.tank_id, float(body.level_pct or 0.0), float(body.volume_l or 0.0), float(body.rainfall_mm or 0.0))
+    level_pct = float(body.level_pct or 0.0)
+    vol_l = float(body.volume_l or 0.0)
+    insert_tank_level(body.tank_id, level_pct, vol_l, float(body.rainfall_mm or 0.0))
+    # Low tank alert if below threshold
+    try:
+        low_thresh = float(
+            os.getenv("AGRISENSE_TANK_LOW_PCT", os.getenv("TANK_LOW_PCT", "20"))
+        )
+        if level_pct > 0 and level_pct <= low_thresh:
+            msg = f"Tank {body.tank_id} low: {level_pct:.1f}%"
+            insert_alert("Z1", "LOW_TANK", msg)
+            send_alert(
+                "Tank low",
+                msg,
+                {"tank_id": body.tank_id, "level_pct": round(level_pct, 1)},
+            )
+    except Exception:
+        pass
     return {"ok": True}
+
 
 @app.get("/tank/status")
 def get_tank_status(tank_id: str = "T1") -> TankStatus:
@@ -417,11 +582,17 @@ def get_tank_status(tank_id: str = "T1") -> TankStatus:
         level_pct=cast(Optional[float], row.get("level_pct")),
         volume_l=cast(Optional[float], row.get("volume_l")),
         last_update=cast(Optional[str], row.get("ts")),
+        capacity_liters=float(
+            os.getenv("AGRISENSE_TANK_CAP_L", os.getenv("TANK_CAPACITY_L", "0")) or 0.0
+        )
+        or None,
     )
+
 
 @app.get("/valves/events")
 def get_valve_events(zone_id: Optional[str] = None, limit: int = 50) -> Dict[str, Any]:
     return {"items": recent_valve_events(zone_id, limit)}
+
 
 def _has_water_for(liters: float) -> bool:
     row = latest_tank_level("T1")
@@ -433,11 +604,28 @@ def _has_water_for(liters: float) -> bool:
     except Exception:
         return True
 
+
+def _select_water_source(required_liters: float) -> str:
+    """Choose 'tank' if the latest tank volume can cover the required liters, else 'groundwater'.
+    If no tank info is available, default to 'groundwater' only if requirement is zero; otherwise assume tank available.
+    """
+    row = latest_tank_level("T1")
+    try:
+        vol = float((row or {}).get("volume_l") or 0.0)
+    except Exception:
+        vol = 0.0
+    if required_liters > 0 and vol >= required_liters:
+        return "tank"
+    return "groundwater"
+
+
 try:
     from .mqtt_publish import publish_command  # type: ignore
 except Exception:
+
     def publish_command(zone_id: str, payload: Dict[str, Any]) -> bool:  # type: ignore
         return False
+
 
 @app.post("/irrigation/start")
 def irrigation_start(cmd: IrrigationCommand) -> IrrigationAck:
@@ -454,23 +642,40 @@ def irrigation_start(cmd: IrrigationCommand) -> IrrigationAck:
         msg = f"Tank insufficient for planned irrigation: need ~{need:.0f} L"
         insert_alert(cmd.zone_id, "water_low", msg)
         try:
-            send_alert("Water low", msg, {"zone_id": cmd.zone_id, "need_l": round(need, 1)})
+            send_alert(
+                "Water low", msg, {"zone_id": cmd.zone_id, "need_l": round(need, 1)}
+            )
         except Exception:
             pass
-        log_valve_event(cmd.zone_id, "start", float(cmd.duration_s or 0), status="blocked")
-        return IrrigationAck(ok=False, status="blocked", note="Insufficient water in tank")
-    duration = int(cmd.duration_s or max(1, int(need / max(1e-6, engine.pump_flow_lpm)) * 60))
-    ok = publish_command(cmd.zone_id, {"action": "open", "duration_s": duration})
-    log_valve_event(cmd.zone_id, "start", float(duration), status="sent" if ok else "queued")
+        log_valve_event(
+            cmd.zone_id, "start", float(cmd.duration_s or 0), status="blocked"
+        )
+        return IrrigationAck(
+            ok=False, status="blocked", note="Insufficient water in tank"
+        )
+    duration = int(
+        cmd.duration_s or max(1, int(need / max(1e-6, engine.pump_flow_lpm)) * 60)
+    )
+    ok = publish_command(cmd.zone_id, {"action": "start", "duration_s": duration})
+    log_valve_event(
+        cmd.zone_id, "start", float(duration), status="sent" if ok else "queued"
+    )
     try:
-        send_alert("Irrigation start", f"Zone {cmd.zone_id} for {duration}s", {"zone_id": cmd.zone_id, "duration_s": duration})
+        send_alert(
+            "Irrigation start",
+            f"Zone {cmd.zone_id} for {duration}s",
+            {"zone_id": cmd.zone_id, "duration_s": duration},
+        )
     except Exception:
         pass
-    return IrrigationAck(ok=ok, status="sent" if ok else "queued", note=f"Duration {duration}s")
+    return IrrigationAck(
+        ok=ok, status="sent" if ok else "queued", note=f"Duration {duration}s"
+    )
+
 
 @app.post("/irrigation/stop")
 def irrigation_stop(cmd: IrrigationCommand) -> IrrigationAck:
-    ok = publish_command(cmd.zone_id, {"action": "close"})
+    ok = publish_command(cmd.zone_id, {"action": "stop"})
     log_valve_event(cmd.zone_id, "stop", 0.0, status="sent" if ok else "queued")
     try:
         send_alert("Irrigation stop", f"Zone {cmd.zone_id}", {"zone_id": cmd.zone_id})
@@ -478,31 +683,39 @@ def irrigation_stop(cmd: IrrigationCommand) -> IrrigationAck:
         pass
     return IrrigationAck(ok=ok, status="sent" if ok else "queued")
 
+
 @app.get("/alerts")
 def get_alerts(zone_id: Optional[str] = None, limit: int = 50) -> Dict[str, Any]:
     return {"items": recent_alerts(zone_id, limit)}
+
 
 @app.post("/alerts")
 def post_alert(alert: AlertItem) -> Dict[str, bool]:
     insert_alert(alert.zone_id, alert.category, alert.message, alert.sent)
     return {"ok": True}
 
+
 class PlantItem(BaseModel):
     value: str
     label: str
     category: Optional[str] = None
 
+
 class PlantsResponse(BaseModel):
     items: List[PlantItem]
 
+
 # Simple cache of dataset rows (name/category)
 _dataset_crops_cache: Optional[List[Dict[str, Optional[str]]]] = None
+
 
 def _load_dataset_crops() -> List[Dict[str, Optional[str]]]:
     global _dataset_crops_cache
     if _dataset_crops_cache is not None:
         return _dataset_crops_cache
     ROOT = os.path.dirname(__file__)
+    # Use India dataset (46 crops) as primary for crop display; optionally merge Sikkim additions
+    sikkim = os.path.join(ROOT, "..", "..", "sikkim_crop_dataset.csv")
     dataset_path = os.path.join(ROOT, "india_crop_dataset.csv")
     crops: List[Dict[str, Optional[str]]] = []
     if os.path.exists(dataset_path):
@@ -510,9 +723,10 @@ def _load_dataset_crops() -> List[Dict[str, Optional[str]]]:
             with open(dataset_path, "r", encoding="utf-8") as f:
                 reader = csv.DictReader(f)
                 for row in reader:
-                    name = str(row.get("Crop", "")).strip()
+                    # Support India schema ("Crop") and Sikkim schema ("crop")
+                    name = str((row.get("Crop") or row.get("crop") or "")).strip()
                     if name:
-                        cat_raw = row.get("Crop_Category")
+                        cat_raw = row.get("Crop_Category") or row.get("category")
                         category = str(cat_raw).strip() if cat_raw is not None else None
                         crops.append({"name": name, "category": category})
         except Exception:
@@ -528,6 +742,7 @@ def _load_dataset_crops() -> List[Dict[str, Optional[str]]]:
     _dataset_crops_cache = unique
     return unique
 
+
 @app.get("/plants")
 def get_plants() -> PlantsResponse:
     """Return a combined list of crops from config and dataset labels.
@@ -537,12 +752,7 @@ def get_plants() -> PlantsResponse:
     labels_path = os.path.join(ROOT, "crop_labels.json")
 
     def norm(name: str, category: Optional[str] = None) -> PlantItem:
-        slug = (
-            name.strip()
-            .lower()
-            .replace(" ", "_")
-            .replace("-", "_")
-        )
+        slug = name.strip().lower().replace(" ", "_").replace("-", "_")
         label = name.replace("_", " ").strip()
         # Title case but preserve acronyms reasonably
         label = " ".join([w.capitalize() for w in label.split()])
@@ -577,6 +787,21 @@ def get_plants() -> PlantsResponse:
     sorted_items = sorted(items.values(), key=lambda x: x.label)
     return PlantsResponse(items=sorted_items)
 
+
+@app.get("/soil/types")
+def get_soil_types() -> Dict[str, Any]:
+    """Expose available soil types from config for data-driven selection in UI."""
+    try:
+        soil_cfg = engine.cfg.get("soil", {})  # type: ignore[assignment]
+        if isinstance(soil_cfg, dict) and soil_cfg:
+            items = [str(k) for k in soil_cfg.keys()]
+        else:
+            items = ["sand", "loam", "clay"]
+    except Exception:
+        items = ["sand", "loam", "clay"]
+    return {"items": items}
+
+
 # Rich crop info for the Crops UI page
 class CropCard(BaseModel):
     id: str
@@ -589,10 +814,12 @@ class CropCard(BaseModel):
     phRange: Optional[str] = None
     growthPeriod: Optional[str] = None
     description: Optional[str] = None
-    tips: List[str] = []
+    tips: List[str] = Field(default_factory=list)
+
 
 class CropsResponse(BaseModel):
     items: List[CropCard]
+
 
 def _bucket_water_req(mm: Optional[float]) -> Optional[str]:
     if mm is None:
@@ -607,61 +834,132 @@ def _bucket_water_req(mm: Optional[float]) -> Optional[str]:
         return "Medium"
     return "High"
 
+
 def _dataset_to_cards() -> List[CropCard]:
     ROOT = os.path.dirname(__file__)
+    sikkim = os.path.join(ROOT, "..", "..", "sikkim_crop_dataset.csv")
     dataset_path = os.path.join(ROOT, "india_crop_dataset.csv")
     items: List[CropCard] = []
-    if not os.path.exists(dataset_path):
-        return items
+
+    def _read_rows(path: str) -> List[Dict[str, Any]]:
+        if not os.path.exists(path):
+            return []
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                return list(csv.DictReader(f))
+        except Exception:
+            return []
+
+    rows = _read_rows(dataset_path)
+    # Optionally append Sikkim rows to enrich the catalog
+    rows += _read_rows(sikkim)
     try:
-        with open(dataset_path, "r", encoding="utf-8") as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                name = str(row.get("Crop", "")).strip()
-                if not name:
-                    continue
-                cat = str(row.get("Crop_Category") or "").strip() or None
-                try:
-                    ph_min = row.get("pH_Min")
-                    ph_max = row.get("pH_Max")
-                    ph_range = f"{float(ph_min):.1f}-{float(ph_max):.1f}" if ph_min and ph_max else None
-                except Exception:
-                    ph_range = None
-                try:
-                    t_min = row.get("Temperature_Min_C")
-                    t_max = row.get("Temperature_Max_C")
-                    temp_range = f"{int(float(t_min))}-{int(float(t_max))}°C" if t_min and t_max else None
-                except Exception:
-                    temp_range = None
-                try:
-                    growth_days = row.get("Growth_Duration_days")
-                    growth_period = f"{int(float(growth_days))} days" if growth_days else None
-                except Exception:
-                    growth_period = None
-                try:
-                    w_mm = row.get("Water_Requirement_mm")
-                    water_req = _bucket_water_req(float(w_mm) if w_mm else None)
-                except Exception:
-                    water_req = None
-                season = str(row.get("Growing_Season") or "").strip() or None
-
-                slug = (
-                    name.lower().replace(" ", "_").replace("-", "_")
+        for row in rows:
+            name = str((row.get("Crop") or row.get("crop") or "")).strip()
+            if not name:
+                continue
+            cat = (
+                str((row.get("Crop_Category") or row.get("category") or "")).strip()
+                or None
+            )
+            try:
+                ph_min = row.get("pH_Min") or row.get("ph_min")
+                ph_max = row.get("pH_Max") or row.get("ph_max")
+                ph_range = (
+                    f"{float(ph_min):.1f}-{float(ph_max):.1f}"
+                    if ph_min and ph_max
+                    else None
                 )
-                # Simple, category-based generic tips
-                base_tips: Dict[str, List[str]] = {
-                    "Cereal": ["Ensure adequate nitrogen", "Maintain consistent moisture", "Plant within optimal temperature"],
-                    "Vegetable": ["Use well-drained soil", "Water regularly", "Monitor pests"],
-                    "Oilseed": ["Avoid waterlogging", "Sunlight exposure is key", "Balanced fertilization"],
-                    "Pulse": ["Rotate with cereals", "Inoculate seeds if needed", "Avoid excessive nitrogen"],
-                    "Cash Crop": ["Optimize irrigation", "Fertilize per schedule", "Scout for pests"],
-                    "Spice": ["Partial shade as needed", "Mulch to retain moisture", "Harvest at maturity"],
-                    "Plantation": ["Deep fertile soil", "Regular irrigation", "Nutrient management"],
-                    "Tuber": ["Loose, sandy loam soil", "Avoid waterlogging", "Hill soil as needed"],
-                }
-                tips = base_tips.get(cat or "", ["Follow local best practices", "Test soil pH", "Irrigate as required"])
+            except Exception:
+                ph_range = None
+            try:
+                t_min = row.get("Temperature_Min_C") or row.get("temperature_min_c")
+                t_max = row.get("Temperature_Max_C") or row.get("temperature_max_c")
+                temp_range = (
+                    f"{int(float(t_min))}-{int(float(t_max))}°C"
+                    if t_min and t_max
+                    else None
+                )
+            except Exception:
+                temp_range = None
+            try:
+                growth_days = row.get("Growth_Duration_days") or row.get("growth_days")
+                growth_period = (
+                    f"{int(float(growth_days))} days" if growth_days else None
+                )
+            except Exception:
+                growth_period = None
+            try:
+                w_mm = row.get("Water_Requirement_mm")
+                if w_mm:
+                    water_req = _bucket_water_req(float(w_mm))
+                else:
+                    w_lpm2 = row.get("water_need_l_per_m2")
+                    if w_lpm2:
+                        v = float(w_lpm2)
+                        water_req = (
+                            "Low" if v <= 5.0 else ("Medium" if v <= 7.0 else "High")
+                        )
+                    else:
+                        water_req = None
+            except Exception:
+                water_req = None
+            season = (
+                str((row.get("Growing_Season") or row.get("season") or "")).strip()
+                or None
+            )
 
-                items.append(CropCard(
+            slug = name.lower().replace(" ", "_").replace("-", "_")
+            # Simple, category-based generic tips
+            base_tips: Dict[str, List[str]] = {
+                "Cereal": [
+                    "Ensure adequate nitrogen",
+                    "Maintain consistent moisture",
+                    "Plant within optimal temperature",
+                ],
+                "Vegetable": [
+                    "Use well-drained soil",
+                    "Water regularly",
+                    "Monitor pests",
+                ],
+                "Oilseed": [
+                    "Avoid waterlogging",
+                    "Sunlight exposure is key",
+                    "Balanced fertilization",
+                ],
+                "Pulse": [
+                    "Rotate with cereals",
+                    "Inoculate seeds if needed",
+                    "Avoid excessive nitrogen",
+                ],
+                "Cash Crop": [
+                    "Optimize irrigation",
+                    "Fertilize per schedule",
+                    "Scout for pests",
+                ],
+                "Spice": [
+                    "Partial shade as needed",
+                    "Mulch to retain moisture",
+                    "Harvest at maturity",
+                ],
+                "Plantation": [
+                    "Deep fertile soil",
+                    "Regular irrigation",
+                    "Nutrient management",
+                ],
+                "Tuber": [
+                    "Loose, sandy loam soil",
+                    "Avoid waterlogging",
+                    "Hill soil as needed",
+                ],
+            }
+            tips = base_tips.get(
+                cat or "",
+                ["Follow local best practices", "Test soil pH", "Irrigate as required"],
+            )
+
+            items.append(
+                CropCard(
                     id=slug,
                     name=name,
                     scientificName=None,
@@ -673,7 +971,8 @@ def _dataset_to_cards() -> List[CropCard]:
                     growthPeriod=growth_period,
                     description=None,
                     tips=tips,
-                ))
+                )
+            )
     except Exception:
         pass
     # Ensure uniqueness by id while preserving order
@@ -685,38 +984,145 @@ def _dataset_to_cards() -> List[CropCard]:
             seen.add(it.id)
     return result
 
+
 @app.get("/crops")
 def get_crops_full() -> CropsResponse:
     return CropsResponse(items=_dataset_to_cards())
 
+
+# --- Rainwater ledger ---
+@app.post("/rainwater/log")
+def rainwater_log(body: Dict[str, Any]) -> Dict[str, bool]:
+    tank_id = str(body.get("tank_id", "T1"))
+    collected = float(body.get("collected_liters") or 0.0)
+    used = float(body.get("used_liters") or 0.0)
+    insert_rainwater_entry(tank_id, collected, used)
+    return {"ok": True}
+
+
+@app.get("/rainwater/summary")
+def rainwater_summary_api(tank_id: str = "T1") -> Dict[str, Any]:
+    return rainwater_summary(tank_id)
+
+
+@app.get("/rainwater/recent")
+def rainwater_recent_api(tank_id: str = "T1", limit: int = 10) -> Dict[str, Any]:
+    return {"items": recent_rainwater(tank_id, limit)}
+
+
+# --- Alerts ack ---
+@app.post("/alerts/ack")
+def alerts_ack(body: Dict[str, Any]) -> Dict[str, bool]:
+    ts = str(body.get("ts")) if body.get("ts") is not None else None
+    if not ts:
+        raise HTTPException(status_code=400, detail="ts required")
+    mark_alert_ack(ts)
+    return {"ok": True}
+
+
 # Recommendation history endpoints for impact graphs
 @app.get("/reco/recent")
 def get_reco_recent(zone_id: str = "Z1", limit: int = 200) -> Dict[str, Any]:
-        return {"items": recent_reco(zone_id, limit)}
+    # recent_reco already returns all columns (including water_source if present)
+    return {"items": recent_reco(zone_id, limit)}
+
 
 @app.post("/reco/log")
 def log_reco_snapshot(body: Dict[str, Any]) -> Dict[str, Any]:
-        """Explicitly log a recommendation snapshot from the client.
-        Body shape example:
-        {
-            "zone_id":"Z1","plant":"rice",
-            "rec": {"water_liters":123, "expected_savings_liters":45, "fert_n_g":10, "fert_p_g":5, "fert_k_g":8},
-            "yield_potential": 2.5
-        }
-        """
-        zone_id = str(body.get("zone_id", "Z1"))
-        plant = str(body.get("plant", "generic"))
-        rec = dict(body.get("rec") or {})
-        yield_p = body.get("yield_potential")
-        insert_reco_snapshot(zone_id, plant, rec, yield_p)
-        return {"ok": True}
+    """Explicitly log a recommendation snapshot from the client.
+    Body shape example:
+    {
+        "zone_id":"Z1","plant":"rice",
+        "rec": {"water_liters":123, "expected_savings_liters":45, "fert_n_g":10, "fert_p_g":5, "fert_k_g":8},
+        "yield_potential": 2.5
+    }
+    """
+    zone_id = str(body.get("zone_id", "Z1"))
+    plant = str(body.get("plant", "generic"))
+    rec = dict(body.get("rec") or {})
+    yield_p = body.get("yield_potential")
+    insert_reco_snapshot(zone_id, plant, rec, yield_p)
+    return {"ok": True}
+
+
+# --- ESP32 Edge ingest (HTTP) ---
+@app.post("/edge/ingest")
+def edge_ingest(payload: Dict[str, Any]) -> Dict[str, bool]:
+    """Accept sensor payloads from ESP32 and normalize to SensorReading.
+    Flexible keys supported:
+      - soil_moisture or moisture_pct
+      - temp_c or temperature_c
+      - humidity (stored only for ML or future use; ignored for now)
+      - ph
+      - ec or ec_mScm (mS/cm). If provided in mS/cm, we convert to dS/m by dividing by 10.
+      - tank_percent (0..100) and optional tank_id, tank_volume_l
+    """
+    zone = str(payload.get("zone_id", "Z1"))
+    # Normalize moisture
+    moisture = payload.get("moisture_pct")
+    if moisture is None:
+        m_alt1 = payload.get("soil_moisture")
+        m_alt2 = payload.get("moisture") if m_alt1 is None else None
+        try:
+            moisture = float(m_alt1 if m_alt1 is not None else m_alt2)  # type: ignore[arg-type]
+        except Exception:
+            moisture = 35.0
+    # Normalize temperature
+    temp = payload.get("temperature_c")
+    if temp is None:
+        try:
+            temp = float(payload.get("temp_c") or payload.get("temperature") or 28.0)
+        except Exception:
+            temp = 28.0
+    # Normalize EC
+    ec = payload.get("ec_dS_m")
+    if ec is None:
+        ec_ms1 = payload.get("ec_mScm")
+        ec_ms2 = payload.get("ec") if ec_ms1 is None else None
+        try:
+            ec_val = float(ec_ms1 if ec_ms1 is not None else ec_ms2)  # type: ignore[arg-type]
+            # Convert mS/cm to dS/m (1 mS/cm == 1 dS/m)
+            ec = ec_val
+        except Exception:
+            ec = 1.0
+    reading = SensorReading(
+        zone_id=zone,
+        plant=str(payload.get("plant", "generic")),
+        soil_type=str(payload.get("soil_type", "loam")),
+        area_m2=float(payload.get("area_m2", engine.defaults.get("area_m2", 100.0))),
+        ph=float(payload.get("ph", 6.5)),
+        moisture_pct=float(moisture),
+        temperature_c=float(temp),
+        ec_dS_m=float(ec),
+        n_ppm=payload.get("n_ppm"),
+        p_ppm=payload.get("p_ppm"),
+        k_ppm=payload.get("k_ppm"),
+    )
+    insert_reading(reading.model_dump())
+    # Optionally record tank level from edge
+    tank_pct = payload.get("tank_percent")
+    if tank_pct is not None:
+        try:
+            level_pct = float(tank_pct)
+            tank_id = str(payload.get("tank_id", "T1"))
+            vol_l = float(payload.get("tank_volume_l") or 0.0)
+            insert_tank_level(
+                tank_id, level_pct, vol_l, float(payload.get("rainfall_mm") or 0.0)
+            )
+        except Exception:
+            pass
+    return {"ok": True}
+
 
 # Serve the frontend as static files under /ui.
 ROOT = os.path.dirname(__file__)
-FRONTEND_DIST_NESTED = os.path.join(ROOT, "..", "frontend", "farm-fortune-frontend-main", "dist")
+FRONTEND_DIST_NESTED = os.path.join(
+    ROOT, "..", "frontend", "farm-fortune-frontend-main", "dist"
+)
 FRONTEND_DIST = os.path.join(ROOT, "..", "frontend", "dist")
 FRONTEND_LEGACY = os.path.join(ROOT, "..", "frontend")
 frontend_root: Optional[str] = None
+
 
 class StaticFilesWithCache(StaticFiles):
     async def get_response(self, path: str, scope):  # type: ignore[override]
@@ -725,7 +1131,9 @@ class StaticFilesWithCache(StaticFiles):
         try:
             # path like "assets/app.js" or "index.html"
             if isinstance(path, str) and not path.endswith(".html"):
-                response.headers.setdefault("Cache-Control", "public, max-age=604800, immutable")
+                response.headers.setdefault(
+                    "Cache-Control", "public, max-age=604800, immutable"
+                )
             else:
                 # cache for a minute for index.html to reduce flashing
                 response.headers.setdefault("Cache-Control", "public, max-age=60")
@@ -733,20 +1141,33 @@ class StaticFilesWithCache(StaticFiles):
             pass
         return response
 
+
 if os.path.isdir(FRONTEND_DIST_NESTED):
     frontend_root = FRONTEND_DIST_NESTED
-    app.mount("/ui", StaticFilesWithCache(directory=FRONTEND_DIST_NESTED, html=True), name="frontend")
+    app.mount(
+        "/ui",
+        StaticFilesWithCache(directory=FRONTEND_DIST_NESTED, html=True),
+        name="frontend",
+    )
 elif os.path.isdir(FRONTEND_DIST):
     frontend_root = FRONTEND_DIST
-    app.mount("/ui", StaticFilesWithCache(directory=FRONTEND_DIST, html=True), name="frontend")
+    app.mount(
+        "/ui", StaticFilesWithCache(directory=FRONTEND_DIST, html=True), name="frontend"
+    )
 elif os.path.isdir(FRONTEND_LEGACY):
     frontend_root = FRONTEND_LEGACY
-    app.mount("/ui", StaticFilesWithCache(directory=FRONTEND_LEGACY, html=True), name="frontend")
+    app.mount(
+        "/ui",
+        StaticFilesWithCache(directory=FRONTEND_LEGACY, html=True),
+        name="frontend",
+    )
+
 
 @app.get("/")
 def root() -> RedirectResponse:
     # Redirect to the frontend so browsers request /ui/favicon.ico instead of /favicon.ico
     return RedirectResponse(url="/ui", status_code=307)
+
 
 # SPA fallback so deep links like /ui/live or /ui/recommend render the app
 @app.get("/ui/{path:path}")
@@ -757,25 +1178,16 @@ def serve_spa(path: str):
             return FileResponse(index_file)
     raise HTTPException(status_code=404, detail="UI not found")
 
+
 # Accept '/api/*' paths by redirecting to the same path without the '/api' prefix
 @app.api_route("/api/{path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"])  # type: ignore[list-item]
 def api_prefix_redirect(path: str) -> RedirectResponse:
     # Preserve path and querystring; FastAPI/Starlette keeps query intact on redirect
     return RedirectResponse(url=f"/{path}", status_code=307)
 
-# --- Admin protection helper ---
-class AdminGuard:
-    def __init__(self, env_var: str = "AGRISENSE_ADMIN_TOKEN") -> None:
-        self.env_var = env_var
 
-    def __call__(self, x_admin_token: Optional[str] = Header(default=None)) -> None:
-        token = os.getenv(self.env_var)
-        if not token:
-            return  # no guard configured
-        if not x_admin_token or x_admin_token != token:
-            raise HTTPException(status_code=401, detail="Unauthorized: missing or invalid admin token")
+## AdminGuard is defined near the top
 
-require_admin = AdminGuard()
 
 # --- Lightweight metrics ---
 @app.get("/metrics")
@@ -785,6 +1197,7 @@ def metrics() -> Dict[str, Any]:
     # Compute uptime seconds on the fly
     out["uptime_s"] = round(time.time() - float(out.get("started_at", time.time())), 3)
     return out
+
 
 @app.get("/version")
 def version() -> Dict[str, Any]:

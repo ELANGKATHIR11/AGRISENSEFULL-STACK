@@ -1,18 +1,20 @@
 {
-  "python.defaultInterpreterPath": "D:/AGRISENSE FULL-STACK/.venv/Scripts/python.exe",
-  "python.venvPath": "D:/AGRISENSE FULL-STACK",
+  "python.defaultInterpreterPath": "${workspaceFolder}/AGRISENSEFULL-STACK/.venv/Scripts/python.exe",
+  "python.venvPath": "${workspaceFolder}",
   "python.analysis.typeCheckingMode": "basic",
   "python.analysis.stubPath": "typings",
   "python.testing.pytestEnabled": true,
   "python.testing.unittestEnabled": false,
-  "python.testing.pytestArgs": ["scripts"],
+  "python.testing.pytestArgs": [
+    "scripts"
+  ],
   "terminal.integrated.defaultProfile.windows": "PowerShell",
   "python.terminal.activateEnvironment": true,
   "python.languageServer": "Pylance",
   "python.analysis.diagnosticMode": "workspace",
   "python.analysis.extraPaths": [
-    "D:/AGRISENSE FULL-STACK/AGRISENSEFULL-STACK",
-    "D:/AGRISENSE FULL-STACK/AGRISENSEFULL-STACK/agrisense_app",
-    "D:/AGRISENSE FULL-STACK/AGRISENSEFULL-STACK/agrisense_pi_edge_minimal"
+    "${workspaceFolder}/AGRISENSEFULL-STACK",
+    "${workspaceFolder}/AGRISENSEFULL-STACK/agrisense_app",
+    "${workspaceFolder}/AGRISENSEFULL-STACK/agrisense_pi_edge_minimal"
   ]
 }

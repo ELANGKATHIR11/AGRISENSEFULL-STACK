@@ -4,13 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
+import { useI18n } from "@/i18n";
 
 export default function Irrigation() {
+  const { t } = useI18n();
   const [tank, setTank] = useState<TankStatus | null>(null);
   const [loading, setLoading] = useState(false);
   const [zone, setZone] = useState("Z1");
   const [duration, setDuration] = useState<number | undefined>(undefined);
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
+  const [showAck, setShowAck] = useState(false);
   const [events, setEvents] = useState<ValveEvent[]>([]);
   const [isRunning, setIsRunning] = useState(false);
   const { toast } = useToast();
@@ -75,27 +78,27 @@ export default function Irrigation() {
     <div className="max-w-5xl mx-auto p-6 space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Tank status</CardTitle>
+          <CardTitle>{t("tank")} {t("status")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm text-muted-foreground">Tank</div>
+              <div className="text-sm text-muted-foreground">{t("tank")}</div>
               <div className="text-xl font-semibold">{tank?.tank_id ?? "T1"}</div>
             </div>
             <div>
-              <div className="text-sm text-muted-foreground">Level</div>
+              <div className="text-sm text-muted-foreground">{t("tank_level")}</div>
               <div className="text-xl font-semibold">{tank?.level_pct != null ? `${tank.level_pct.toFixed(0)}%` : "—"}</div>
             </div>
             <div>
-              <div className="text-sm text-muted-foreground">Volume</div>
+              <div className="text-sm text-muted-foreground">{t("tank_volume")}</div>
               <div className="text-xl font-semibold">{tank?.volume_l != null ? `${Math.round(tank.volume_l)} L` : "—"}</div>
             </div>
             <div>
-              <div className="text-sm text-muted-foreground">Updated</div>
+              <div className="text-sm text-muted-foreground">{t("updated")}</div>
               <div className="text-xl font-semibold">{tank?.last_update ? new Date(tank.last_update).toLocaleString() : "—"}</div>
             </div>
-            <Button variant="secondary" onClick={refresh}>Refresh</Button>
+            <Button variant="secondary" onClick={refresh}>{t("refresh")}</Button>
           </div>
 
           <div>
@@ -104,7 +107,7 @@ export default function Irrigation() {
               className={`${(tank?.level_pct ?? 0) < 20 ? "bg-red-100" : (tank?.level_pct ?? 0) < 50 ? "bg-yellow-100" : "bg-green-100"}`}
             />
             <div className="text-xs mt-1 text-muted-foreground">
-              {(tank?.level_pct ?? 0) < 20 ? "Low level" : (tank?.level_pct ?? 0) < 50 ? "Moderate" : "Healthy"}
+              {(tank?.level_pct ?? 0) < 20 ? t("low_level") : (tank?.level_pct ?? 0) < 50 ? t("moderate") : t("healthy")}
             </div>
           </div>
         </CardContent>
@@ -112,11 +115,11 @@ export default function Irrigation() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Irrigation control</CardTitle>
+          <CardTitle>{t("nav_irrigation")} {t("status")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap items-center gap-4">
-            <label htmlFor="zone" className="text-sm">Zone</label>
+            <label htmlFor="zone" className="text-sm">{t("zone")}</label>
             <input
               id="zone"
               name="zone"
@@ -126,7 +129,7 @@ export default function Irrigation() {
               value={zone}
               onChange={(e) => setZone(e.target.value)}
             />
-            <label htmlFor="duration" className="text-sm">Duration (s)</label>
+            <label htmlFor="duration" className="text-sm">{t("duration_seconds")}</label>
             <div className="relative">
               <input
                 id="duration"
@@ -143,19 +146,19 @@ export default function Irrigation() {
             </div>
           </div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            Quick: {([60, 120, 300, 600] as const).map((d) => (
+            {t("quick")}: {([60, 120, 300, 600] as const).map((d) => (
               <Button key={d} size="sm" variant="outline" onClick={() => setDuration(d)}>{d}s</Button>
             ))}
           </div>
           <div className="text-xs text-muted-foreground">
-            {duration == null || duration <= 0 ? "Set a duration to enable Start" : ""}
+            {duration == null || duration <= 0 ? t("duration_seconds") : ""}
           </div>
           <div className="flex items-center space-x-3">
-            <Button onClick={() => start(false)} disabled={loading || duration == null || duration <= 0}>Start</Button>
-            <Button variant="destructive" onClick={stop} disabled={loading}>Stop</Button>
-            <Button variant="outline" onClick={() => start(true)} disabled={loading || duration == null || duration <= 0}>Force Start</Button>
+            <Button onClick={() => start(false)} disabled={loading || duration == null || duration <= 0}>{t("start")}</Button>
+            <Button variant="destructive" onClick={stop} disabled={loading}>{t("stop")}</Button>
+            <Button variant="outline" onClick={() => start(true)} disabled={loading || duration == null || duration <= 0}>{t("force_start")}</Button>
             <span className={`text-sm ${isRunning ? "text-green-600" : "text-muted-foreground"}`}>
-              Status: {isRunning ? "Running" : "Idle"}
+              {t("status")}: {isRunning ? t("running") : t("idle")}
             </span>
           </div>
         </CardContent>
@@ -163,11 +166,11 @@ export default function Irrigation() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Recent valve events</CardTitle>
+          <CardTitle>{t("recent_valve_events")}</CardTitle>
         </CardHeader>
         <CardContent>
           {events.length === 0 ? (
-            <div className="text-sm text-muted-foreground">No events</div>
+            <div className="text-sm text-muted-foreground">{t("no_events")}</div>
           ) : (
             <ul className="space-y-2">
               {events.map((ev, i) => (
@@ -187,20 +190,31 @@ export default function Irrigation() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Recent alerts</CardTitle>
+          <CardTitle className="flex items-center justify-between">
+            <span>{t("alerts")}</span>
+            <label className="flex items-center gap-2 text-xs text-muted-foreground">
+              <input type="checkbox" checked={showAck} onChange={(e) => setShowAck(e.target.checked)} />
+              {t("show_acknowledged")}
+            </label>
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          {alerts.length === 0 ? (
-            <div className="text-sm text-muted-foreground">No alerts</div>
+          {alerts.filter(a => showAck || !a.sent).length === 0 ? (
+            <div className="text-sm text-muted-foreground">{t("all_clear")}</div>
           ) : (
             <ul className="space-y-2">
-              {alerts.map((a, i) => (
-                <li key={i} className="flex items-center justify-between border rounded-md px-3 py-2">
+              {alerts.filter(a => showAck || !a.sent).map((a, i) => (
+                <li key={i} className={`flex items-center justify-between border rounded-md px-3 py-2 ${a.sent ? "opacity-60" : ""}`}>
                   <div>
-                    <div className="text-sm font-medium">{a.category}</div>
+                    <div className="text-sm font-medium">{a.category}{a.sent ? ` • ${t("acknowledged")}` : ""}</div>
                     <div className="text-xs text-muted-foreground">{a.message}</div>
                   </div>
-                  <div className="text-xs text-muted-foreground">{a.ts ? new Date(a.ts).toLocaleString() : ""}</div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground">{a.ts ? new Date(a.ts).toLocaleString() : ""}</span>
+                    {!a.sent && (
+                      <Button size="sm" variant="outline" onClick={async () => { if (a.ts) { await api.alertAck(a.ts); refresh(); } }}>{t("acknowledge")}</Button>
+                    )}
+                  </div>
                 </li>
               ))}
             </ul>

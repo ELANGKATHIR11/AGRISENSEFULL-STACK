@@ -3,6 +3,7 @@ import { api } from "@/lib/api";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useI18n } from "@/i18n";
 
 function Sparkline({ points, color = "#16a34a" }: { points: number[]; color?: string }) {
   if (!points.length) return <div className="h-12" />;
@@ -29,15 +30,16 @@ type RecoItem = {
   ts: string;
   zone_id: string;
   plant: string;
-  water_liters: number;
-  expected_savings_liters: number;
-  fert_n_g: number;
-  fert_p_g: number;
-  fert_k_g: number;
-  yield_potential: number | null;
+  water_liters?: number;
+  expected_savings_liters?: number;
+  fert_n_g?: number;
+  fert_p_g?: number;
+  fert_k_g?: number;
+  yield_potential?: number | null;
 };
 
 export default function ImpactGraphs() {
+  const { t } = useI18n();
   const [zone, setZone] = useState("Z1");
   const [rows, setRows] = useState<RecoItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,9 +80,9 @@ export default function ImpactGraphs() {
   return (
     <div className="container mx-auto p-4 space-y-4">
       <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">Impact Over Time</h1>
+        <h1 className="text-2xl font-semibold">{t("impact_over_time")}</h1>
         <Select value={zone} onValueChange={setZone}>
-          <SelectTrigger className="w-32"><SelectValue placeholder="Zone" /></SelectTrigger>
+          <SelectTrigger className="w-32"><SelectValue placeholder={t("zone_label")} /></SelectTrigger>
           <SelectContent>
             <SelectItem value="Z1">Z1</SelectItem>
             <SelectItem value="Z2">Z2</SelectItem>
@@ -93,16 +95,16 @@ export default function ImpactGraphs() {
 
       {!rows.length && !loading && (
         <Card className="p-4 text-sm text-muted-foreground">
-          No recommendation snapshots yet. They’ll appear after calling Recommend or by posting to /reco/log.
+          {t("no_reco_snapshots")}
         </Card>
       )}
 
       <Tabs defaultValue="savings" className="w-full">
         <TabsList>
-          <TabsTrigger value="savings">Water Savings (L)</TabsTrigger>
-          <TabsTrigger value="water">Water Applied (L)</TabsTrigger>
-          <TabsTrigger value="fert">Fertilizer Total (g)</TabsTrigger>
-          <TabsTrigger value="yield">Yield Potential</TabsTrigger>
+          <TabsTrigger value="savings">{t("water_savings_l")}</TabsTrigger>
+          <TabsTrigger value="water">{t("water_applied_l")}</TabsTrigger>
+          <TabsTrigger value="fert">{t("fertilizer_total_g")}</TabsTrigger>
+          <TabsTrigger value="yield">{t("yield_potential")}</TabsTrigger>
         </TabsList>
         <TabsContent value="savings">
           <Card className="p-4">

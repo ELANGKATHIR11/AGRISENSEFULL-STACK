@@ -1,17 +1,19 @@
 import { NavLink } from "react-router-dom";
 import { Home, Zap, Wheat, Settings, LineChart, Droplets, CloudRain } from "lucide-react";
+import { useI18n, LanguageToggle } from "@/i18n";
 
 const Navigation = () => {
+  const { t } = useI18n();
   const navItems = [
-    { to: "/", icon: Home, label: "Home" },
-    { to: "/recommend", icon: Zap, label: "Recommend" },
-    { to: "/soil-analysis", icon: Wheat, label: "Soil Analysis" },
-    { to: "/crops", icon: Wheat, label: "Crops" },
-    { to: "/live", icon: Zap, label: "Live" },
-    { to: "/irrigation", icon: Droplets, label: "Irrigation" },
-    { to: "/harvesting", icon: CloudRain, label: "Harvesting" },
-    { to: "/impact", icon: LineChart, label: "Impact" },
-    { to: "/admin", icon: Settings, label: "Admin" },
+    { to: "/", icon: Home, label: t("nav_home") },
+    { to: "/recommend", icon: Zap, label: t("nav_recommend") },
+    { to: "/soil-analysis", icon: Wheat, label: t("nav_soil") },
+    { to: "/crops", icon: Wheat, label: t("nav_crops") },
+    { to: "/live", icon: Zap, label: t("nav_live") },
+    { to: "/irrigation", icon: Droplets, label: t("nav_irrigation") },
+    { to: "/harvesting", icon: CloudRain, label: t("nav_harvesting") },
+    { to: "/impact", icon: LineChart, label: t("nav_impact") },
+    { to: "/admin", icon: Settings, label: t("nav_admin") },
   ];
 
   return (
@@ -24,13 +26,13 @@ const Navigation = () => {
               <img src={`${import.meta.env.BASE_URL}logo-agrisense-mark-v2.svg`} alt="AgriSense" className="w-10 h-10 select-none" draggable={false} />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-foreground">AgriSense</h1>
-              <p className="text-xs text-muted-foreground">Smart Farming Platform</p>
+              <h1 className="text-xl font-bold text-foreground">{t("app_title")}</h1>
+              <p className="text-xs text-muted-foreground">{t("app_tagline")}</p>
             </div>
           </div>
 
           {/* Navigation Links */}
-          <div className="flex space-x-1">
+          <div className="flex items-center space-x-1">
             {navItems.map((item) => (
               <NavLink
                 key={item.to}
@@ -46,6 +48,9 @@ const Navigation = () => {
                 <span className="hidden sm:block">{item.label}</span>
               </NavLink>
             ))}
+            <div className="ml-2">
+              <LanguageToggle />
+            </div>
           </div>
         </div>
       </div>

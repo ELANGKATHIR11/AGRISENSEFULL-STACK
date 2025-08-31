@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional, List, Dict
 
 # Accept arbitrary plant names and soil labels from UI/dataset
@@ -27,7 +27,10 @@ class Recommendation(BaseModel):
     fert_n_g: float
     fert_p_g: float
     fert_k_g: float
+    # Hackathon: explicitly include inferred water source ("tank"|"groundwater")
+    water_source: Optional[str] = None
     notes: List[str]
+    tips: List[str] = Field(default_factory=list)
     expected_savings_liters: float
     expected_cost_saving_rs: float
     expected_co2e_kg: float

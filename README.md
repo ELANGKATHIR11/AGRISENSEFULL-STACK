@@ -2,6 +2,8 @@
 
 AIML BASED SMART AGRICULTURE SOLUTION
 
+See `PROJECT_DOCUMENTATION.md` for the full system architecture, API reference, configs, and deployment guide.
+
 ## How to run
 
 - Backend (FastAPI/uvicorn):
@@ -14,7 +16,7 @@ AIML BASED SMART AGRICULTURE SOLUTION
   - Node.js 18+ recommended
   - `cd agrisense_app/frontend/farm-fortune-frontend-main`
   - `npm install`
-  - `npm run dev` (serves http://localhost:8080)
+  - `npm run dev` (serves [http://localhost:8080](http://localhost:8080))
   - Dev proxy: the frontend uses `/api/*` and Vite forwards to `http://127.0.0.1:8004` (see `vite.config.ts`).
   - Optional: create `.env.local` with `VITE_API_URL=http://127.0.0.1:8004` to bypass proxy.
   - Build: `npm run build` → backend will serve `/ui` from the built `dist/`

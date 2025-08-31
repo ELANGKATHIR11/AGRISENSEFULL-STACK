@@ -1,6 +1,6 @@
 """Optional MQTT publisher: publish valve control commands to microcontrollers.
-Topics: agrisense/<zone_id>/command
-Payload example: {"action":"open","duration_s":120}
+Topics: <prefix>/<zone_id>/command (prefix via MQTT_PREFIX env, default 'agrisense')
+Payload examples: {"action":"start","duration_s":120} or {"action":"stop"}
 """
 import os
 from typing import Dict, Any
@@ -11,6 +11,7 @@ except Exception:
 
 BROKER = os.getenv("MQTT_BROKER", "localhost")
 PORT = int(os.getenv("MQTT_PORT", "1883"))
+PREFIX = os.getenv("MQTT_PREFIX", "agrisense").strip()
 
 def publish_command(zone_id: str, payload: Dict[str, Any]) -> bool:
     if mqtt is None:
@@ -20,7 +21,7 @@ def publish_command(zone_id: str, payload: Dict[str, Any]) -> bool:
         # Create a short-lived client to publish the command
         client: _Any = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)  # type: ignore[attr-defined]
         client.connect(BROKER, PORT, 60)  # type: ignore[call-arg]
-        topic = f"agrisense/{zone_id}/command"
+        topic = f"{PREFIX}/{zone_id}/command"
         client.publish(topic, json_dumps(payload))  # type: ignore[call-arg]
         client.disconnect()  # type: ignore[call-arg]
         return True

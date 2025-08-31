@@ -16,7 +16,9 @@ export type BackendRecommendation = {
   fert_n_g: number;
   fert_p_g: number;
   fert_k_g: number;
+  water_source?: string; // "tank" | "groundwater"
   notes?: string[];
+  tips?: string[];
   expected_savings_liters?: number;
   expected_cost_saving_rs?: number;
   expected_co2e_kg?: number;
@@ -79,10 +81,12 @@ export type EdgeCaptureResponse = {
   recommendation: BackendRecommendation;
 };
 
-export type TankStatus = { tank_id: string; level_pct?: number | null; volume_l?: number | null; last_update?: string | null };
+export type TankStatus = { tank_id: string; level_pct?: number | null; volume_l?: number | null; last_update?: string | null; capacity_liters?: number | null };
 export type IrrigationAck = { ok: boolean; status: string; note?: string };
 export type AlertItem = { ts?: string; zone_id: string; category: string; message: string; sent: boolean };
 export type ValveEvent = { ts: string; zone_id: string; action: "start" | "stop"; duration_s: number; status: string };
+export type RainwaterSummary = { tank_id: string; collected_total_l: number; used_total_l: number; net_l: number };
+export type RainwaterEntry = { ts: string; tank_id: string; collected_liters: number; used_liters: number };
 
 // Weather cache latest record shape from backend
 export type WeatherCacheRow = {
@@ -102,6 +106,7 @@ export const api = {
   edgeHealth: () => http<{ status: string; edge_module?: boolean }>(`/edge/health`),
   plants: () => http<{ items: PlantListItem[] }>(`/plants`),
   crops: () => http<{ items: CropCard[] }>(`/crops`),
+  soilTypes: () => http<{ items: string[] }>(`/soil/types`),
   adminWeatherRefresh: (lat: number, lon: number, days = 7) =>
     http<{ ok: boolean; cache_path: string; latest?: WeatherCacheRow }>(`/admin/weather/refresh`, {
       method: "POST",
@@ -122,7 +127,7 @@ export const api = {
       `/recent?zone_id=${encodeURIComponent(zone)}&limit=${limit}`
     ),
   recoRecent: (zone = "Z1", limit = 200) =>
-    http<{ items: Array<{ ts: string; zone_id: string; plant: string; water_liters: number; expected_savings_liters: number; fert_n_g: number; fert_p_g: number; fert_k_g: number; yield_potential: number | null }> }>(
+    http<{ items: Array<{ ts: string; zone_id: string; plant: string; water_liters?: number; expected_savings_liters?: number; fert_n_g?: number; fert_p_g?: number; fert_k_g?: number; yield_potential?: number | null; water_source?: string }> }>(
       `/reco/recent?zone_id=${encodeURIComponent(zone)}&limit=${limit}`
     ),
   recoLog: (zone_id: string, plant: string, rec: Partial<BackendRecommendation> & { water_liters?: number; expected_savings_liters?: number; fert_n_g?: number; fert_p_g?: number; fert_k_g?: number }, yield_potential?: number) =>
@@ -140,5 +145,10 @@ export const api = {
   alerts: (zone_id?: string, limit = 50) => http<{ items: AlertItem[] }>(`/alerts${zone_id ? `?zone_id=${encodeURIComponent(zone_id)}&limit=${limit}` : `?limit=${limit}`}`),
   alertCreate: (zone_id: string, category: string, message: string, sent = false) =>
     http<{ ok: boolean }>(`/alerts`, { method: "POST", body: JSON.stringify({ zone_id, category, message, sent }) }),
+  alertAck: (ts: string) => http<{ ok: boolean }>(`/alerts/ack`, { method: "POST", body: JSON.stringify({ ts }) }),
+  rainwaterSummary: (tank_id = "T1") => http<RainwaterSummary>(`/rainwater/summary?tank_id=${encodeURIComponent(tank_id)}`),
+  rainwaterRecent: (tank_id = "T1", limit = 10) => http<{ items: RainwaterEntry[] }>(`/rainwater/recent?tank_id=${encodeURIComponent(tank_id)}&limit=${limit}`),
+  rainwaterLog: (tank_id: string, collected_liters = 0, used_liters = 0) =>
+    http<{ ok: boolean }>(`/rainwater/log`, { method: "POST", body: JSON.stringify({ tank_id, collected_liters, used_liters }) }),
   adminReset: () => http<{ ok: boolean }>(`/admin/reset`, { method: "POST" }),
 };

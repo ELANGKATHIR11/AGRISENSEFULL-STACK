@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
+import { useI18n } from "@/i18n";
 
 interface SystemMetric {
   label: string;
@@ -36,6 +37,7 @@ interface ModelWeight {
 const Admin = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { t } = useI18n();
 
   // Mock system metrics
   const systemMetrics: SystemMetric[] = [
@@ -82,8 +84,8 @@ const Admin = () => {
     setLoading(false);
     
     toast({
-      title: "Models Reloaded",
-      description: "All ML models have been successfully reloaded.",
+      title: t("models_reloaded"),
+      description: t("models_reload_done"),
     });
   };
 
@@ -93,20 +95,20 @@ const Admin = () => {
     setLoading(false);
     
     toast({
-      title: "Dataset Reloaded", 
-      description: "Enhanced agricultural dataset has been refreshed.",
+      title: t("dataset_reloaded"), 
+      description: t("dataset_reload_done"),
     });
   };
 
   const handleResetAll = async () => {
-    if (!confirm("This will erase ALL stored data (readings, tank levels, events, alerts). Continue?")) return;
+  if (!confirm(t("confirm_erase_all"))) return;
     setLoading(true);
     try {
       await api.adminReset();
-      toast({ title: "All data erased", description: "Storage reset completed." });
+      toast({ title: t("all_data_erased"), description: t("storage_reset_done") });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
-      toast({ title: "Reset failed", description: msg, variant: "destructive" });
+      toast({ title: t("reset_failed"), description: msg, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -134,16 +136,16 @@ const Admin = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">System Administration</h1>
-          <p className="text-muted-foreground">Monitor and manage AgriSense system components</p>
+          <h1 className="text-3xl font-bold text-foreground mb-2">{t("system_administration")}</h1>
+          <p className="text-muted-foreground">{t("monitor_and_manage")}</p>
         </div>
 
         <Tabs defaultValue="overview" className="space-y-8">
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="models">ML Models</TabsTrigger>
-            <TabsTrigger value="system">System</TabsTrigger>
-            <TabsTrigger value="activity">Activity</TabsTrigger>
+            <TabsTrigger value="overview">{t("overview")}</TabsTrigger>
+            <TabsTrigger value="models">{t("ml_models")}</TabsTrigger>
+            <TabsTrigger value="system">{t("system")}</TabsTrigger>
+            <TabsTrigger value="activity">{t("activity")}</TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
@@ -153,9 +155,9 @@ const Admin = () => {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Zap className="w-5 h-5 text-primary" />
-                  <span>Quick Actions</span>
+                  <span>{t("quick_actions")}</span>
                 </CardTitle>
-                <CardDescription>Common administrative tasks</CardDescription>
+                <CardDescription>{t("common_admin_tasks")}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -165,7 +167,7 @@ const Admin = () => {
                     className="bg-gradient-primary hover:shadow-glow transition-spring"
                   >
                     <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                    Reload Models
+                    {t("reload_models")}
                   </Button>
                   <Button 
                     onClick={handleReloadDataset}
@@ -173,19 +175,19 @@ const Admin = () => {
                     disabled={loading}
                   >
                     <Database className="w-4 h-4 mr-2" />
-                    Reload Dataset
+                    {t("reload_dataset")}
                   </Button>
                   <Button variant="outline">
                     <BarChart3 className="w-4 h-4 mr-2" />
-                    View Logs
+                    {t("view_logs")}
                   </Button>
                   <Button variant="outline">
                     <Settings className="w-4 h-4 mr-2" />
-                    Config
+                    {t("config")}
                   </Button>
                   <Button onClick={handleResetAll} variant="destructive" disabled={loading}>
                     <Database className="w-4 h-4 mr-2" />
-                    Erase All Data
+                    {t("erase_all_data")}
                   </Button>
                 </div>
               </CardContent>
@@ -263,7 +265,7 @@ const Admin = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
                     <Activity className="w-5 h-5 text-primary" />
-                    <span>System Health</span>
+                    <span>{t("system_health")}</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -289,7 +291,7 @@ const Admin = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
                     <Settings className="w-5 h-5 text-primary" />
-                    <span>Configuration</span>
+                    <span>{t("configuration")}</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -322,9 +324,9 @@ const Admin = () => {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Clock className="w-5 h-5 text-primary" />
-                  <span>Recent Activity</span>
+                  <span>{t("recent_activity")}</span>
                 </CardTitle>
-                <CardDescription>System events and administrative actions</CardDescription>
+                <CardDescription>{t("system_events_actions")}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">

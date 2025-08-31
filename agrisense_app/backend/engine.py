@@ -117,6 +117,111 @@ class RecoEngine:
             notes.append(f"Soil pH ({ph:.1f}) is above optimal for {pcfg['name']}. Consider acidifying amendments.")
         return n_g, p_g, k_g, notes
 
+    def _detailed_tips(
+        self,
+        pcfg: Dict[str, Union[float, str]],
+        ph: float,
+        moisture: float,
+        temp: float,
+        ec: float,
+        n_ppm: Optional[float],
+        p_ppm: Optional[float],
+        k_ppm: Optional[float],
+        soil_type: str,
+        area_m2: float,
+    ) -> List[str]:
+        """Generate concrete, farmer-friendly tips when parameters are out of ideal ranges.
+        Tips are action-oriented and specific (what, how much, when).
+        """
+        tips: List[str] = []
+        name = str(pcfg.get("name", "crop"))
+        # pH guidance
+        ph_min = float(pcfg.get("ph_min", 5.5))
+        ph_max = float(pcfg.get("ph_max", 8.5))
+        if ph < ph_min:
+            # Estimate ag lime (CaCO3) need: rough thumb-rule ~0.5 kg per 10 m2 to raise ~0.2-0.3 pH in light soils
+            lime_kg = max(0.0, area_m2 * 0.05)
+            tips.append(
+                f"pH low ({ph:.1f} < {ph_min:.1f}) for {name}. Apply agricultural lime ~ {lime_kg:.1f} kg over {area_m2:.0f} m2; irrigate lightly and recheck in 2-4 weeks."
+            )
+        elif ph > ph_max:
+            # Use elemental sulfur for alkalinity reduction; very rough guidance 0.02–0.05 kg/m2 depending on soil
+            sulfur_kg = max(0.0, area_m2 * 0.03)
+            tips.append(
+                f"pH high ({ph:.1f} > {ph_max:.1f}) for {name}. Incorporate elemental sulfur ~ {sulfur_kg:.1f} kg over {area_m2:.0f} m2; keep soil moist and recheck pH after 3-6 weeks."
+            )
+
+        # Moisture guidance (use crop parameters if present)
+        try:
+            m_max = float(pcfg.get("moisture_max", 80.0))
+            m_opt = float(pcfg.get("moisture_optimal", 60.0))
+            m_min = float(pcfg.get("moisture_min", 20.0))
+        except Exception:
+            m_max, m_opt, m_min = 80.0, 60.0, 20.0
+        if moisture < m_min:
+            # Water to reach mid of optimal band
+            target = max(m_opt - 5.0, m_min + 5.0)
+            tips.append(
+                f"Soil moisture low ({moisture:.1f}% < {m_min:.0f}%). Irrigate today to reach ~{target:.0f}%: split into 2 cycles to reduce runoff, especially on {soil_type} soils."
+            )
+        elif moisture > m_max:
+            tips.append(
+                f"Soil moisture high ({moisture:.1f}% > {m_max:.0f}%). Pause irrigation; improve drainage or use raised beds to avoid root stress."
+            )
+
+        # EC guidance (salinity)
+        if ec >= 3.0:
+            tips.append(
+                f"High salinity (EC {ec:.2f} dS/m). Avoid heavy fertilization, flush salts with a deep irrigation in cool hours, and consider gypsum if sodicity suspected."
+            )
+        elif ec <= 0.2:
+            tips.append(
+                f"Very low EC ({ec:.2f} dS/m). Nutrient levels may be insufficient - apply balanced fertilizer and mulching to improve retention."
+            )
+
+        # Nitrogen / Phosphorus / Potassium guidance against targets
+        n_target = self.targets_ppm["N"]
+        p_target = self.targets_ppm["P"]
+        k_target = self.targets_ppm["K"]
+        if n_ppm is not None and n_ppm < n_target:
+            deficit = n_target - n_ppm
+            # Convert N ppm deficit to urea requirement considering 46% N, 0.1 scaling already used elsewhere
+            urea_g = max(0.0, deficit * area_m2 * 0.1) / 0.46
+            tips.append(
+                f"Nitrogen low (N {n_ppm:.0f} < {n_target}). Apply urea ~ {urea_g:.0f} g split into 2 doses a week apart; irrigate lightly after each application."
+            )
+        if p_ppm is not None and p_ppm < p_target:
+            deficit = p_target - p_ppm
+            # Use DAP: 46% P2O5; convert P to P2O5 via factor 1/0.436
+            p2o5_needed = max(0.0, deficit * area_m2 * 0.1) / 0.436
+            dap_g = p2o5_needed / 0.46
+            tips.append(
+                f"Phosphorus low (P {p_ppm:.0f} < {p_target}). Apply DAP ~ {dap_g:.0f} g; mix into topsoil, avoid direct contact with roots."
+            )
+        if k_ppm is not None and k_ppm < k_target:
+            deficit = k_target - k_ppm
+            # Use MOP: 60% K2O; convert K to K2O via factor 1/0.8301
+            k2o_needed = max(0.0, deficit * area_m2 * 0.1) / 0.8301
+            mop_g = k2o_needed / 0.60
+            tips.append(
+                f"Potassium low (K {k_ppm:.0f} < {k_target}). Apply MOP ~ {mop_g:.0f} g; water after application to aid uptake."
+            )
+
+        # Temperature hints
+        if temp >= 35:
+            tips.append("High temperature - prefer early morning/evening irrigation and use mulch to reduce evaporation.")
+        elif temp <= 12:
+            tips.append("Low temperature - avoid overwatering; consider row covers to reduce stress.")
+
+        # Soil type specifics
+        st = soil_type.strip().lower()
+        if st == "sand":
+            tips.append("Sandy soil drains fast—use smaller, more frequent irrigation cycles and add organic matter.")
+        elif st == "clay":
+            tips.append("Clay soil holds water—ensure good drainage and avoid working soil when wet.")
+
+        return tips
+
     def recommend(self, reading: Dict[str, Any]) -> Dict[str, Any]:
         plant: str = str((reading.get("plant") or "generic")).lower()
         soil_type: str = str(reading.get("soil_type", "loam"))
@@ -231,7 +336,7 @@ class RecoEngine:
             "n_from_dap_g": round(n_from_dap, 1),
         }
 
-        # Moisture guidance
+    # Moisture guidance
         if "moisture_optimal" in pcfg:
             try:
                 moisture_max = float(pcfg["moisture_max"])
@@ -265,12 +370,27 @@ class RecoEngine:
             else:
                 notes.append("Moderate moisture; light irrigation advised if no rain expected.")
 
+        # Build detailed tips block
+        tips: List[str] = self._detailed_tips(
+            pcfg=pcfg,
+            ph=ph,
+            moisture=moisture,
+            temp=temp,
+            ec=ec,
+            n_ppm=n_ppm,
+            p_ppm=p_ppm,
+            k_ppm=k_ppm,
+            soil_type=soil_type,
+            area_m2=area_m2,
+        )
+
         out: Dict[str, Any] = {
             "water_liters": round(water_total, 1),
             "fert_n_g": round(n_g, 1),
             "fert_p_g": round(p_g, 1),
             "fert_k_g": round(k_g, 1),
             "notes": notes,
+            "tips": tips,
             "expected_savings_liters": round(savings_liters, 1),
             "expected_cost_saving_rs": round(cost_saving, 2),
             "expected_co2e_kg": round(co2e, 2),

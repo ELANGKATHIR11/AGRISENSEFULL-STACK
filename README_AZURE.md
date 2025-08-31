@@ -1,6 +1,6 @@
 # Deploy AgriSense to Azure Container Apps
 
-This repo now includes Azure infrastructure-as-code (Bicep) and an `azure.yaml` so you can deploy with a single command using the Azure Developer CLI (azd).
+This repo includes Azure infrastructure-as-code (Bicep) and an `azure.yaml` so you can deploy with a single command using the Azure Developer CLI (azd).
 
 ## Prerequisites
 
@@ -14,11 +14,11 @@ This repo now includes Azure infrastructure-as-code (Bicep) and an `azure.yaml` 
 2. Initialize environment (you'll be prompted for an environment name, e.g. `dev`)
 3. Provision infra and deploy
 
-```powershell
-azd auth login
-azd init -e dev
-azd up
-```
+    ```powershell
+    azd auth login
+    azd init -e dev
+    azd up
+    ```
 
 This provisions:
 
@@ -30,8 +30,8 @@ This provisions:
 
 Outputs will include the public FQDN for the app. Visit:
 
-- https://YOUR-FQDN/ui
-- https://YOUR-FQDN/health
+- <https://YOUR-FQDN/ui>
+- <https://YOUR-FQDN/health>
 
 ## Configuration
 
@@ -51,23 +51,23 @@ Runtime environment variables are set in `infra/bicep/main.bicep` under the cont
 
 Database path:
 
-- The backend now honors `AGRISENSE_DB_PATH` and `AGRISENSE_DATA_DIR`. By default, it writes `sensors.db` to `/data/sensors.db` which is an ephemeral EmptyDir.
+- The backend honors `AGRISENSE_DB_PATH` and `AGRISENSE_DATA_DIR`. By default, it writes `sensors.db` to `/data/sensors.db` which is an ephemeral EmptyDir.
 - For persistence across revisions, switch the `volumes` section in `infra/bicep/main.bicep` to use an Azure Files volume.
 
 ## Make changes and redeploy
 
 - App code changes (no infra change):
 
-  ```powershell
-  azd deploy
-  ```
+    ```powershell
+    azd deploy
+    ```
 
 - Infra changes (Bicep):
 
-  ```powershell
-  azd provision
-  azd deploy
-  ```
+    ```powershell
+    azd provision
+    azd deploy
+    ```
 
 ## Optional: secure CORS
 
@@ -77,9 +77,10 @@ Set `allowedOrigins` in `infra/bicep/main.parameters.json` to your frontend orig
 
 - Check Container App logs:
 
-  ```powershell
-  az containerapp logs show --name agrisense-api --resource-group <rg>
-  ```
+    ```powershell
+    az containerapp logs show --name agrisense-api --resource-group <rg>
+    ```
+
 - Verify health endpoints: `/health`, `/ready`
 - Ensure the image was pushed to ACR and the managed identity has `AcrPull` on the registry
 

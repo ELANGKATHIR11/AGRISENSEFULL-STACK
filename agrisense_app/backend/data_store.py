@@ -34,10 +34,23 @@ def get_conn():
         yield_potential REAL
     )
     ''')
+    # Store individual tips for richer analytics
+    conn.execute('''
+    CREATE TABLE IF NOT EXISTS reco_tips(
+        ts TEXT, zone_id TEXT, plant TEXT,
+        tip TEXT, category TEXT
+    )
+    ''')
     # Water tank levels (for rainwater harvesting storage)
     conn.execute('''
     CREATE TABLE IF NOT EXISTS tank_levels(
         ts TEXT, tank_id TEXT, level_pct REAL, volume_l REAL, rainfall_mm REAL
+    )
+    ''')
+    # Rainwater harvesting ledger for collections/usages
+    conn.execute('''
+    CREATE TABLE IF NOT EXISTS rainwater_harvest(
+        ts TEXT, tank_id TEXT, collected_liters REAL, used_liters REAL
     )
     ''')
     # Valve actuation history for irrigation control
@@ -103,8 +116,28 @@ def recent(zone_id: str, limit: int = 50) -> List[Dict[str, Any]]:
     conn.close()
     return rows
 
+def _ensure_reco_history_columns(conn) -> None:
+    """Idempotently add new columns to reco_history if missing."""
+    try:
+        cur = conn.execute("PRAGMA table_info(reco_history)")
+        cols = [row[1] for row in cur.fetchall()]
+        if "water_source" not in cols:
+            try:
+                conn.execute("ALTER TABLE reco_history ADD COLUMN water_source TEXT")
+            except Exception:
+                pass
+        if "tips" not in cols:
+            try:
+                conn.execute("ALTER TABLE reco_history ADD COLUMN tips TEXT")
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+
 def insert_reco_snapshot(zone_id: str, plant: str, rec: Dict[str, Any], yield_potential: Optional[float] = None) -> None:
     conn = get_conn()
+    _ensure_reco_history_columns(conn)
     ts = rec.get("timestamp") or dt.datetime.now(dt.timezone.utc).isoformat()
     vals = (
         ts,
@@ -117,7 +150,48 @@ def insert_reco_snapshot(zone_id: str, plant: str, rec: Dict[str, Any], yield_po
         float(rec.get("fert_k_g", 0.0)),
         float(yield_potential) if yield_potential is not None else None,
     )
-    conn.execute("INSERT INTO reco_history VALUES (?,?,?,?,?,?,?,?,?)", vals)
+    # Insert base columns first
+    conn.execute("INSERT INTO reco_history (ts, zone_id, plant, water_liters, expected_savings_liters, fert_n_g, fert_p_g, fert_k_g, yield_potential) VALUES (?,?,?,?,?,?,?,?,?)", vals)
+    # Update water_source and tips if present
+    try:
+        ws = rec.get("water_source")
+        if ws is not None:
+            conn.execute("UPDATE reco_history SET water_source=? WHERE ts=? AND zone_id=?", (str(ws), ts, zone_id))
+    except Exception:
+        pass
+    try:
+        tips = rec.get("tips")
+        if isinstance(tips, list) and tips:
+            # Store as a single string joined by ' | ' to keep schema simple
+            s = " | ".join(str(x) for x in tips)
+            conn.execute("UPDATE reco_history SET tips=? WHERE ts=? AND zone_id=?", (s, ts, zone_id))
+    except Exception:
+        pass
+    # Insert individual tips, categorize by simple heuristics
+    try:
+        tips = rec.get("tips")
+        if isinstance(tips, list):
+            for tip in tips:
+                t = str(tip)
+                cat = "other"
+                lower = t.lower()
+                if "ph " in lower:
+                    cat = "ph"
+                elif "moisture" in lower or "%" in lower:
+                    cat = "moisture"
+                elif "ec" in lower or "salinity" in lower:
+                    cat = "ec"
+                elif "nitrogen" in lower or "urea" in lower:
+                    cat = "nitrogen"
+                elif "phosphorus" in lower or "dap" in lower:
+                    cat = "phosphorus"
+                elif "potassium" in lower or "mop" in lower:
+                    cat = "potassium"
+                elif "temperature" in lower or "irrigation" in lower or "mulch" in lower:
+                    cat = "climate"
+                conn.execute("INSERT INTO reco_tips VALUES (?,?,?,?,?)", (ts, zone_id, plant, t, cat))
+    except Exception:
+        pass
     conn.commit()
     conn.close()
 
@@ -188,3 +262,41 @@ def recent_alerts(zone_id: Optional[str] = None, limit: int = 50) -> List[Dict[s
     rows = [dict(zip(cols, row)) for row in cur.fetchall()]
     conn.close()
     return rows
+
+# --- Rainwater ledger helpers ---
+def insert_rainwater_entry(tank_id: str, collected_liters: float = 0.0, used_liters: float = 0.0) -> None:
+    conn = get_conn()
+    ts = dt.datetime.now(dt.timezone.utc).isoformat()
+    conn.execute("INSERT INTO rainwater_harvest VALUES (?,?,?,?)", (ts, tank_id, float(collected_liters), float(used_liters)))
+    conn.commit()
+    conn.close()
+
+def rainwater_summary(tank_id: str = "T1") -> Dict[str, Any]:
+    conn = get_conn()
+    cur = conn.execute(
+        "SELECT IFNULL(SUM(collected_liters),0), IFNULL(SUM(used_liters),0) FROM rainwater_harvest WHERE tank_id=?",
+        (tank_id,),
+    )
+    row = cur.fetchone() or (0.0, 0.0)
+    collected, used = float(row[0] or 0.0), float(row[1] or 0.0)
+    conn.close()
+    return {"tank_id": tank_id, "collected_total_l": collected, "used_total_l": used, "net_l": collected - used}
+
+def recent_rainwater(tank_id: str = "T1", limit: int = 10) -> List[Dict[str, Any]]:
+    conn = get_conn()
+    cur = conn.execute(
+        "SELECT * FROM rainwater_harvest WHERE tank_id=? ORDER BY ts DESC LIMIT ?",
+        (tank_id, limit),
+    )
+    cols = [c[0] for c in cur.description]
+    rows = [dict(zip(cols, row)) for row in cur.fetchall()]
+    conn.close()
+    return rows
+
+# --- Alerts ack ---
+def mark_alert_ack(ts: str) -> None:
+    conn = get_conn()
+    # Mark as sent=1 to indicate acknowledged; or could add a new column in a future migration
+    conn.execute("UPDATE alerts SET sent=1 WHERE ts=?", (ts,))
+    conn.commit()
+    conn.close()

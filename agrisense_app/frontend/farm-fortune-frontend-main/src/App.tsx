@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navigation from "./components/Navigation";
+import { I18nProvider } from "./i18n";
 import Home from "./pages/Home";
 import Dashboard from "@/pages/Dashboard";
 import Recommend from "./pages/Recommend";
@@ -24,28 +25,30 @@ const routerBasename = import.meta.env.PROD ? "/ui" : "/";
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter basename={routerBasename}>
-        <div className="min-h-screen bg-background">
-          <Navigation />
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/recommend" element={<Recommend />} />
-            <Route path="/soil-analysis" element={<SoilAnalysis />} />
-            <Route path="/crops" element={<Crops />} />
-            <Route path="/live" element={<LiveStats />} />
-            <Route path="/irrigation" element={<Irrigation />} />
-            <Route path="/harvesting" element={<Harvesting />} />
-            <Route path="/admin" element={<Admin />} />
-            <Route path="/impact" element={<ImpactGraphs />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </div>
-      </BrowserRouter>
-    </TooltipProvider>
+    <I18nProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter basename={routerBasename}>
+          <div className="min-h-screen bg-background">
+            <Navigation />
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/recommend" element={<Recommend />} />
+              <Route path="/soil-analysis" element={<SoilAnalysis />} />
+              <Route path="/crops" element={<Crops />} />
+              <Route path="/live" element={<LiveStats />} />
+              <Route path="/irrigation" element={<Irrigation />} />
+              <Route path="/harvesting" element={<Harvesting />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/impact" element={<ImpactGraphs />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </div>
+        </BrowserRouter>
+      </TooltipProvider>
+    </I18nProvider>
   </QueryClientProvider>
 );
 

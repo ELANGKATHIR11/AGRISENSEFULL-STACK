@@ -6,11 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Search, Wheat, Droplets, Thermometer, Sun, Calendar, TrendingUp } from "lucide-react";
 
 import { api, type CropCard } from "@/lib/api";
+import { useI18n } from "@/i18n";
 
 const Crops = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [crops, setCrops] = useState<CropCard[]>([]);
+  const { t } = useI18n();
 
   useEffect(() => {
     let cancelled = false;
@@ -58,8 +60,8 @@ const Crops = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Crop Database</h1>
-          <p className="text-muted-foreground">Browse our comprehensive crop library with growing requirements and tips</p>
+          <h1 className="text-3xl font-bold text-foreground mb-2">{t("nav_crops")}</h1>
+          <p className="text-muted-foreground">{t("crops_browse_subtitle")}</p>
         </div>
 
         {/* Search and Filter */}
@@ -70,7 +72,7 @@ const Crops = () => {
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search crops by name or scientific name..."
+                    placeholder={t("search_crops_placeholder")}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10"
@@ -85,13 +87,13 @@ const Crops = () => {
                       onClick={() => setSelectedCategory(category)}
                       className={selectedCategory === category ? "bg-gradient-primary" : ""}
                     >
-                      {category === "all" ? "All Crops" : category}
+                      {category === "all" ? t("all_crops") : category}
                     </Button>
                   ))}
                 </div>
               </div>
               <div className="mt-3 text-xs text-muted-foreground text-right">
-                Showing {filteredCrops.length} of {crops.length} crops
+                {t("showing_n_of_m").replace("{n}", String(filteredCrops.length)).replace("{m}", String(crops.length))}
               </div>
             </CardContent>
           </Card>
@@ -126,7 +128,7 @@ const Crops = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="flex items-center space-x-2 text-sm">
                     <Droplets className="w-4 h-4 text-primary" />
-                    <span className="text-muted-foreground">Water:</span>
+                    <span className="text-muted-foreground">{t("water_label")}:</span>
                     <Badge className={`text-xs ${getWaterColor(crop.waterRequirement)}`}>
                       {crop.waterRequirement}
                     </Badge>
@@ -134,19 +136,19 @@ const Crops = () => {
                   
                   <div className="flex items-center space-x-2 text-sm">
                     <Sun className="w-4 h-4 text-primary" />
-                    <span className="text-muted-foreground">Season:</span>
+                    <span className="text-muted-foreground">{t("season")}:</span>
                     <span className="font-medium text-foreground">{crop.season}</span>
                   </div>
 
                   <div className="flex items-center space-x-2 text-sm">
                     <Thermometer className="w-4 h-4 text-primary" />
-                    <span className="text-muted-foreground">Temp:</span>
+                    <span className="text-muted-foreground">{t("temp_short")}:</span>
                     <span className="font-medium text-foreground">{crop.tempRange}</span>
                   </div>
 
                   <div className="flex items-center space-x-2 text-sm">
                     <TrendingUp className="w-4 h-4 text-primary" />
-                    <span className="text-muted-foreground">pH:</span>
+                    <span className="text-muted-foreground">{t("ph_short")}:</span>
                     <span className="font-medium text-foreground">{crop.phRange}</span>
                   </div>
                 </div>
@@ -154,12 +156,12 @@ const Crops = () => {
                 {/* Growth Period */}
                 <div className="flex items-center space-x-2 text-sm bg-accent rounded-lg p-2">
                   <Calendar className="w-4 h-4 text-accent-foreground" />
-                  <span className="text-accent-foreground">Growth Period: {crop.growthPeriod}</span>
+                  <span className="text-accent-foreground">{t("growth_period")}: {crop.growthPeriod}</span>
                 </div>
 
                 {/* Growing Tips */}
                 <div className="space-y-2">
-                  <h4 className="text-sm font-semibold text-foreground">Growing Tips:</h4>
+                  <h4 className="text-sm font-semibold text-foreground">{t("growing_tips")}</h4>
                   <ul className="space-y-1">
                     {crop.tips.map((tip, index) => (
                       <li key={index} className="text-xs text-muted-foreground flex items-center space-x-2">
@@ -178,8 +180,8 @@ const Crops = () => {
         {filteredCrops.length === 0 && (
           <div className="text-center py-12">
             <Wheat className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-foreground mb-2">No crops found</h3>
-            <p className="text-muted-foreground">Try adjusting your search terms or category filter</p>
+            <h3 className="text-lg font-semibold text-foreground mb-2">{t("no_crops_found")}</h3>
+            <p className="text-muted-foreground">{t("try_adjusting_search")}</p>
           </div>
         )}
       </div>
