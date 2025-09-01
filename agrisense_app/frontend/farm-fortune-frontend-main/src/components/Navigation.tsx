@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { Home, Zap, Wheat, Settings, LineChart, Droplets, CloudRain } from "lucide-react";
+import { Home, Zap, Wheat, Settings, LineChart, Droplets, CloudRain, MessageSquare } from "lucide-react";
 import { useI18n, LanguageToggle } from "@/i18n";
 
 const Navigation = () => {
@@ -12,6 +12,7 @@ const Navigation = () => {
     { to: "/live", icon: Zap, label: t("nav_live") },
     { to: "/irrigation", icon: Droplets, label: t("nav_irrigation") },
     { to: "/harvesting", icon: CloudRain, label: t("nav_harvesting") },
+  { to: "/chat", icon: MessageSquare, label: "Chat" },
     { to: "/impact", icon: LineChart, label: t("nav_impact") },
     { to: "/admin", icon: Settings, label: t("nav_admin") },
   ];

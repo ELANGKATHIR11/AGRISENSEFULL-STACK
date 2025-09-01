@@ -16,6 +16,7 @@ import LiveStats from "./pages/LiveStats";
 import ImpactGraphs from "./pages/ImpactGraphs";
 import Irrigation from "@/pages/Irrigation";
 import Harvesting from "@/pages/Harvesting";
+import Chatbot from "@/pages/Chatbot";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,7 @@ const App = () => (
               <Route path="/live" element={<LiveStats />} />
               <Route path="/irrigation" element={<Irrigation />} />
               <Route path="/harvesting" element={<Harvesting />} />
+              <Route path="/chat" element={<Chatbot />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="/impact" element={<ImpactGraphs />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

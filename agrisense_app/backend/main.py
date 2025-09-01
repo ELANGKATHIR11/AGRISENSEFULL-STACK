@@ -1031,6 +1031,157 @@ def get_crops_full() -> CropsResponse:
     return CropsResponse(items=_dataset_to_cards())
 
 
+# --- Chatbot ---
+class ChatRequest(BaseModel):
+    message: str
+    zone_id: str = "Z1"
+
+
+class ChatResponse(BaseModel):
+    answer: str
+    sources: Optional[List[str]] = None
+
+
+def _find_crop_card(name: str) -> Optional[CropCard]:
+    nm = name.strip().lower().replace("-", " ")
+    for c in _dataset_to_cards():
+        if c.name.lower() == nm or c.id.lower() == nm or nm in c.name.lower():
+            return c
+    return None
+
+
+def _format_reco(rec: Dict[str, Any]) -> str:
+    parts: List[str] = []
+    try:
+        wl = rec.get("water_liters")
+        if wl is not None:
+            parts.append(f"Water ~{float(wl):.0f} L ({rec.get('water_source','tank')})")
+    except Exception:
+        pass
+    for k, label in [("fert_n_g", "N"), ("fert_p_g", "P"), ("fert_k_g", "K")]:
+        try:
+            v = rec.get(k)
+            if v is not None and float(v) > 0:
+                parts.append(f"{label} {float(v):.0f} g")
+        except Exception:
+            pass
+    if not parts:
+        return "No immediate action required. Maintain regular monitoring."
+    return "; ".join(parts)
+
+
+@app.post("/chat/ask")
+def chat_ask(req: ChatRequest) -> ChatResponse:
+    q = req.message.strip()
+    ql = q.lower()
+    sources: List[str] = []
+
+    # 1) If question mentions a crop, return its quick facts
+    tokens = [w.strip("., ?!()[]{}\"'`").lower() for w in q.split()]
+    crop_hit: Optional[CropCard] = None
+    for w in tokens:
+        c = _find_crop_card(w)
+        if c is not None:
+            crop_hit = c
+            break
+    if crop_hit is not None:
+        ans = [
+            f"Crop: {crop_hit.name}",
+        ]
+        if crop_hit.category:
+            ans.append(f"Category: {crop_hit.category}")
+        if crop_hit.season:
+            ans.append(f"Season: {crop_hit.season}")
+        if crop_hit.waterRequirement:
+            ans.append(f"Water need: {crop_hit.waterRequirement}")
+        if crop_hit.tempRange:
+            ans.append(f"Temperature: {crop_hit.tempRange}")
+        if crop_hit.phRange:
+            ans.append(f"Soil pH: {crop_hit.phRange}")
+        if crop_hit.growthPeriod:
+            ans.append(f"Growth period: {crop_hit.growthPeriod}")
+        if crop_hit.tips:
+            ans.append("Tips: " + "; ".join(crop_hit.tips[:3]))
+        sources.append("india_crop_dataset.csv (+ Sikkim additions if present)")
+        return ChatResponse(answer="\n".join(ans), sources=sources)
+
+    # 2) Irrigation / fertiliser intent -> use last reading and engine
+    if any(
+        k in ql
+        for k in ["irrigat", "water", "moisture", "fert", "urea", "dap", "mop", "npk"]
+    ):
+        last = recent(req.zone_id, 1)
+        base = last[0] if last else engine.defaults
+        rec = engine.recommend(dict(base))
+        # augment water source decision
+        try:
+            need_l = float(rec.get("water_liters", 0.0))
+        except Exception:
+            need_l = 0.0
+        rec["water_source"] = _select_water_source(need_l)
+        txt = _format_reco(rec)
+        sources.extend(["latest reading", "engine.recommend"])
+        return ChatResponse(answer=txt, sources=sources)
+
+    # 3) Tank status intent
+    if any(k in ql for k in ["tank", "storage", "reservoir", "cistern"]):
+        row = latest_tank_level("T1") or {}
+        pct = row.get("level_pct")
+        vol = row.get("volume_l")
+        if pct is None and vol is None:
+            return ChatResponse(answer="No tank data available yet.")
+        ans = (
+            f"Tank level: {pct:.0f}%"
+            if isinstance(pct, (int, float))
+            else "Tank level: —"
+        )
+        if isinstance(vol, (int, float)) and vol > 0:
+            ans += f", approx {vol:.0f} L"
+        sources.append("tank_levels")
+        return ChatResponse(answer=ans, sources=sources)
+
+    # 4) Soil pH / EC generic guidance
+    if "ph" in ql or "acidity" in ql:
+        return ChatResponse(
+            answer=(
+                "Most crops prefer soil pH 6.0–7.5. If pH is low (<6), add lime; if high (>7.5), add elemental sulfur/organic matter."
+            )
+        )
+    if "ec" in ql or "salinity" in ql:
+        return ChatResponse(
+            answer=(
+                "EC ~1–2 dS/m is generally acceptable. High salinity reduces uptake—leach with good-quality water and improve drainage."
+            )
+        )
+
+    # 5) Crop suggestion by soil type
+    if "best crop" in ql or ("crop" in ql and "soil" in ql):
+        # Try to detect simple soil words
+        soil = next(
+            (
+                w
+                for w in ["loam", "sandy", "clay", "sandy loam", "clay loam"]
+                if w in ql
+            ),
+            "loam",
+        )
+        resp = suggest_crop({"soil_type": soil})
+        top = (
+            ", ".join([c.crop for c in resp.top[:3]])
+            if resp.top
+            else "(no suggestions)"
+        )
+        return ChatResponse(answer=f"For {resp.soil_type}: top crops could be {top}.")
+
+    # Fallback
+    return ChatResponse(
+        answer=(
+            "I can help with irrigation, fertilizer, crop info, tank status and soil guidance. Try: "
+            "'How much water should I apply today?', 'Recommend NPK for my field', 'Tell me about rice', 'What is my tank level?'"
+        )
+    )
+
+
 # --- Rainwater ledger ---
 @app.post("/rainwater/log")
 def rainwater_log(body: Dict[str, Any]) -> Dict[str, bool]:

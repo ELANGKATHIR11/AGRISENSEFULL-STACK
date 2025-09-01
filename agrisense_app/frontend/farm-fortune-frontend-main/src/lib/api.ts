@@ -151,4 +151,9 @@ export const api = {
   rainwaterLog: (tank_id: string, collected_liters = 0, used_liters = 0) =>
     http<{ ok: boolean }>(`/rainwater/log`, { method: "POST", body: JSON.stringify({ tank_id, collected_liters, used_liters }) }),
   adminReset: () => http<{ ok: boolean }>(`/admin/reset`, { method: "POST" }),
+  chatAsk: (message: string, zone_id = "Z1") =>
+    http<{ answer: string; sources?: string[] }>(`/chat/ask`, {
+      method: "POST",
+      body: JSON.stringify({ message, zone_id }),
+    }),
 };
