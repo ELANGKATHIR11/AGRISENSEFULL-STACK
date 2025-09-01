@@ -24,6 +24,7 @@ Key components
 - Edge & MQTT: `agrisense_app/backend/mqtt_publish.py`, `agrisense_pi_edge_minimal/edge/*`
 - Frontend: `agrisense_app/frontend/farm-fortune-frontend-main`
 - Infra: `infra/bicep/main.bicep` + `azure.yaml`, containerized by `Dockerfile`
+- Chatbot: retrieval endpoint `/chatbot/ask` with saved encoders and `/chatbot/metrics` for Recall@K (optional)
 
 ASCII map
 
@@ -63,6 +64,7 @@ Container & cloud (optional)
 - `Dockerfile` — Multi-stage frontend + backend image
 - `azure.yaml` — `azd` service config
 - `scripts/` and `agrisense_app/scripts/` — smoke tests, training, utilities
+- Chatbot artifacts: `agrisense_app/backend/chatbot_question_encoder/`, `chatbot_answer_encoder/`, `chatbot_index.npz`, `chatbot_index.json`, metrics `chatbot_metrics.json`
 
 ---
 
@@ -73,7 +75,7 @@ Included CSVs (root or backend directory):
 - `agrisense_app/backend/india_crop_dataset.csv` — Primary catalog for crop names and properties used by UI and crop cards
 - `sikkim_crop_dataset.csv` — Optional supplement for region-specific crops
 
-Columns (union across datasets; not all are required):
+Columns (union across datasets; not all are required) used by UI and chatbot crop facts:
 
 - `Crop` or `crop` — Crop name (string)
 - `Crop_Category` or `category` — Category (e.g., Cereal, Vegetable, Spice)
@@ -284,6 +286,8 @@ Smoke test (optional)
 ```powershell
 # In another terminal
 curl http://127.0.0.1:8004/health
+curl -X POST http://127.0.0.1:8004/chatbot/ask -H "Content-Type: application/json" -d '{"question":"Tell me about carrot","top_k":3}'
+curl http://127.0.0.1:8004/chatbot/metrics
 curl -X POST http://127.0.0.1:8004/recommend -H "Content-Type: application/json" -d '{
   "plant":"tomato","soil_type":"loam","area_m2":100,
   "ph":6.5,"moisture_pct":35,"temperature_c":28,"ec_dS_m":1.0

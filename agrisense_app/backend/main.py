@@ -6,11 +6,16 @@ from fastapi.responses import FileResponse, RedirectResponse, JSONResponse
 from fastapi import HTTPException
 from starlette.middleware.gzip import GZipMiddleware  # type: ignore
 import logging
+from pathlib import Path
+from pathlib import Path
 import time
 import os
 import sys
 import csv
 import json
+import numpy as np
+import tensorflow as tf
+import numpy as np
 import uuid
 import threading
 from typing import (
@@ -25,6 +30,7 @@ from typing import (
     Set,
 )
 from pydantic import BaseModel, Field
+from collections import OrderedDict
 
 # Support running as a package (uvicorn backend.main:app) or as a module from backend folder (uvicorn main:app)
 try:
@@ -1050,6 +1056,38 @@ def _find_crop_card(name: str) -> Optional[CropCard]:
     return None
 
 
+def _normalize_simple(text: str) -> str:
+    t = text.lower()
+    t = "".join(ch if ch.isalnum() else " " for ch in t)
+    # collapse spaces
+    return " ".join(t.split())
+
+
+def _find_crop_in_text(text: str) -> Optional[CropCard]:
+    """Find best crop mention as a whole-word phrase in the text.
+    Prefers longer names (e.g., 'green peas' over 'peas').
+    """
+    qnorm = f" {_normalize_simple(text)} "
+    best: Optional[CropCard] = None
+    best_len = -1
+    for c in _dataset_to_cards():
+        name_norm = f" {c.name.lower().replace('-', ' ')} "
+        id_norm = f" {c.id.lower().replace('_', ' ')} "
+        hit = False
+        if name_norm in qnorm:
+            hit = True
+            cand_len = len(name_norm.strip())
+        elif id_norm in qnorm:
+            hit = True
+            cand_len = len(id_norm.strip())
+        else:
+            cand_len = -1
+        if hit and cand_len > best_len:
+            best = c
+            best_len = cand_len
+    return best
+
+
 def _format_reco(rec: Dict[str, Any]) -> str:
     parts: List[str] = []
     try:
@@ -1457,3 +1495,233 @@ def metrics() -> Dict[str, Any]:
 @app.get("/version")
 def version() -> Dict[str, Any]:
     return {"name": app.title, "version": app.version}
+
+
+# --------------- Chatbot Retrieval Endpoint -----------------
+_chatbot_loaded = False
+_chatbot_q_layer = None  # type: ignore
+_chatbot_answers: Optional[List[str]] = None
+_chatbot_emb: Optional[np.ndarray] = None
+_chatbot_cache: "OrderedDict[tuple[str, int], List[Dict[str, Any]]]" = OrderedDict()
+_CHATBOT_CACHE_MAX = 64
+_chatbot_answer_tokens: Optional[List[Set[str]]] = None
+_chatbot_alpha: float = 0.7  # blend weight for embedding vs lexical
+_chatbot_min_cos: float = 0.28  # fallback threshold for cosine similarity
+_chatbot_metrics_cache: Optional[Dict[str, Any]] = None
+
+
+def _tokenize(text: str) -> Set[str]:
+    try:
+        t = text.lower()
+        # keep alphanumerics and spaces
+        t = "".join(ch if ch.isalnum() else " " for ch in t)
+        toks = [w for w in t.split() if len(w) >= 3]
+        return set(toks)
+    except Exception:
+        return set()
+
+
+def _clean_text(text: str) -> str:
+    try:
+        # Fix common encoding artifacts like 'Â°C'
+        return text.replace("Â°C", "°C").replace("Â", "").replace("\u00c2\u00b0C", "°C")
+    except Exception:
+        return text
+
+
+def _load_chatbot_artifacts() -> bool:
+    global _chatbot_loaded, _chatbot_q_layer, _chatbot_emb, _chatbot_answers, _chatbot_answer_tokens, _chatbot_alpha, _chatbot_min_cos, _chatbot_metrics_cache
+    if _chatbot_loaded:
+        return True
+    try:
+        backend_dir = Path(__file__).resolve().parent
+        qenc_dir = backend_dir / "chatbot_question_encoder"
+        index_npz = backend_dir / "chatbot_index.npz"
+        index_json = backend_dir / "chatbot_index.json"
+        if not (qenc_dir.exists() and index_npz.exists() and index_json.exists()):
+            logger.warning("Chatbot artifacts not found; skipping load.")
+            return False
+        # Load SavedModel endpoint via Keras TFSMLayer
+        from tensorflow.keras.layers import TFSMLayer  # type: ignore
+
+        _chatbot_q_layer = TFSMLayer(str(qenc_dir), call_endpoint="serve")
+        with np.load(index_npz, allow_pickle=False) as data:
+            arr = data["embeddings"]
+        # L2-normalize answer embeddings to use cosine similarity robustly
+        try:
+            norms = np.linalg.norm(arr, axis=1, keepdims=True) + 1e-12
+            arr = arr / norms
+        except Exception:
+            pass
+        _chatbot_emb = arr
+        with open(index_json, "r", encoding="utf-8") as f:
+            meta = json.load(f)
+        _chatbot_answers = list(meta.get("answers", []))
+        # Pre-tokenize answers for lightweight lexical re-ranking
+        _chatbot_answer_tokens = [_tokenize(a) for a in _chatbot_answers]
+        # Optionally read metrics and tune blend/threshold
+        try:
+            metrics_path = backend_dir / "chatbot_metrics.json"
+            if metrics_path.exists():
+                with open(metrics_path, "r", encoding="utf-8") as mf:
+                    _chatbot_metrics_cache = json.load(mf)
+                r1 = float(
+                    (_chatbot_metrics_cache or {}).get("val", {}).get("recall@1", 0.0)
+                )
+                # Adjust alpha and threshold based on quality
+                if r1 >= 0.65:
+                    _chatbot_alpha = 0.8
+                    _chatbot_min_cos = 0.25
+                elif r1 >= 0.5:
+                    _chatbot_alpha = 0.7
+                    _chatbot_min_cos = 0.27
+                else:
+                    # Low recall@1 -> lean more on lexical and higher threshold
+                    _chatbot_alpha = 0.55
+                    _chatbot_min_cos = 0.30
+        except Exception:
+            # Non-fatal
+            pass
+        _chatbot_loaded = True
+        logger.info("Chatbot artifacts loaded: %d answers", len(_chatbot_answers or []))
+        return True
+    except Exception:
+        logger.exception("Failed to load chatbot artifacts")
+        return False
+
+
+class ChatbotQuery(BaseModel):
+    question: str = Field(..., min_length=1)
+    top_k: int = 5
+
+
+@app.post("/chatbot/ask")
+def chatbot_ask(q: ChatbotQuery) -> Dict[str, Any]:
+    ok = _load_chatbot_artifacts()
+    if (
+        not ok
+        or _chatbot_q_layer is None
+        or _chatbot_emb is None
+        or _chatbot_answers is None
+    ):
+        raise HTTPException(
+            status_code=503, detail="Chatbot not trained or artifacts missing"
+        )
+    # Normalize and validate input
+    qtext = q.question.strip()
+    if not qtext:
+        raise HTTPException(status_code=400, detail="question must not be empty")
+    topk = int(max(1, min(q.top_k, 20)))
+
+    # LRU cache lookup
+    key = (qtext, topk)
+    if key in _chatbot_cache:
+        results = _chatbot_cache.pop(key)
+        _chatbot_cache[key] = results  # move to end (most recent)
+        return {"question": qtext, "results": results}
+
+    # If query mentions a known crop, return crop facts directly (better relevance)
+    try:
+        crop_hit: Optional[CropCard] = _find_crop_in_text(qtext)
+        if crop_hit is not None:
+            facts: List[str] = [f"Crop: {crop_hit.name}"]
+            if crop_hit.category:
+                facts.append(f"Category: {crop_hit.category}")
+            if crop_hit.season:
+                facts.append(f"Season: {crop_hit.season}")
+            if crop_hit.waterRequirement:
+                facts.append(f"Water need: {crop_hit.waterRequirement}")
+            if crop_hit.tempRange:
+                facts.append(f"Temperature: {crop_hit.tempRange}")
+            if crop_hit.phRange:
+                facts.append(f"Soil pH: {crop_hit.phRange}")
+            if crop_hit.growthPeriod:
+                facts.append(f"Growth period: {crop_hit.growthPeriod}")
+            if crop_hit.tips:
+                facts.append("Tips: " + "; ".join(crop_hit.tips[:3]))
+            ans_txt = "\n".join(facts)
+            results = [{"rank": 1, "score": 1.0, "answer": ans_txt}]
+            _chatbot_cache[key] = results
+            if len(_chatbot_cache) > _CHATBOT_CACHE_MAX:
+                _chatbot_cache.popitem(last=False)
+            return {"question": qtext, "results": results}
+    except Exception:
+        pass
+    # Compute question embedding
+    # SavedModel signature is positional-only (args_0) with name 'text' and dtype tf.string
+    vec = _chatbot_q_layer(tf.constant([qtext], dtype=tf.string))
+    if isinstance(vec, (list, tuple)):
+        vec = vec[0]
+    try:
+        v = vec.numpy()[0]
+    except Exception:
+        v = np.array(vec)[0]
+    # L2-normalize question vector for cosine similarity
+    try:
+        v = v / (np.linalg.norm(v) + 1e-12)
+    except Exception:
+        pass
+    # Initial retrieval by cosine similarity
+    # cast for type-checking clarity (we validated non-None above)
+    emb: np.ndarray = cast(np.ndarray, _chatbot_emb)
+    scores = emb @ v
+    # Expand candidate pool for re-ranking
+    pool = int(max(topk * 5, 50))
+    cand_idx = scores.argsort()[::-1][: min(pool, scores.shape[0])]
+
+    # Hybrid re-ranking: blend cosine with lexical token overlap
+    qtok = _tokenize(qtext)
+    # Use dynamically tuned alpha from metrics (fallback default is 0.7)
+    alpha = _chatbot_alpha  # weight for embedding score (lexical gets 1 - alpha)
+    beta = 1.0 - alpha
+    reranked: List[tuple[int, float]] = []
+    ans_tokens = _chatbot_answer_tokens
+    for j in cand_idx:
+        sim = float(scores[j])
+        overlap = 0.0
+        if ans_tokens is not None and qtok:
+            inter = qtok.intersection(ans_tokens[j])
+            if qtok:
+                overlap = len(inter) / max(1.0, float(len(qtok)))
+        blended = alpha * sim + beta * overlap
+        reranked.append((j, blended))
+    reranked.sort(key=lambda x: x[1], reverse=True)
+    idx = [j for (j, s) in reranked[:topk]]
+    results = [
+        {"rank": i + 1, "score": float(scores[j]), "answer": _chatbot_answers[j]}
+        for i, j in enumerate(idx)
+    ]
+    # Add a gentle note if the top cosine similarity is below our threshold
+    try:
+        if results:
+            top_cos = float(scores[idx[0]]) if idx else 0.0
+            if top_cos < _chatbot_min_cos:
+                results[0]["answer"] = (
+                    "Note: confidence is low; results may be off. Try rephrasing or add details.\n\n"
+                    + str(results[0]["answer"])
+                )
+    except Exception:
+        pass
+    # Update LRU cache
+    _chatbot_cache[key] = results
+    if len(_chatbot_cache) > _CHATBOT_CACHE_MAX:
+        _chatbot_cache.popitem(last=False)
+    return {"question": qtext, "results": results}
+
+
+@app.get("/chatbot/metrics")
+def chatbot_metrics() -> Dict[str, Any]:
+    """Return saved evaluation metrics (e.g., Recall@K) if available."""
+    try:
+        backend_dir = Path(__file__).resolve().parent
+        metrics_path = backend_dir / "chatbot_metrics.json"
+        if not metrics_path.exists():
+            raise HTTPException(status_code=404, detail="metrics not found")
+        with open(metrics_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, dict) else {"metrics": data}
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("Failed to read chatbot metrics")
+        raise HTTPException(status_code=500, detail="failed to read metrics")

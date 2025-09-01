@@ -13,16 +13,19 @@ AgriSense is a smart farming assistant that:
 - Controls irrigation via MQTT to edge controllers
 - Tracks tank levels and rainwater usage
 - Serves a web UI (Vite/React) and a minimal mobile client
+- Answers farmer questions via a lightweight retrieval Chatbot endpoint (/chatbot/ask) using saved encoders, hybrid re-ranking, crop facts, and latest readings
 - Can be deployed to Azure Container Apps with IaC (Bicep) and `azd`
 
 Key components
 
 - Backend API: FastAPI at `agrisense_app/backend/main.py`
 - Engine: `agrisense_app/backend/engine.py` with `config.yaml` crop config and optional ML/joblib models
-- Data store: SQLite (`agrisense_app/backend/data_store.py`)
+- Data store: SQLite (`agrisense_app/backend/data_store.py`) by default, optional MongoDB (`agrisense_app/backend/data_store_mongo.py`) via env switch
 - Weather/ET0: `agrisense_app/backend/weather.py`, `agrisense_app/backend/et0.py`
 - Edge & MQTT: `agrisense_app/backend/mqtt_publish.py`, `agrisense_pi_edge_minimal/edge/*`
 - Frontend: `agrisense_app/frontend/farm-fortune-frontend-main`
+- Frontend Chatbot page: `src/pages/Chatbot.tsx` (route `/chat`) wired to `/chatbot/ask`
+- Chatbot artifacts (under backend): `chatbot_question_encoder/`, `chatbot_answer_encoder/`, `chatbot_index.npz`, `chatbot_index.json`, and metrics `chatbot_metrics.json`
 - Infra: `infra/bicep/main.bicep` + `azure.yaml`, containerized by `Dockerfile`
 - Actionable tips & analytics: server-side generation of detailed tips and persistence for insights
 
@@ -139,6 +142,11 @@ Core endpoints (selected)
 - `POST /admin/reset|weather/refresh|notify` — admin utilities (guarded by token if set)
 - `GET /metrics` — lightweight counters and uptime
 - `GET /version` — app name and version
+- `POST /chatbot/ask` — retrieval Chatbot that answers irrigation/fertilizer/tank/crop questions using saved encoders and crop catalog with hybrid re-ranking and crop facts shortcut
+- `GET /chatbot/metrics` — retrieval metrics (Recall@K) if computed and present
+- IoT compatibility shims for external frontends:
+  - `GET /sensors/recent?zone_id=Z1&limit=10` — simplified list of readings
+  - `GET /recommend/latest?zone_id=Z1` — last recommendation summary
 
 Models
 
@@ -313,6 +321,13 @@ curl -X POST http://127.0.0.1:8004/recommend -H "Content-Type: application/json"
 ---
 
 ## 12) Containerization & Azure Deployment
+
+MongoDB (optional)
+
+- Alternate persistence via `agrisense_app/backend/data_store_mongo.py`
+- Enable with env `AGRISENSE_DB=mongo` (or `mongodb`)
+- Connection envs: `AGRISENSE_MONGO_URI` (fallback `MONGO_URI`) and `AGRISENSE_MONGO_DB` (fallback `MONGO_DB`)
+- The backend keeps the same public API regardless of store; switching requires no frontend changes
 
 Docker (local)
 

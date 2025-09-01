@@ -26,6 +26,12 @@ build/
 !**/*.onnx
 **/*.pkl
 **/*.h5
+# Chatbot retrieval artifacts (large/generated) — do not commit
+agrisense_app/backend/chatbot_question_encoder/
+agrisense_app/backend/chatbot_answer_encoder/
+agrisense_app/backend/chatbot_index.npz
+agrisense_app/backend/chatbot_index.json
+agrisense_app/backend/chatbot_metrics.json
 
 # OS
 .DS_Store
