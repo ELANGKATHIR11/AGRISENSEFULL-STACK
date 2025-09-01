@@ -30,45 +30,86 @@ from pydantic import BaseModel, Field
 try:
     from .models import SensorReading, Recommendation
     from .engine import RecoEngine
-    from .data_store import (
-        insert_reading,
-        recent,
-        insert_reco_snapshot,
-        recent_reco,
-        insert_tank_level,
-        latest_tank_level,
-        log_valve_event,
-        recent_valve_events,
-        insert_alert,
-        recent_alerts,
-        reset_database,
-        rainwater_summary,
-        insert_rainwater_entry,
-        recent_rainwater,
-        mark_alert_ack,
-    )
+
+    # Prefer MongoDB store when configured; fallback to SQLite store
+    if os.getenv("AGRISENSE_DB", "sqlite").lower() in ("mongo", "mongodb"):
+        from .data_store_mongo import (  # type: ignore
+            insert_reading,
+            recent,
+            insert_reco_snapshot,
+            recent_reco,
+            insert_tank_level,
+            latest_tank_level,
+            log_valve_event,
+            recent_valve_events,
+            insert_alert,
+            recent_alerts,
+            reset_database,
+            rainwater_summary,
+            insert_rainwater_entry,
+            recent_rainwater,
+            mark_alert_ack,
+        )
+    else:
+        from .data_store import (
+            insert_reading,
+            recent,
+            insert_reco_snapshot,
+            recent_reco,
+            insert_tank_level,
+            latest_tank_level,
+            log_valve_event,
+            recent_valve_events,
+            insert_alert,
+            recent_alerts,
+            reset_database,
+            rainwater_summary,
+            insert_rainwater_entry,
+            recent_rainwater,
+            mark_alert_ack,
+        )
     from .smart_farming_ml import SmartFarmingRecommendationSystem
     from .weather import fetch_and_cache_weather, read_latest_from_cache
 except ImportError:  # no parent package context
     from models import SensorReading, Recommendation
     from engine import RecoEngine
-    from data_store import (
-        insert_reading,
-        recent,
-        insert_reco_snapshot,
-        recent_reco,
-        insert_tank_level,
-        latest_tank_level,
-        log_valve_event,
-        recent_valve_events,
-        insert_alert,
-        recent_alerts,
-        reset_database,
-        rainwater_summary,
-        insert_rainwater_entry,
-        recent_rainwater,
-        mark_alert_ack,
-    )
+
+    if os.getenv("AGRISENSE_DB", "sqlite").lower() in ("mongo", "mongodb"):
+        from data_store_mongo import (  # type: ignore
+            insert_reading,
+            recent,
+            insert_reco_snapshot,
+            recent_reco,
+            insert_tank_level,
+            latest_tank_level,
+            log_valve_event,
+            recent_valve_events,
+            insert_alert,
+            recent_alerts,
+            reset_database,
+            rainwater_summary,
+            insert_rainwater_entry,
+            recent_rainwater,
+            mark_alert_ack,
+        )
+    else:
+        from data_store import (
+            insert_reading,
+            recent,
+            insert_reco_snapshot,
+            recent_reco,
+            insert_tank_level,
+            latest_tank_level,
+            log_valve_event,
+            recent_valve_events,
+            insert_alert,
+            recent_alerts,
+            reset_database,
+            rainwater_summary,
+            insert_rainwater_entry,
+            recent_rainwater,
+            mark_alert_ack,
+        )
     from smart_farming_ml import SmartFarmingRecommendationSystem
     from weather import fetch_and_cache_weather, read_latest_from_cache
 
@@ -1043,6 +1084,69 @@ def log_reco_snapshot(body: Dict[str, Any]) -> Dict[str, Any]:
     yield_p = body.get("yield_potential")
     insert_reco_snapshot(zone_id, plant, rec, yield_p)
     return {"ok": True}
+
+
+# --- IoT compatibility shims ---
+@app.get("/sensors/recent")
+def iot_sensors_recent(zone_id: str = "Z1", limit: int = 10) -> List[Dict[str, Any]]:
+    """Return recent sensor readings as a bare list, matching AGRISENSE_IoT expectations.
+    Fields are adapted to the IoT schema: soil_moisture, temperature_c, ph, ec_dS_m, tank_percent, timestamp.
+    """
+    rows = recent(zone_id, limit)
+    # Fetch latest tank level once
+    tank = latest_tank_level("T1") or {}
+    tank_pct = None
+    try:
+        tank_pct = float(tank.get("level_pct")) if tank.get("level_pct") is not None else None  # type: ignore[arg-type]
+    except Exception:
+        tank_pct = None
+    out: List[Dict[str, Any]] = []
+    for r in rows:
+        item: Dict[str, Any] = {
+            "timestamp": r.get("ts"),
+            "soil_moisture": r.get("moisture_pct"),
+            "temperature_c": r.get("temperature_c"),
+            "ph": r.get("ph"),
+            "ec_dS_m": r.get("ec_dS_m"),
+            # Humidity isn't tracked in core readings; omit for now
+            "tank_percent": tank_pct,
+        }
+        out.append(item)
+    return out
+
+
+@app.get("/recommend/latest")
+def iot_recommend_latest(zone_id: str = "Z1") -> Dict[str, Any]:
+    """Synthesize a latest recommendation document compatible with AGRISENSE_IoT frontend.
+    Includes: irrigate, recommended_liters, water_source, and a human "notes" string.
+    """
+    rows = recent(zone_id, 1)
+    if not rows:
+        # No data yet; return a neutral recommendation
+        src = _select_water_source(0.0)
+        return {
+            "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "irrigate": False,
+            "recommended_liters": 0.0,
+            "water_source": src,
+            "notes": "No sensor data yet",
+        }
+    last = dict(rows[0])
+    rec = engine.recommend(last)
+    try:
+        need_l = float(rec.get("water_liters", 0.0))
+    except Exception:
+        need_l = 0.0
+    src = _select_water_source(need_l)
+    irrigate = need_l > 0.0
+    note = "Soil dry, irrigate now" if irrigate else "Skip irrigation today"
+    return {
+        "timestamp": last.get("ts"),
+        "irrigate": irrigate,
+        "recommended_liters": need_l,
+        "water_source": src,
+        "notes": note,
+    }
 
 
 # --- ESP32 Edge ingest (HTTP) ---

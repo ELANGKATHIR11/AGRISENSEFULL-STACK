@@ -10,3 +10,4 @@ python-dotenv==1.0.1
 requests
 PyYAML==6.0.2
 Flask==3.0.3
+pymongo==4.8.0

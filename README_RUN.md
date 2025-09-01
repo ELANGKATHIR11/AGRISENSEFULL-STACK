@@ -6,6 +6,14 @@ Backend
 - Install: `pip install -r agrisense_app/backend/requirements.txt`
 - Run: `uvicorn agrisense_app.backend.main:app --reload --port 8004`
 
+MongoDB (optional)
+
+- To store data in MongoDB instead of the default SQLite file, set these environment variables:
+  - `AGRISENSE_DB=mongo`
+  - `AGRISENSE_MONGO_URI=mongodb://localhost:27017` (or your URI)
+  - `AGRISENSE_MONGO_DB=agrisense` (optional; defaults to `agrisense`)
+- All existing endpoints work unchanged; only the storage backend switches.
+
 Frontend (dev)
 
 - Node 18+
@@ -35,7 +43,7 @@ Frontend (Vite + React + TS):
 Notes:
 
 - Large model artifacts are ignored in git to avoid GitHub file size limits.
-- Provide `.env` locally if needed; it's ignored by git.
+- Provide `.env` locally if needed; it's ignored by git. You can place the MongoDB env vars above in `.env`.
 - CORS can be restricted by setting `ALLOWED_ORIGINS` (comma-separated) in env; defaults to `*` in dev.
 
 ## Train models (optional)

@@ -8,6 +8,7 @@ try:
 except Exception:
     # Fallback if executed from scripts folder directly
     import sys, os
+
     sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
     from backend.main import app  # type: ignore
 
@@ -18,6 +19,7 @@ client = TestClient(app)
 def pretty(obj: Any) -> str:
     try:
         import json
+
         return json.dumps(obj, indent=2)
     except Exception:
         return str(obj)
@@ -57,6 +59,14 @@ def main() -> None:
         json={"soil_type": "loam", "ph": 6.8, "temperature": 25, "moisture": 60},
     ).json()
     print("/suggest_crop =>", pretty(crop))
+
+    # IoT compatibility shims
+    iot_recent = client.get(
+        "/sensors/recent", params={"zone_id": "Z1", "limit": 1}
+    ).json()
+    print("/sensors/recent =>", pretty(iot_recent))
+    iot_latest = client.get("/recommend/latest", params={"zone_id": "Z1"}).json()
+    print("/recommend/latest =>", pretty(iot_latest))
 
 
 if __name__ == "__main__":
