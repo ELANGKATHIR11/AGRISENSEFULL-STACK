@@ -11,7 +11,7 @@ export default defineConfig((ctx: { mode: string }) => ({
     proxy: {
       // Proxy API calls in dev to FastAPI backend on 8004
       "/api": {
-        target: "http://127.0.0.1:8004",
+  target: process.env.VITE_API || "http://127.0.0.1:8004",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/(api)(\/)?/, "/"),
       },

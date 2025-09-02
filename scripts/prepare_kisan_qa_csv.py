@@ -2,7 +2,7 @@
 Prepare KisanVaani agriculture QA CSV from the Hugging Face Parquet file.
 
 This script:
-- Loads the Parquet dataset at ../agriculture-qa-english-only/data/train-00000-of-00001.parquet
+- Loads the Parquet dataset at ../AGRISENSEFULL-STACK/agriculture-qa-english-only/data/train-00000-of-00001.parquet
 - Ensures columns are named 'question' and 'answer'
 - Adds a 'source' column with value 'KisanVaani'
 - Writes CSV to the workspace root as 'KisanVaani_agriculture_qa.csv'
@@ -25,7 +25,7 @@ def main() -> int:
     workspace_root = script_path.parents[2]  # .../AGRISENSE FULL-STACK
     parquet_path = (
         workspace_root
-        / "agriculture-qa-english-only"
+        / "AGRISENSEFULL-STACK/agriculture-qa-english-only"
         / "data"
         / "train-00000-of-00001.parquet"
     )

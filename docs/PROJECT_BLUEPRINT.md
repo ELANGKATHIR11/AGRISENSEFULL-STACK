@@ -4,6 +4,20 @@ This blueprint is a complete, practical manual to recreate AgriSense end-to-end:
 
 ---
 
+## What’s new (Sep 2025)
+
+- Chatbot tuning and hot-reload:
+  - Added `/chatbot/reload` to refresh artifacts and apply env tuning without restart.
+  - New envs: `CHATBOT_ALPHA` and `CHATBOT_MIN_COS` for lexical/embedding balance and min confidence.
+  - Optional LLM rerank gates exist but are disabled unless keys are provided; by default LLM is off.
+- Scripts and artifacts:
+  - New tools: `scripts/eval_chatbot_http.py`, `scripts/build_chatbot_qindex.py`, `scripts/rag_augment_qa.py`.
+  - Optional question-side artifacts: `agrisense_app/backend/chatbot_q_index.npz` and `chatbot_qa_pairs.json`.
+- Dataset consolidation: train/index scripts can merge multiple QA CSVs and Parquet sources.
+- Security hygiene: removed committed `.env` files; configure via environment instead.
+
+---
+
 ## 1) System Overview
 
 AgriSense is a smart farming assistant that:
@@ -26,6 +40,7 @@ Key components
 - Frontend: `agrisense_app/frontend/farm-fortune-frontend-main`
 - Frontend Chatbot page: `src/pages/Chatbot.tsx` (route `/chat`) wired to `/chatbot/ask`
 - Chatbot artifacts (under backend): `chatbot_question_encoder/`, `chatbot_answer_encoder/`, `chatbot_index.npz`, `chatbot_index.json`, and metrics `chatbot_metrics.json`
+  - Optional question-side artifacts: `chatbot_q_index.npz` and `chatbot_qa_pairs.json`
 - Infra: `infra/bicep/main.bicep` + `azure.yaml`, containerized by `Dockerfile`
 - Actionable tips & analytics: server-side generation of detailed tips and persistence for insights
 
@@ -83,6 +98,7 @@ Chatbot training CSVs (if present at repo root):
 - `Farming_FAQ_Assistant_Dataset.csv` — FAQ pairs (Question, Answer)
 - `Farming_FAQ_Assistant_Dataset (2).csv` — alt FAQ pairs (Question, Answer)
 - `data_core.csv` — generic pairs; columns auto-mapped among [question|questions|q] and [answer|answers|a]
+- `agriculture-qa-english-only/data/train-00000-of-00001.parquet` — Parquet QA source; see `scripts/prepare_kisan_qa_csv.py`
 
 Columns (union across datasets; not all are required):
 
@@ -121,6 +137,7 @@ Chatbot (retrieval) training
   - `agrisense_app/backend/chatbot_answer_encoder/` (SavedModel)
   - `agrisense_app/backend/chatbot_index.npz` + `chatbot_index.json` (generated index)
   - `agrisense_app/backend/chatbot_metrics.json` (evaluation)
+  - Optional: `agrisense_app/backend/chatbot_q_index.npz` and `chatbot_qa_pairs.json`
 - Git hygiene: heavy artifacts above are gitignored; regenerate locally as needed
 
 Train (PowerShell examples)
@@ -134,13 +151,17 @@ Train (PowerShell examples)
 
 # Compute retrieval metrics (Recall@{1,3,5,10}) for the API
 .venv\Scripts\python.exe scripts\compute_chatbot_metrics.py --sample 2000
+
+# Build optional question index for HTTP eval/exact-match checks
+.venv\Scripts\python.exe scripts\build_chatbot_qindex.py --sample 5000
 ```
 
 Runtime behavior
 
-- The backend `/chatbot/ask` endpoint loads the SavedModels, uses cosine similarity with hybrid lexical re-ranking, and returns top answers
-- `/chatbot/metrics` serves `chatbot_metrics.json`
-- The backend auto-tunes retrieval blend and a low-confidence threshold from metrics
+- The backend `/chatbot/ask` endpoint loads the SavedModels, uses cosine similarity with hybrid lexical re-ranking, and returns top answers.
+- `/chatbot/metrics` serves `chatbot_metrics.json`.
+- `/chatbot/reload` hot-reloads artifacts and applies env tuning without restart.
+- The backend auto-tunes retrieval blend and a low-confidence threshold from metrics.
 
 Runtime behavior
 
@@ -180,6 +201,7 @@ Core endpoints (selected)
 - `GET /metrics` — lightweight counters and uptime
 - `GET /version` — app name and version
 - `POST /chatbot/ask` — retrieval Chatbot that answers irrigation/fertilizer/tank/crop questions using saved encoders and crop catalog with hybrid re-ranking and crop facts shortcut
+- `POST /chatbot/reload` — refresh artifacts and configuration
 - `GET /chatbot/metrics` — retrieval metrics (Recall@K) if computed and present
 - IoT compatibility shims for external frontends:
   - `GET /sensors/recent?zone_id=Z1&limit=10` — simplified list of readings
@@ -432,6 +454,13 @@ ML & datasets
 - `AGRISENSE_DISABLE_ML` — `1` to skip ML model loading
 - `AGRISENSE_DATASET` or `DATASET_CSV` — dataset for `/suggest_crop`
 
+Chatbot retrieval tuning (hot-reloadable)
+
+- `CHATBOT_ALPHA` — Blend weight [0..1] between lexical and embedding similarity (e.g., 0.0 emphasizes lexical).
+- `CHATBOT_MIN_COS` — Minimum cosine threshold for candidate acceptance.
+- `CHATBOT_LLM_RERANK_TOPN`, `CHATBOT_LLM_BLEND` — Optional when LLM key present.
+- `GEMINI_API_KEY`, `DEEPSEEK_API_KEY` — Optional keys; if unset, LLM reranking and LLM-based RAG stay disabled.
+
 Weather/ET0
 
 - `AGRISENSE_LAT`, `AGRISENSE_LON` — coordinates
@@ -466,6 +495,8 @@ Smoke tests
 - `agrisense_app/scripts/api_smoke_client.py` and `scripts/test_backend_inprocess.py`
 - Basic manual checks: `/health`, `/ready`, `/metrics`, simple `/recommend`
 - Chatbot: `/chatbot/metrics` and `/chatbot/ask` with a few sample queries
+- HTTP eval: `.venv\Scripts\python.exe scripts\eval_chatbot_http.py --sample 100 --top_k 3`
+- Optional q-index build: `.venv\Scripts\python.exe scripts\build_chatbot_qindex.py`
 
 Quality gates (suggested)
 
@@ -482,6 +513,12 @@ Quality gates (suggested)
 - No data persisted on Azure: configure Azure Files volume (EmptyDir is ephemeral)
 - MQTT commands not received: check broker address/port, topic prefix, and network egress
 - Admin endpoints unauthorized: set `AGRISENSE_ADMIN_TOKEN` and include `x-admin-token` header
+
+Chatbot returns unrelated answers
+
+- Merge and clean datasets, then rebuild artifacts: `train_chatbot.py` → `compute_chatbot_metrics.py` → (optional) `build_chatbot_qindex.py` → `POST /chatbot/reload`.
+- Temporarily set `CHATBOT_ALPHA=0.0` and reload to emphasize lexical overlap.
+- Inspect `agrisense_app/backend/chatbot_index.json` for coverage of your Q/A pairs.
 
 ---
 

@@ -13,6 +13,7 @@ import os
 import sys
 import csv
 import json
+import joblib
 import numpy as np
 import tensorflow as tf
 import numpy as np
@@ -31,6 +32,7 @@ from typing import (
 )
 from pydantic import BaseModel, Field
 from collections import OrderedDict
+from . import llm_clients  # optional LLM reranker (Gemini/DeepSeek)
 
 # Support running as a package (uvicorn backend.main:app) or as a module from backend folder (uvicorn main:app)
 try:
@@ -1502,12 +1504,20 @@ _chatbot_loaded = False
 _chatbot_q_layer = None  # type: ignore
 _chatbot_answers: Optional[List[str]] = None
 _chatbot_emb: Optional[np.ndarray] = None
+# Optional question-side index (improves matching user questions to known QA pairs)
+_chatbot_q_emb: Optional[np.ndarray] = None
+_chatbot_q_texts: Optional[List[str]] = None
+_chatbot_q_tokens: Optional[List[Set[str]]] = None
+_chatbot_qa_answers: Optional[List[str]] = None  # aligned to _chatbot_q_texts
 _chatbot_cache: "OrderedDict[tuple[str, int], List[Dict[str, Any]]]" = OrderedDict()
 _CHATBOT_CACHE_MAX = 64
 _chatbot_answer_tokens: Optional[List[Set[str]]] = None
 _chatbot_alpha: float = 0.7  # blend weight for embedding vs lexical
 _chatbot_min_cos: float = 0.28  # fallback threshold for cosine similarity
 _chatbot_metrics_cache: Optional[Dict[str, Any]] = None
+_chatbot_lgbm_bundle: Optional[Dict[str, Any]] = (
+    None  # {'model': lgb.Booster, 'vectorizer': TfidfVectorizer}
+)
 _chatbot_artifact_sig: Optional[Dict[str, float]] = None  # mtimes to detect changes
 
 
@@ -1563,15 +1573,17 @@ def _artifact_signature(
 
 
 def _load_chatbot_artifacts() -> bool:
-    global _chatbot_loaded, _chatbot_q_layer, _chatbot_emb, _chatbot_answers, _chatbot_answer_tokens, _chatbot_alpha, _chatbot_min_cos, _chatbot_metrics_cache, _chatbot_artifact_sig
+    global _chatbot_loaded, _chatbot_q_layer, _chatbot_emb, _chatbot_answers, _chatbot_answer_tokens, _chatbot_alpha, _chatbot_min_cos, _chatbot_metrics_cache, _chatbot_artifact_sig, _chatbot_lgbm_bundle, _chatbot_q_emb, _chatbot_q_texts, _chatbot_q_tokens, _chatbot_qa_answers
     try:
         backend_dir = Path(__file__).resolve().parent
         qenc_dir = backend_dir / "chatbot_question_encoder"
         index_npz = backend_dir / "chatbot_index.npz"
         index_json = backend_dir / "chatbot_index.json"
-        metrics_path = backend_dir / "chatbot_metrics.json"
+    metrics_path = backend_dir / "chatbot_metrics.json"
+    qindex_npz = backend_dir / "chatbot_q_index.npz"
+    qa_pairs_json = backend_dir / "chatbot_qa_pairs.json"
         # If already loaded, only reload when artifacts changed on disk
-        if _chatbot_loaded:
+    if _chatbot_loaded:
             try:
                 sig_now = _artifact_signature(
                     qenc_dir, index_npz, index_json, metrics_path
@@ -1599,7 +1611,7 @@ def _load_chatbot_artifacts() -> bool:
         _chatbot_emb = arr
         with open(index_json, "r", encoding="utf-8") as f:
             meta = json.load(f)
-        _chatbot_answers = list(meta.get("answers", []))
+    _chatbot_answers = list(meta.get("answers", []))
         # Pre-tokenize answers for lightweight lexical re-ranking
         _chatbot_answer_tokens = [_tokenize(a) for a in _chatbot_answers]
         # Optionally read metrics and tune blend/threshold
@@ -1621,9 +1633,81 @@ def _load_chatbot_artifacts() -> bool:
                     # Low recall@1 -> lean more on lexical and higher threshold
                     _chatbot_alpha = 0.55
                     _chatbot_min_cos = 0.30
+            # Tiny env overrides for manual tuning (optional)
+            try:
+                # Re-read .env to allow runtime tweaks without full restart
+                try:
+                    from dotenv import load_dotenv  # type: ignore
+
+                    # Prefer a .env placed alongside backend artifacts
+                    backend_env = Path(__file__).resolve().parent / ".env"
+                    if backend_env.exists():
+                        load_dotenv(dotenv_path=str(backend_env), override=True)
+                    else:
+                        load_dotenv(override=True)
+                except Exception:
+                    pass
+                env_alpha = os.getenv("CHATBOT_ALPHA") or os.getenv(
+                    "AGRISENSE_CHATBOT_ALPHA"
+                )
+                if env_alpha is not None and str(env_alpha).strip() != "":
+                    _chatbot_alpha = float(env_alpha)
+                    # clamp to safe range
+                    _chatbot_alpha = max(0.0, min(1.0, _chatbot_alpha))
+                env_min_cos = os.getenv("CHATBOT_MIN_COS") or os.getenv(
+                    "AGRISENSE_CHATBOT_MIN_COS"
+                )
+                if env_min_cos is not None and str(env_min_cos).strip() != "":
+                    _chatbot_min_cos = float(env_min_cos)
+                    _chatbot_min_cos = max(0.0, min(1.0, _chatbot_min_cos))
+            except Exception:
+                # Non-fatal if env parsing fails
+                pass
         except Exception:
             # Non-fatal
             pass
+        # Optionally load LightGBM re-ranker bundle
+        try:
+            lgbm_path = backend_dir / "chatbot_lgbm_ranker.joblib"
+            _chatbot_lgbm_bundle = None
+            if lgbm_path.exists():
+                _chatbot_lgbm_bundle = joblib.load(lgbm_path)
+                logger.info("Loaded LightGBM re-ranker bundle")
+        except Exception:
+            _chatbot_lgbm_bundle = None
+            logger.warning("Failed loading LightGBM bundle", exc_info=True)
+
+        # Optional question-side index and QA mapping
+        try:
+            _chatbot_q_emb = None
+            _chatbot_q_texts = None
+            _chatbot_q_tokens = None
+            _chatbot_qa_answers = None
+            if qindex_npz.exists() and qa_pairs_json.exists():
+                with np.load(qindex_npz, allow_pickle=False) as d:
+                    qarr = d["embeddings"]
+                    # ensure l2-normalized (safety)
+                    try:
+                        qarr = qarr / (np.linalg.norm(qarr, axis=1, keepdims=True) + 1e-12)
+                    except Exception:
+                        pass
+                    _chatbot_q_emb = qarr
+                with open(qa_pairs_json, "r", encoding="utf-8") as fqa:
+                    qa_meta = json.load(fqa)
+                qtexts = list(qa_meta.get("questions", []))
+                aans = list(qa_meta.get("answers", []))
+                if qtexts and aans and len(qtexts) == len(aans):
+                    _chatbot_q_texts = qtexts
+                    _chatbot_qa_answers = aans
+                    _chatbot_q_tokens = [_tokenize(t) for t in qtexts]
+                    logger.info("Loaded question index with %d QA pairs", len(qtexts))
+        except Exception:
+            _chatbot_q_emb = None
+            _chatbot_q_texts = None
+            _chatbot_q_tokens = None
+            _chatbot_qa_answers = None
+            logger.warning("Failed loading question index; will use answer index only", exc_info=True)
+
         _chatbot_loaded = True
         try:
             _chatbot_artifact_sig = _artifact_signature(
@@ -1631,7 +1715,15 @@ def _load_chatbot_artifacts() -> bool:
             )
         except Exception:
             _chatbot_artifact_sig = None
-        logger.info("Chatbot artifacts loaded: %d answers", len(_chatbot_answers or []))
+    logger.info("Chatbot artifacts loaded: %d answers", len(_chatbot_answers or []))
+        try:
+            logger.info(
+                "Chatbot tuning => alpha=%.3f, min_cos=%.3f",
+                _chatbot_alpha,
+                _chatbot_min_cos,
+            )
+        except Exception:
+            pass
         return True
     except Exception:
         logger.exception("Failed to load chatbot artifacts")
@@ -1709,36 +1801,136 @@ def chatbot_ask(q: ChatbotQuery) -> Dict[str, Any]:
         v = v / (np.linalg.norm(v) + 1e-12)
     except Exception:
         pass
-    # Initial retrieval by cosine similarity
-    # cast for type-checking clarity (we validated non-None above)
-    emb: np.ndarray = cast(np.ndarray, _chatbot_emb)
-    scores = emb @ v
-    # Expand candidate pool for re-ranking
-    pool = int(max(topk * 5, 50))
-    cand_idx = scores.argsort()[::-1][: min(pool, scores.shape[0])]
-
-    # Hybrid re-ranking: blend cosine with lexical token overlap
     qtok = _tokenize(qtext)
-    # Use dynamically tuned alpha from metrics (fallback default is 0.7)
-    alpha = _chatbot_alpha  # weight for embedding score (lexical gets 1 - alpha)
-    beta = 1.0 - alpha
+
+    # Prefer question-index retrieval if available (match user question -> dataset question)
+    use_qindex = _chatbot_q_emb is not None and _chatbot_q_texts is not None and _chatbot_qa_answers is not None
     reranked: List[tuple[int, float]] = []
-    ans_tokens = _chatbot_answer_tokens
-    for j in cand_idx:
-        sim = float(scores[j])
-        overlap = 0.0
-        if ans_tokens is not None and qtok:
-            inter = qtok.intersection(ans_tokens[j])
-            if qtok:
-                overlap = len(inter) / max(1.0, float(len(qtok)))
-        blended = alpha * sim + beta * overlap
-        reranked.append((j, blended))
-    reranked.sort(key=lambda x: x[1], reverse=True)
+    idx_source = "q" if use_qindex else "a"
+    if use_qindex:
+        qemb = cast(np.ndarray, _chatbot_q_emb)
+        scores = qemb @ v
+        pool = int(max(topk * 5, 50))
+        cand_idx = scores.argsort()[::-1][: min(pool, scores.shape[0])]
+        alpha = _chatbot_alpha
+        beta = 1.0 - alpha
+        q_tokens_list = _chatbot_q_tokens
+        for j in cand_idx:
+            sim = float(scores[j])
+            overlap = 0.0
+            if q_tokens_list is not None and qtok:
+                inter = qtok.intersection(q_tokens_list[j])
+                if qtok:
+                    overlap = len(inter) / max(1.0, float(len(qtok)))
+            blended = alpha * sim + beta * overlap
+            reranked.append((j, blended))
+        reranked.sort(key=lambda x: x[1], reverse=True)
+    else:
+        # Fallback: original answer-index retrieval
+        emb: np.ndarray = cast(np.ndarray, _chatbot_emb)
+        scores = emb @ v
+        pool = int(max(topk * 5, 50))
+        cand_idx = scores.argsort()[::-1][: min(pool, scores.shape[0])]
+        alpha = _chatbot_alpha
+        beta = 1.0 - alpha
+        ans_tokens = _chatbot_answer_tokens
+        for j in cand_idx:
+            sim = float(scores[j])
+            overlap = 0.0
+            if ans_tokens is not None and qtok:
+                inter = qtok.intersection(ans_tokens[j])
+                if qtok:
+                    overlap = len(inter) / max(1.0, float(len(qtok)))
+            blended = alpha * sim + beta * overlap
+            reranked.append((j, blended))
+        reranked.sort(key=lambda x: x[1], reverse=True)
+    # Optional LightGBM re-ranking on top candidates to refine order
+    try:
+        if _chatbot_lgbm_bundle and len(reranked) > 0:
+            take = min(len(reranked), max(20, topk * 4))
+            cand = reranked[:take]
+            vec = _chatbot_lgbm_bundle.get("vectorizer")  # type: ignore[assignment]
+            model = _chatbot_lgbm_bundle.get("model")  # type: ignore[assignment]
+            if vec is not None and model is not None:
+                q_arr = [qtext] * len(cand)
+                cand_answers = [
+                    cast(List[str], _chatbot_answers or [""])[j] for (j, _) in cand
+                ]
+                q_tf = vec.transform(q_arr)
+                a_tf = vec.transform(cand_answers)
+                cos_proxy = (q_tf.multiply(a_tf)).sum(axis=1)
+                cos_proxy = np.asarray(cos_proxy).ravel().astype(np.float32)
+                qtok_set = set(qtok)
+                jac = np.array(
+                    [
+                        (
+                            len(qtok_set & (ans_tokens[j] if ans_tokens else set()))
+                            / max(
+                                1,
+                                len(
+                                    qtok_set | (ans_tokens[j] if ans_tokens else set())
+                                ),
+                            )
+                        )
+                        for (j, _) in cand
+                    ],
+                    dtype=np.float32,
+                )
+                X = np.vstack([cos_proxy, jac]).T
+                lgbm_scores = model.predict(X)
+                # Mix with our blended score for final ordering
+                # Normalize lgbm scores to 0..1
+                lmin, lmax = float(np.min(lgbm_scores)), float(np.max(lgbm_scores))
+                lnorm = (lgbm_scores - lmin) / (lmax - lmin + 1e-9)
+                merged = [
+                    (j, 0.85 * s + 0.15 * float(lnorm[i]))
+                    for i, (j, s) in enumerate(cand)
+                ]
+                merged.sort(key=lambda x: x[1], reverse=True)
+                reranked = merged
+    except Exception:
+        logger.warning("LightGBM re-rank failed; keep blended order", exc_info=True)
+
     idx = [j for (j, s) in reranked[:topk]]
-    results = [
-        {"rank": i + 1, "score": float(scores[j]), "answer": _chatbot_answers[j]}
-        for i, j in enumerate(idx)
-    ]
+    if idx_source == "q":
+        qa_answers = cast(List[str], _chatbot_qa_answers or [])
+        results = [
+            {"rank": i + 1, "score": float(scores[j]), "answer": qa_answers[j]}
+            for i, j in enumerate(idx)
+        ]
+    else:
+        results = [
+            {"rank": i + 1, "score": float(scores[j]), "answer": _chatbot_answers[j]}
+            for i, j in enumerate(idx)
+        ]
+    # Optional LLM re-ranking of top few results (controlled by env keys)
+    try:
+        if results and (os.getenv("GEMINI_API_KEY") or os.getenv("DEEPSEEK_API_KEY")):
+            # Allow env overrides to tune how many candidates to pass to LLM and how much to blend
+            try:
+                MAX_LLM_RERANK = int(os.getenv("CHATBOT_LLM_RERANK_TOPN") or 5)
+            except Exception:
+                MAX_LLM_RERANK = 5
+            MAX_LLM_RERANK = max(1, min(25, MAX_LLM_RERANK))
+            try:
+                LLM_BLEND = float(os.getenv("CHATBOT_LLM_BLEND") or 0.10)
+            except Exception:
+                LLM_BLEND = 0.10
+            LLM_BLEND = max(0.0, min(0.5, LLM_BLEND))
+            subset = results[:MAX_LLM_RERANK]
+            cand_answers = [r["answer"] for r in subset]
+            llm_scores = llm_clients.llm_rerank(qtext, cand_answers)
+            if llm_scores:
+                for i, sc in enumerate(llm_scores):
+                    subset[i]["score"] = (subset[i]["score"] * (1.0 - LLM_BLEND)) + (
+                        float(sc) * LLM_BLEND
+                    )
+                # resort only the subset
+                subset.sort(key=lambda r: r["score"], reverse=True)
+                results = subset + results[MAX_LLM_RERANK:]
+    except Exception:
+        # Non-fatal if LLM errors occur
+        pass
     # Add a gentle note if the top cosine similarity is below our threshold
     try:
         if results:

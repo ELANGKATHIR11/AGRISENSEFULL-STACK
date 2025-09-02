@@ -47,6 +47,12 @@
 			"type": "shell",
 			"command": "cd '${workspaceFolder}/AGRISENSEFULL-STACK'; .venv\\Scripts\\python.exe agrisense_app/backend/tf_train.py",
 			"problemMatcher": []
+		},
+		{
+			"label": "Run Backend (Uvicorn)",
+			"type": "shell",
+			"command": "cd '${workspaceFolder}'; .venv\\Scripts\\python.exe -m uvicorn agrisense_app.backend.main:app --reload --port 8004",
+			"group": "build"
 		}
 	]
 }

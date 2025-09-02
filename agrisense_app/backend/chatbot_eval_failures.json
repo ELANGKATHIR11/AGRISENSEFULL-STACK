@@ -1,0 +1,62 @@
+[
+  {
+    "q": "What is the period mentioned for harvesting forage crops, considering soil and weather conditions?",
+    "gold": "When soil conditions are suitable",
+    "pred": "Organic matter incorporation: Increase the organic matter content of the soil by incorporating organic materials such as compost, farmyard manure, cover crops, or crop residues. This improves soil structure, enhances nutrient retention, and promotes microbial activity.\n\nCrop rotation and diversification: Rotate maize with leguminous crops (such as beans, peas, or clover) that fix nitrogen from the atmosphere and improve soil nitrogen levels. Crop rotation also helps break pest and disease cycles and promotes overall soil health.\n\nGreen manure cover crops: Plant cover crops like clover, vetch, or hairy vetch during fallow periods. These cover crops add organic matter, prevent soil erosion, and improve soil structure.\n\nMulching: Apply organic mulch, such as straw or crop residues, to the soil surface. Mulching helps conserve soil moisture, suppress weed growth, and slowly release nutrients into the soil as it decomposes.",
+    "ok": false
+  },
+  {
+    "q": "What is the final product of an effective aerobic composting process?",
+    "gold": "Stable and slowly degradable material.",
+    "pred": "In coarse material, assess soil layers by examining the depth and color of the topsoil and subsoil, as well as the presence of compaction layers. These factors help determine soil fertility, drainage capacity, and potential restrictions to root growth, which are crucial for effective land management.",
+    "ok": false
+  },
+  {
+    "q": "How may heavy clay soils need to be managed for organic soil cultivation?",
+    "gold": "Heavy clay soils need deep ploughing and subsoiling to maintain good structure.",
+    "pred": "High water-holding capacity: Clay soils have a high water-holding capacity, which can be advantageous in areas with low rainfall or inconsistent moisture. This can also reduce the need for irrigation and improve soil moisture retention.\nHigh nutrient retention: Clay soils have a high nutrient retention capacity, which can help to reduce leaching of nutrients and improve soil fertility.\nGood for some crops: Clay soils can be good for crops that require consistent soil moisture, such as rice, and can also be beneficial for root crops such as carrots and potatoes.\nHigh organic matter content: Clay soils often have a high organic matter content, which can improve soil structure and water-holding capacity.",
+    "ok": false
+  },
+  {
+    "q": "What are the potential benefits of grass/clover leys for soil structure?",
+    "gold": "Grass/clover leys improve soil structure due to the entrapping activity of roots, root hairs, and fungal hyphae.",
+    "pred": "Organic matter incorporation: Increase the organic matter content of the soil by incorporating organic materials such as compost, farmyard manure, cover crops, or crop residues. This improves soil structure, enhances nutrient retention, and promotes microbial activity.\n\nCrop rotation and diversification: Rotate maize with leguminous crops (such as beans, peas, or clover) that fix nitrogen from the atmosphere and improve soil nitrogen levels. Crop rotation also helps break pest and disease cycles and promotes overall soil health.\n\nGreen manure cover crops: Plant cover crops like clover, vetch, or hairy vetch during fallow periods. These cover crops add organic matter, prevent soil erosion, and improve soil structure.\n\nMulching: Apply organic mulch, such as straw or crop residues, to the soil surface. Mulching helps conserve soil moisture, suppress weed growth, and slowly release nutrients into the soil as it decomposes.",
+    "ok": false
+  },
+  {
+    "q": "What does a fertility management program based on organic matter provide?",
+    "gold": "A fertility management program based on organic matter provides a broad range of essential nutrients for plant growth, rather than focusing on a few selected nutrients.",
+    "pred": "Add organic matter: Incorporating organic matter, such as compost or well-rotted manure, into clay soil can improve soil structure, increase soil fertility, and enhance water-holding capacity. It is best to apply organic matter in the fall or early spring and mix it into the soil to a depth of 6-8 inches.",
+    "ok": false
+  },
+  {
+    "q": "Discuss the role of alternative analytical techniques in identifying nutrient deficiencies.",
+    "gold": "Alternative analytical techniques play a crucial role in identifying nutrient deficiencies by pinpointing nutrient imbalances, determining the specific nutrient inputs needed, and uncovering the underlying reasons for observable deficiency symptoms in crops, thereby facilitating effective nutrient management.",
+    "pred": "Conducting soil tests to determine the soil's nutrient content, pH levels, and other factors that could impact plant growth.\n\nUsing high-quality seeds and planting at the appropriate time of year.\n\nApplying fertilizers and other soil amendments in the correct amounts and at the right time.\n\nPracticing crop rotation to prevent soil depletion and reduce the buildup of pests and diseases.\n\nUsing integrated pest management (IPM) techniques to minimize the use of chemical pesticides.\n\nMaintaining proper irrigation and drainage systems to ensure the plants receive the right amount of water.\n\nImplementing sustainable farming practices, such as conservation tillage and cover cropping, to promote soil health and reduce erosion.\n\nMonitoring crops regularly for signs of disease, pests, and nutrient deficiencies, and taking appropriate actions to address any issues.\n\nSeeking advice from agricultural extension officers or other experts when necessary.",
+    "ok": false
+  },
+  {
+    "q": "What are some roles of break crops?",
+    "gold": "Nutrient addition, conservation, cycling, pest control, disease control, weed control, and satisfactory yields.",
+    "pred": "Crop rotation: Rotating crops can help break pest cycles and reduce pest populations over time.\n\nUse of resistant varieties: Planting crop varieties that are resistant or tolerant to specific pests can help reduce pest damage.\n\nProper field hygiene: Removing crop residue and weeds can eliminate potential hiding places and breeding grounds for pests.\n\nSanitation: Proper disposal of infested plants, crop debris, and waste materials can help prevent the spread of pests.\n\nBiological control: Introducing beneficial insects, such as ladybugs or parasitic wasps, that prey on pests can help control their populations naturally.\n\nMechanical methods: Handpicking pests, using traps, or employing physical barriers can be effective in managing certain pests.\n\nIntegrated Pest Management (IPM): Implementing an integrated approach that combines multiple pest control strategies tailored to specific pest and crop conditions.\n\nTimely planting and harvesting: Planting at the appropriate time and harvesting crops promptly can minimize exposure to pests.",
+    "ok": false
+  },
+  {
+    "q": "What are the main uses of mouldboard ploughing?",
+    "gold": "Incorporation of crop residues and amendments",
+    "pred": "Good ventilation: Proper air circulation is crucial to prevent the buildup of moisture, which can attract pests like molds, mites, and insects. The store should have vents or fans to allow fresh air to enter and stale air to exit.\n\nDryness: Most pests prefer humid conditions, so a dry store is less attractive to them. The store should be free from leaks, and the walls and floor should be made of materials that do not absorb moisture.\n\nCleanliness: A clean store reduces the likelihood of pest infestation. Any spilled grain or produce should be promptly cleaned up, and the store should be regularly swept and sanitized.\n\nPest monitoring: Regular inspection of stored crops is essential to detect any signs of pest infestation early. Traps or baits can be used to monitor and control pests.\n\nPest control: If pests are detected, appropriate control measures should be taken immediately. This can include the use of insecticides, fumigation, or physical removal of infested crops.\n\nProper storage containers: Crops should be stored in appropriate containers, such as airtight containers, to prevent pests from entering. The containers should be made of materials that do not release harmful chemicals or odors that can affect the quality of the stored crops.\n\nProper storage location: The store should be located away from sources of pests, such as animal pens or garbage dumps. Additionally, the store should be located in an area that is accessible for regular monitoring and maintenance.",
+    "ok": false
+  },
+  {
+    "q": "How can biological soil fertility be emulated in organic farming?",
+    "gold": "Through recycling nutrients naturally.",
+    "pred": "Disease and pest carryover: Some diseases and pests can overwinter or survive on maize stalks, potentially infecting or infesting future crops. It is advisable to remove and properly dispose of stalks affected by diseases or pests to minimize the risk.\nCrop rotation: Leaving maize stalks in the same area may hinder proper crop rotation, which is important for managing pests, diseases, and nutrient imbalances.\nIf you decide to leave maize stalks in the garden as organic matter and mulch, it is recommended to chop or shred the stalks into smaller pieces to facilitate decomposition. It is also important to monitor for any signs of disease or pests and take appropriate measures if necessary. Overall, proper management of maize stalks can contribute to soil fertility and sustainability, but it is essential to consider specific farm conditions and crop rotation practices.",
+    "ok": false
+  },
+  {
+    "q": "What is the risk associated with cultivating in the following autumn?",
+    "gold": "Increased risk of leaching.",
+    "pred": "Crop rotation helps prevent soil depletion, nutrient imbalances, and buildup of pests and diseases associated with continuous tomato cultivation. Rotate tomatoes with non-solanaceous crops such as legumes, leafy greens, or root vegetables to break pest and disease cycles and improve soil health. Avoid planting tomatoes in the same location more frequently than once every 3-4 years to maintain soil fertility and reduce disease pressure.",
+    "ok": false
+  }
+]

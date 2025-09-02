@@ -210,6 +210,7 @@ def recent_rainwater(tank_id: str = "T1", limit: int = 10) -> List[Dict[str, Any
 
 # --- admin ---
 def reset_database() -> None:
+    global _db, _readings, _reco, _tank, _valves, _alerts, _rain
     # Drop collections to clear state; will be recreated lazily via indexes
     for name in (
         "readings",
@@ -224,7 +225,6 @@ def reset_database() -> None:
         except Exception:
             pass
     # Recreate indexes via _get_db
-    global _db, _readings, _reco, _tank, _valves, _alerts, _rain
     _db = _get_db()
     _readings = _db["readings"]
     _reco = _db["reco_history"]

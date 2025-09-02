@@ -155,6 +155,26 @@ def load_datasets(repo_root: Path) -> pd.DataFrame:
         except Exception:
             pass
 
+    # 6) RAG-augmented CSV at project root
+    rag_csv = next(
+        (r / "rag_qa_gemini.csv" for r in roots if (r / "rag_qa_gemini.csv").exists()),
+        None,
+    )
+    if rag_csv and rag_csv.exists():
+        try:
+            df = pd.read_csv(rag_csv)
+            cols = {str(c).strip().lower(): c for c in df.columns}
+            q = cols.get("question")
+            a = cols.get("answer")
+            if q and a:
+                df = df.rename(columns={q: "question", a: "answer"})[
+                    ["question", "answer"]
+                ]
+                df["source"] = "RAGGemini"
+                frames.append(df)
+        except Exception:
+            pass
+
     if not frames:
         raise FileNotFoundError(
             "No datasets found. Ensure at least one CSV is present."

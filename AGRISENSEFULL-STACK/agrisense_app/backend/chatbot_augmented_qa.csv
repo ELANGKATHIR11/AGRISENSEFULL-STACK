@@ -1,0 +1,418 @@
+id,parent_id,source,question,answer
+1,0,original,name the important categories of food crops.,"cereals, legumes, forage, fruits and vegetables"
+2,1,gemini,What are the main types of food crops?,"cereals, legumes, forage, fruits and vegetables"
+3,0,original,what happens during biological nitrogen fixation?,convert biologically unavailable atmospheric nitrogen gas (N2) to biologically available ammonium (NH+4)
+4,3,gemini,Explain the process of biological nitrogen fixation.,convert biologically unavailable atmospheric nitrogen gas (N2) to biologically available ammonium (NH+4)
+5,0,original,Are genetically modified organisms (GMOs) the only organisms with genes?,"No. Living or once living things contain genes, whether they are genetically modified or not. �Gene� is the root word for genetics. Genes are located on chromosomes"
+6,0,original,how do ranchers administer antibiotics?,according to the instructions on the label and under the direction of a veterinarian
+7,6,gemini,What methods do cattle farmers use to give antibiotics?,according to the instructions on the label and under the direction of a veterinarian
+8,0,original,What is threshing?,separate the beans from the pods and other debris
+9,0,original,which fish are grown in farms?,"salmon, catfish, rainbow trout, tilapia, and cod are grown in fish farms"
+10,0,original,"Could more people be fed if crop land was used for food for human
+consumption instead of livestock or livestock feed?",land used f
+11,0,original,List the breeds of dairy cattle?,"Holstein, Jersey, Brown Swiss, Ayrshire, Guernsey and Milking Shorthorn"
+12,0,original,"What is field curing, and why is it important for bean crops?","the beans are left to dry further in the sun, a process known as field curing"
+13,0,original,what farming technique is used to supplement rainfall in areas of low rainfall.,irrigation
+14,0,original,how long does the adult live.,up to 14 days.
+15,0,original,What are the ideal storage conditions for maize to prevent mold growth and insect infestation?,temperatures between 10-15�C
+16,0,original,How can cows make so much milk?,If its calf nurses regularl
+17,0,original,What is the best season for beans?,"beans prefer warm weather, plant at least a week after the last spring frost"
+18,0,original,when do primary outbreaks occurs?,"occur with relatively inconspicuous, low-density populations that can survive without frequent rainfal"
+19,0,original,what is organic farming?,"method of crop production that emphasizes the use of natural and sustainable practices, such as crop rotation, composting, and biological pest control"
+20,0,original,"If a farm is large, does that mean it is a corporate farm?","Just because a farm is large in number of acres, does not mean it is a corporate farm"
+21,0,original,which key districts produces maize in uganda?,"Masindi, Kapchorwa, Kasese, Jinja, Kabarole and Mbale"
+22,0,original,what causes hunger?,poverty
+23,0,original,how can Cassava mosaic disease spread,Whitefly infestations
+24,0,original,Can eating a genetically modified fruit or vegetable change a person’s genes?,Eating GMO products does not impact our genes.
+25,0,original,when are the African armyworms noticed by farmers.,until the caterpillars are ten days old and start exhibiting the gregaria phase.
+26,0,original,What is the difference between cloning and genetic modification (GM)?,Genetic modification and cloning are not the same. Cloning provides an exact copy. Cloned genes can only be copied in the same species. Genetic modification (genetic engineering) something scientists do to pick out a specific set of genes and place these genes in an organism where the traits would be helpful
+27,0,original,Does organic farming contribute to less pollution?,Yes
+28,0,original,what are some of the high risk of work-related hazards that can affect farmers.,"injuries, lung disease, noise-induced hearing loss, skin diseases, as well as certain cancers related to chemical use and prolonged sun exposure"
+29,0,original,define what is intercropping.,several crops are grown at the same time
+30,0,original,which crop is the crop most often used for silage.,corn
+31,0,original,List inputs whose cost would lead farmers to increase prices.,"land, equipment, fertilizer, chemical, seed, buildings and facilities, maintenance, labor, fuel, heating, feed, taxes, insurance"
+32,0,original,what is Pastoralism.,"involves managing domesticated animals. In nomadic pastoralism, herds of livestock are moved from place to place in search of pasture, fodder, and water"
+33,0,original,name the phase in polyphenism in which the larvae raised in isolation turns green,solitaria
+34,0,original,Is buying local and organic the same thing?,No. Local is a definition based on location
+35,0,original,Is global hunger caused by a shortage of food?,"Not necessarily. In many cases, hunger is not caused by a shortage of food"
+36,0,original,define what GMO is?,"GMOs are crops that have been genetically modified to enhance their resistance to pests and diseases, as well as to improve their nutritional value and other characteristics"
+37,0,original,what causes the green coloration in Solitaria larvae,This green coloration is due to both pigmentation and ingested plant material visible in the gut
+38,0,original,What is the best time of year to plant soybeans in the Midwest?,between late April and mid-May
+39,0,original,name two types fertilizers.,organic and inorganic fertilizers
+40,0,original,whats the botanical name of african armyworm,Spodoptera exempta
+41,0,original,Which common chemical is used for seed dressing,Phenylmercuric acetate
+42,0,original,How is maize  stored after harvesting?,use of hermetic storage bags or containers
+43,0,original,which synthetic substances allowed in organic production.,Chlorine and hydrogen peroxide
+44,0,original,why is crop rotation important in farming?,"This helps to prevent soil erosion and depletion, and can also help to control pests and diseases"
+45,0,original,How can I prevent soil erosion on my farm?,"planting cover crops, using conservation tillage practices, and building contour terraces. It's also important to avoid overgrazing and to maintain vegetation along streams and other waterways to prevent bank erosion."
+46,0,original,what does S. exempta larvae feeds on?,Poaceae
+47,0,original,Name cultural  techniques for managing crop nutrients use.,crop rotation or a fallow period
+48,0,original,What is Consumptive water use?,is the term that describes water used and not returned to the original source.
+49,0,original,which kind of GM varieties release protein to control pest.,bacterium Bacillus thuringiensis
+50,0,original,why is migration benefical to moths?,it allows the species to travel to a new location with fewer predators and less possibility of parasitism and infection
+51,0,original,what are the three phases of  Food Supply Continuum,"pre?harvest, harvest and postharvest"
+52,0,original,what are the signs and symptoms of CBB disease?,"The disease causes wilting, yellowing of the leaves, and rotting of the stems and roots"
+53,0,original,Which crop is the major source of food in africa?,Cassava
+54,0,original,why do crops require regular maintainance after planting,to ensure healthy growth and yield
+55,0,original,what  is the role of Center for Disease Control(CDC).,"to prevent �illness, disability and death due to domestic and imported foodborne diseases"
+56,0,original,What is the recommended spacing for cassava?,spacing of 1.0 m x 1.0 m (3 ft x 3 ft) is commonly used for cassava planting
+57,0,original,How are maize planted?,"the maize seeds are planted either by hand or machine, depending on the scale of the operation"
+58,0,original,what median age of farmers in the US,57.5 years
+59,0,original,which other way can cover crops increase fertility,Cover crops can also improve soil quality by increasing soil organic matter levels through the input of cover crop biomass over time
+60,0,original,how many days does the eggs takes to hatch into larvae.,two to five days
+61,0,original,what is hay,"(dried grasses) to feed livestock (horses, cattle, sheep) during the winter when they cannot feed in green pastures"
+62,0,original,Organic farms that raise livestock such as dairy cows or chickens feed the animals with?,natural food
+63,0,original,name any Environmental issues.,"depletion of aquifers, deforestation, antibiotic resistance"
+64,0,original,name the first step in crop cultivation,Land preparation
+65,0,original,give examples of micronutrients.,"iron, zinc, and manganese."
+66,0,original,in which phase is the armyworms species dangerous to crops.,gregaria
+67,0,original,which pesticides causes liver disease?,Copper sulfate
+68,0,original,Testing Cassava?,There are various tests that can be done on cassava like testing for viruses.
+69,0,original,why is crop rotation important?,help to maintain soil health and improve crop yields over time
+70,0,original,Does the United States import more agricultural products than we export?,"Agriculture has a positive trade balance, which means we send out (export) more than we bring in (import)"
+71,0,original,What is crop cultivation?,"is the practice of growing crops for food, fiber, or fuel"
+72,0,original,name activities done during water management.,"irrigation scheduling, water storage, and distribution systems"
+73,0,original,"Are fresh, raw vegetables healthier and more nutritious than frozen
+vegetables?",Not necessarily. Research shows that frozen vegetables can even be more nutritious than fresh vegetables!
+74,0,original,when do the eggs of armyworms turn black.,prior to hatching
+75,0,original,how is threshing done for bean crops?,manually or by using machines such as threshers or combines
+76,0,original,which stage of crop cultivation involves placing seeds or seedlings into the soil at the right depth and spacing.,Planting
+77,0,original,what is crop rotation in soil management?,a technique used in soil management to reduce soil-borne diseases and pests and improve soil fertility
+78,0,original,What is a silo?,"silos are used to store silage, which is animal feed"
+79,0,original,what does a hand represents in a horse?,4 inches
+80,0,original,what kinds of tools are used in precision agriculture,"sensors, drones, and other tools"
+81,0,original,what is harvesting,It involves removing the mature crops from the field and preparing them for storage or transport
+82,0,original,How is the height of a horse measured?,A horse�s height is measured in hands from the ground to the withers (the area on top of a horse between its neck and back)
+83,0,original,what is Integrated Pest Management?,"IPM is a holistic approach to pest management that emphasizes the use of multiple methods to control pests, including biological control, cultural control, and chemical control"
+84,0,original,which farm tool was used by farmers to thresh or beat the dried wheat in order to separate its edible grain seeds from its stalks,flails
+85,0,original,List the Animal Care Principles for producers,"access to food and water, health and veterinary care, appropriate environmental and living conditions, implementing science?�based husbandry practices, using proper handling practices and providing comfortable and sanitary transportation to avoid stress"
+86,0,original,what is the importane of organic farming?,This approach seeks to minimize the use of synthetic chemicals and promote the health of the soil and the environment
+87,0,original,what the required soil PH for beans,between 6.0 and 7.0
+88,0,original,what is the importance of soil management.,it helps farmers to identify nutrient deficiencies or excesses in the soil and adjust their fertilization practices accordingly.
+89,0,original,what causes plant diseases?,"variety of pathogens, including fungi, bacteria, viruses, and nematodes"
+90,0,original,what are organic fertilizers?,"are derived from natural sources such as animal manure, compost, and plant residues"
+91,0,original,What are the symptoms of cassava mosaic,"Leaves leaves become distorted and yellow, Poor formation of tubers, The plants is stumted, Mosaic mottling,mishapen and twisted leaflets and reduction in size of leaves"
+92,0,original,what is Couch grass?,is a persistent weed that can be difficult to control in cassava gardens
+93,0,original,name one crop that belongs to Brassicaceae family,mustards
+94,0,original,what is Poaceae.,Poaceae is a family of flowering grasses which includes cereal grasses and the grasses of grasslands and pastures
+95,0,original,which people used small windmills to generate electricity in rural areas,Americans
+96,0,original,how do we control plant diseases?,use of pesticides and other measures to control.
+97,0,original,the product of consistent modification by scientists are called?,GMOs
+98,0,original,Any maize markets out there?,Nakasero Market
+99,0,original,what are different cassava diseases?,Cassava
+100,0,original,What is post-harvest management?,Proper storage conditions
+101,0,original,How is technology in agriculture changing?,Tractor technology is changing! Auto?steer and GPS (global positioning systems) help make farming more efficient. Tractor technology is also helping the environment.
+102,0,original,how can pest and diseases be managed in maize plants?,"use of chemical or organic pesticides and fungicides, as well as proper crop rotation to reduce the risk of infection"
+103,0,original,what happens to African armyworms first after emerging from pupation,hey allow their bodies to dry off and their wings to harden before climbing trees
+104,0,original,which body oversees organic certification>,USDA National Organic Program (NOP)
+105,0,original,what is Tillage.,"is the practice of breaking up the soil with tools such as the plow or harrow to prepare for planting, for nutrient incorporation, or for pest control."
+106,0,original,define what a seed class is?,"The categorization of seed according to genetic purity and quality standards. The seed
+classes adopted in these guidelines are Nuclear stock, Basic seed, Certified 1, Certified 2 and QDS."
+107,0,original,"When is the best time to harvest beans, and how is this determined?",when the pods turn yellow and dry up
+108,0,original,which vitamins helps blood cell and DNA development,B12
+109,0,original,what is final stage in crop cultivation,Harvesting
+110,0,original,Why do horses sleep standing up?,"Their legs can lock in place, enabling them to fall asleep without falling over. Because they are prey animals, horses often do not feel comfortable sleeping on the ground, and most of their sleeping is done during the day rather than at night when predators are out hunting. Horses have straight backs, so they cannot get up quickly."
+111,0,original,name the activities of crop maintanance.,"weed and pest control, fertilization, and irrigation."
+112,0,original,Name the cultural pest control practicies.,"crop rotation, culling, cover crops, intercropping, composting, avoidance, and resistance"
+113,0,original,what are some of the challenges in growing apples?,"� Apple seedlings are imported and costly
+� Birds and thieves are giving many farmers sleepless nights.
+� Few areas are favourable for Apple Growing
+� High competition with imported apples
+Market"
+114,0,original,in which way is climate change affecting agriculture?,"changes in temperature, rainfall, and weather patterns"
+115,0,original,which nutrient is leguminous crops high in?,nitrogen
+116,0,original,how do cover crops suppress weeds after death,they smother the next flush of weeds by forming a mulch layer on the soil surface
+117,0,original,How can couch grass be effectively control from the cassava garden.,"Hand-pulling, mulching, herbicides, and tillage"
+118,0,original,Why do cows stand around in fields eating all day?,to produce four or more gallons of milk
+119,0,original,what is isolation.,"A minimum separation distance required in a seed multiplication field in order to prevent
+contamination by physical mixtures or disease vectors"
+120,0,original,name regions where irrigation is applicable.,regions with low rainfall or unreliable water sources
+121,0,original,"What are some of the physical and chemical, properties of soil that soil scientists study?","texture, structure, acidity, and nutrient content."
+122,0,original,how was harvesting done before the evolution of machinery?,Gathering and removing mature plants from the field had to be done by hand
+123,0,original,what is animal husbandry?,"is the breeding and raising of animals for meat, milk, eggs, or wool, and for work and transport."
+124,0,original,What are the effects of reliable rain fall,"improved crop yields, better soil health, enhanced biodiversity, reduced risk of drought, and improved water quality."
+125,0,original,how do we call the cover crops that increases soil fertility.,green manure
+126,0,original,List some of the soil management activites.,"soil testing, fertilization, irrigation, tillage, and crop rotation"
+127,0,original,give other examples of ruminats,"Goats, sheep, camels, and antelope"
+128,0,original,what are other benefits of cover crops to habitat.,improve farm habitat for wildlife
+129,0,original,What are some of biological properties of soil that soil scientists study?,microbial communities that live in the soil and the interactions between these organisms and the plants that grow in the soil.
+130,0,original,"what nutrients can i use for water regulation, disease resistance, and stress tolerance in plants.",potassium
+131,0,original,what kind of information is collected by tools used in precision agriculture?,"soil moisture, nutrient levels, and other factors"
+132,0,original,which year was Apple farming introduced in Uganda?,1999
+133,0,original,what is multiple cropping.,several crops are grown sequentially in one year
+134,0,original,which nutrients are required for high yield in cassava.,"nitrogen, phosphorus, and potassium"
+135,0,original,What is the best way to store harvested wheat to prevent spoilage?,Harvested wheat should be stored carefully to prevent spoilage and maintain quality
+136,0,original,"which nutrient  is important for root development, flowering, and fruiting.",Phosphorus
+137,0,original,Which agricultural method can be used to improve on soil fertility,incorporating cover crops that add organic matter to the soil
+138,0,original,what other methods can be used to control apple tree pests?,"using pheromone traps, applying insecticides, or using natural predators such as ladybugs"
+139,0,original,when can Calcium Ammonium Nitrate (CAN) be applied in maize?,After 2-3 weeks or when the crop is about 45cm high
+140,0,original,what does Agriculture encompasses.,"crop and livestock production, aquaculture, fisheries and forestry for food and non-food products"
+141,0,original,What is the recommended pH range for soil used for growing beans?,between 6.0 and 7.5
+142,0,original,How has farming changed in the United States?,"The growth of farming brought many laborsaving devices to 19th- and early 20th-century farm life, including reaping and threshing machines, which replaced work done by hand. Today, with modern methods of agriculture that include complex machinery, scientific breeding, and chemical pesticides, farms require far fewer workers."
+143,0,original,what is the spacing between plants and rows?,a spacing of 20-30 cm between plants and 60-75 cm between rows
+144,0,original,what is soil?,"Soil is a complex mixture of minerals, organic matter, water, air, and living organisms."
+145,0,original,why is fertilizer used in soil management?,to provide the necessary nutrients for optimal crop growth.
+146,0,original,"During  Food Supply Continuum, what processes are included inside pre-harvest phase.","the producer or farmer, transportation of the product, and marketing of the product"
+147,0,original,which  sector is considered as one of the most hazardous of all economic sectors by International Labour Organization.,agriculture
+148,0,original,what is  irrigation.,the application of water to crops to supplement natural rainfall and ensure healthy plant growth
+149,0,original,What are barns used for?,to store modern farm machinery and house farm animals
+150,0,original,why is post-harvest management important for preserving the quality of beans?,to prevent mold growth and insect infestation
+151,0,original,what is the basic principle of organic farming,keeping the soil rich with nutrients by feeding it natural fertilizers such as cow manure
+152,0,original,what is volunteer plant,"A plant, which usually comes up from seed (root or cutting) left on/in the ground
+from a previous crop"
+153,0,original,when does the differences in appearance between the solitaria and gregaria phases become apparent.,in the third instar and remain until the last instar
+154,0,original,how many eggs does the female armyworm lays per night.,100�400
+155,0,original,name one crop planted by using a seed drill.,corn
+156,0,original,how many eggs does a female African armyworm lays.,"about 1,000 eggs in her lifetime"
+157,0,original,which other regions in Uganda grow apples?,"Bugisu, Bukedi and
+Sebei sub regions in areas around Mt. Elgon"
+158,0,original,what type of fertilizers are made from chemical?,synthetic fertilizers
+159,0,original,How does farming and ranching impact wildlife habitat?,"Farmers and ranchers value wildlife conservation and are working hard to improve habitat, while providing food, fiber and fuel to a growing population."
+160,0,original,why do ranchers do not like to use antibiotics?,"because antibiotics are expensive, and they take time to administer"
+161,0,original,why is it important in agriculture?,It is an essential aspect of agriculture that plays a crucial role in ensuring sustainable crop yields and protecting the environment.
+162,0,original,What is necessary to facilitate seedling growth during the germination process?,to ensure adequate moisture levels during the germination process
+163,0,original,name agricultural products that belong to food classes.,"cereals (grains), vegetables, fruits, cooking oils, meat, milk, eggs, and fungi"
+164,0,original,Is the primary focus of the USDA agricultural programs?,"7% of the total USDA budget. Rural development, research, food safety, marketing and regulatory, and departmental management accounts for 6% of the budget"
+165,0,original,Do cows cause global warming?,cattle production is not a top contributor to greenhouse gasses
+166,0,original,which two countries are the largest trading partners of the U.S,China and Canada
+167,0,original,which other techniques can help preserve quality of beans?,The use of hermetic storage bags or containers
+168,0,original,What is soil science and management.,"Soil science and management is the scientific study of the physical, chemical, and biological properties of soil and the ways in which it can be managed for optimal crop production."
+169,0,original,what the advantages of natural food?,make cows produce more milk and chickens produce more eggs
+170,0,original,what are some of the water conservation practices being done.,"reducing evaporation loss, controlling water runoff, and maintaining proper soil moisture levels"
+171,0,original,How long does beans take  from planting to harvesting season?,75 days to 90 depending on the variety
+172,0,original,what is the right spacing for beans when plantimg?,about 2-4 inches apart
+173,0,original,when do ad.ults emerge from pupa stage,in 7 to 10 days
+174,0,original,how many bristles do female armyworms have?,females have multiple
+175,0,original,What percentage did vitamin C in fresh broccoli dropped?,50% within one week
+176,0,original,what is Aquaculture,production of fish for human consumption
+177,0,original,What is a seed drill?,a device that allowed farmers to plant seeds in the soil and then cover them up
+178,0,original,name the four stages of the lifecycle.,"Eggs, Larvae, Pupae and Adult"
+179,0,original,any maize market out there?,There are several markets available but all depends on where you are based.Where are you based
+180,0,original,"If it says locally grown, does that mean it is from my community?","Not necessarily. This may come as a surprise, but if you�re buying or eating locally grown food, it may not be food grown in your community."
+181,0,original,why has Food and Drug Administration has approved  the use of antibiotics in treating animals?,"to treat disease in animals that are sick, control disease for a group of animals when some of the animals are sick and to prevent disease in animals that are at risk for becoming sick"
+182,0,original,What are the factors affecting response of crops to fertilizers,Soil type and properties
+183,0,original,What are some common pests that can affect maize crops?,"corn borers, armyworms, and rootworms"
+184,0,original,which population is vulnerable  in agriculture.,Ages 0�6
+185,0,original,where do armyworms lay their eggs.,clusters on the lower side of leaves
+186,0,original,which phase in polyphenism in which the larvae raised in groups turns black.,gregaria
+187,0,original,how does clover cover crop enhanced songbird habitat.,"by providing cover and nesting sites, and an increased food source from higher arthropod populations"
+188,0,original,What is maize and why is it important?,"Maize, also known as corn, is one of the most widely cultivated crops in the world, and is a staple food in many regions"
+189,0,original,what is common cause of fatal agricultural injuries in developed countries.,tractor rollovers
+190,0,original,how do farmers control soil erosion.,farmers use conservation practices like planting cover crops in the winter or using conservation tillage practices
+191,0,original,what is pest management?,Pest management is the practice of controlling pests and diseases that can damage crops
+192,0,original,which natural water can fish grow in?,"ponds, lakes, rivers, and streams"
+193,0,original,which district in Uganda was apple first introduced?,Kabale District
+194,0,original,The primary macronutrients are?,"nitrogen (N), phosphorus (P), and potassium (K), which are typically present in fertilizers in the form of NPK ratios"
+195,0,original,why do farmers practice irrigation.,to conserve water while ensuring that crops receive the necessary moisture for healthy growth.
+196,0,original,Who invented the earliest milking machines?,the ancient Egyptians
+197,0,original,when do i harvest cassava plant?,"when the plants have attained
+complete physiological maturity"
+198,0,original,Do farmers waste water?,"Water is necessary to grow plants that provide food, fiber and shelter for the world"
+199,0,original,How do you call the young ones of a horse,foal
+200,0,original,name examples of cover crops.,"Secale cereale (rye), Vicia villosa (hairy vetch), Trifolium pratense (red clover), Sorghum bicolor (sorghum-sudangrass), and species in the family Brassicaceae, particularly mustards"
+201,0,original,what is irrigation?,Irrigation is the process of applying water to crops in order to help them grow
+202,0,original,why must farmers  balance the benefits of tillage against its potential negative impacts,excessive tillage can lead to soil erosion and nutrient loss
+203,0,original,name two types of African armyworm outbreak.,primary and secondary
+204,0,original,why is Integrated Pest Management used?,"to minimize the use of pesticides and other chemicals, while still effectively controlling pests and diseases."
+205,0,original,what is the use of cow's special stomach,to store food for later chewing and digestion once they were hidden and out of danger
+206,0,original,when do moths travel?,during the day
+207,0,original,how did seed drill helped farmres,allowed farmers to sow seeds in well-spaced rows at specific depths at a specific rate
+208,0,original,give two cultural crop protection practices.,crop rotation and intercropping.
+209,0,original,what percentage does agriculture contribute to the total greenhouse gas emissions,9% of total U.S. greenhouse gas emissions
+210,0,original,Does most of the money I pay for food go back to the farmer?,Not necessarily
+211,0,original,why is crop cultivation a critical aspect of agriculture.,plays a vital role in providing food security for the world's growing population.
+212,0,original,what is GMO in full?,Genetically Modified Crops
+213,0,original,when secondary outbreaks occur?,occur when the moths from the primary outbreak are carried downwind and the adults mate and lay eggs in same location due to wind patterns
+214,0,original,How can Tillage improve productivity.,"warming the soil, incorporating fertilizer and controlling weeds, but also renders soil more prone to erosion, triggers the decomposition of organic matter releasing CO2, and reduces the abundance and diversity of soil organisms."
+215,0,original,"What are some common pests and diseases that can affect beans, and how can they be managed?","Common pests include aphids, thrips, and spider mites, while diseases such as bacterial blight and rust can also affect the crop. Pest and disease management typically involves the use of chemical or organic pesticides and fungicides, as well as proper crop rotation to reduce the risk of infection"
+216,0,original,which region in African has the armyworm,Sahara
+217,0,original,what are organic fertilizers?,"organic fertilizers, which are made from natural materials such as manure and compost"
+218,0,original,"What is the fall armyworm, and why is it a concern for farmers in Uganda?","The fall armyworm, in particular, is a major concern for farmers as it is highly invasive, can reproduce quickly, and can cause significant crop losses"
+219,0,original,what are the different methods of pest management?,"biological control, cultural control, and chemical contro"
+220,0,original,which other field is RFID being used?,hay
+221,0,original,What is the process of field drying and threshing maize?,Post-harvest management
+222,0,original,what are green manure used for?,to manage a range of soil macronutrients and micronutrients
+223,0,original,what is Payment for ecosystem services.,is a method of providing additional incentives to encourage farmers to conserve some aspects of the environment
+224,0,original,What type of soil is beans doing well,well-draining loamy soil
+225,0,original,what processes are involved during harvest phase of  Food Supply Continuum,"harvesting the meat, fruit, vegetable or food product and processing it into a usable form"
+226,0,original,what are principal factors of soil quality.,"soil salination, pH, microorganism balance and the prevention of soil contamination"
+227,0,original,Can farmers save and replant GMO seeds?,"GMO seeds, like any others, can be saved and replanted"
+228,0,original,Why are pigs so dirty?,"Because pigs will eat almost anything, they have traditionally been fed farm leftovers and waste."
+229,0,original,what is the importance of chlorophyll.,is necessary for photosynthesis and plant growth.
+230,0,original,why do we say cover crops are nurse crops?,"they increase the survival of the main crop being harvested, and are often grown over winter"
+231,0,original,how do farmers control insects?,prevent insect damage by putting up insect traps or by bringing in beneficial insects that feed on the harmful ones that are causing a problem.
+232,0,original,why do farmers plant cover crops?,"Cover crops manage soil erosion, soil fertility, soil quality, water, weeds, pests, diseases, biodiversity and wildlife in an agroecosystem"
+233,0,original,which types of crops are used to retain and recycle soil nitrogen already present.,catch crops
+234,0,original,how are beans planted?,The seeds are planted at a depth of 1-2 inches and spaced about 2-4 inches apart in rows
+235,0,original,why is gregaria phase dangerous to crops.,because the black-bodied caterpillars are more active and densely concentrated than solitaria caterpillars
+236,0,original,how can distinguish female from male,Females and males can be distinguished by the number of bristles on their frenulum
+237,0,original,what is crop protection?,"Crop protection refers to the various methods used to protect crops from pests, diseases, and other threats"
+238,0,original,why is animal welfare important to ranchers?,animals that are properly cared for will be healthier and more productive
+239,0,original,what is the most popular crop in midwest?,Soybeans
+240,0,original,which kind of cultivation is sometimes referred to as slash and burn.,Shifting cultivation
+241,0,original,what does  Food and Drug Administration (FDA) focuses on.,FDA focuses on both fresh and processed food products
+242,0,original,which technical allows for water status monitoring and automate water usage.,precision agriculture
+243,0,original,How can I control the spread of fungal diseases in my tomato plants?,"ensure good airflow around the plants by spacing them properly and pruning them as needed. Additionally, using a fungicide can help control fungal growth. It's also important to avoid overhead watering, which can promote the spread of disease by splashing spores from one plant to another"
+244,0,original,how did the name armyworm starts.,"The larvae often exhibit marching behavior when traveling to feeding sites,"
+245,0,original,what is Food Safety and Inspection Service (FSIS) responsible.,"FSIS is �responsible for ensuring that the nation�s commercial supply of meat, poultry and egg products is safe, wholesome and correctly labeled and packaged"
+246,0,original,Where does our food come from?,"87.3% of food and beverage purchases by U.S. consumers, including both grocery store and eating out purchases, were from domestic production. The remaining 12.7% were imported food and beverages such as produce from Chile or wines from France"
+247,0,original,what is the approximate amount of Global agricultural production of wood.,4 billion
+248,0,original,how were the primitive milking machine used?,used hollow wheat stems inserted in the teats to milk cows
+249,0,original,name two types of beans found in the garden,bush beans and pole beans
+250,0,original,Which U.S. states are the biggest farm states?,California
+251,0,original,What is the ideal planting density for maize?,"The ideal planting density for maize can vary depending on the specific climate and soil conditions. In general, a planting density of around 70,000 to 80,000 plants per hectare is recommended for optimal yield. However, the ideal density may vary depending on factors such as the variety of maize being planted and the availability of water and nutrients"
+252,0,original,what is tillage?,the process of preparing the soil for planting by breaking up the soil and creating a suitable seedbed
+253,0,original,how doses cover crops reduce soil loss?,"by improving soil structure and increasing infiltration, protecting the soil surface, scattering raindrop energy and reducing the velocity of the movement of water over the soil surface"
+254,0,original,Why are crops sprayed with pesticides?,"to protect crops from insect pests, weeds, and fungal diseases while they are growing"
+255,0,original,A mature horse shorter than 14 hands is considered?,pony
+256,0,original,what are the common causes of fatal injuries among young farm workers.,"drowning, machinery and motor accidents, including with all-terrain vehicles."
+257,0,original,what is the major cassava disease?,Cassava Mosaic Disease (CMD)
+258,0,original,Are we losing family farms because corporate farms are taking over American Agriculture?,America�s farms are still family farms
+259,0,original,which family does the African armyworm belongs to.,Noctuidae
+260,0,original,Is maize growth affected by altitude?,The expert will reachout to help
+261,0,original,when do adults emerge?,in 7 to 10 days
+262,0,original,Do agricultural exports help the economy?,"According to the USDA Economic Research Service, $140.5 billion worth of American agricultural products were exported around the globe in 2017"
+263,0,original,How many pounds of grain does it take to produce 1 pound of beef?,2.5 pounds
+264,0,original,what is the ideal storage temperature for beans?,between 10-15�C
+265,0,original,which two countries contribute to 80 percentage of the sea food,Asia and Latin America
+266,0,original,which nutrient is essential for the production of chlorophyll.,Nitrogen
+267,0,original,what is soil fertility,Soil fertility is the ability of soil to sustain plant growth and optimize crop yield
+268,0,original,What is gene editing? How is it different from genetic engineering?,Gene editing allows scientists to make changes to a specific target sequence of DNA within a gene. It modifies the gene in a precise and predictable manner
+269,0,original,how can i define precision agriculture?,Precision agriculture is the use of technology to optimize crop production and reduce waste
+270,0,original,Can the world support more vegetarians than meat eaters?,"Unfortunately, the answer is not as simple as a mere calculation"
+271,0,original,What does the label on my egg carton mean?,Omega?3 Enriched: Ingredients like flaxseed and fish oils are added to hen�s diets to increase omega?3 content. � Organic: Hens are not in cages and are raised according to the USDA�s National Organic Program guidelines � Free?range: Hens are raised with access to the outdoors. � Cage?free: Hens are allowed to roam in open areas
+272,0,original,"during the final stage, what activities are done during  Food Supply Continuum","retailing the product, distributing the product through the food service industry and, finally, reaching the consumer"
+273,0,original,What are some common pests that attack apple trees and how can I control them?,"codling moths, apple maggots, and aphids. To control these pests, it's important to monitor the trees regularly and take action as soon as signs of infestation are observed"
+274,0,original,"In growing Irish potatoes,row planting and use of holes, which one conserves fertilizers?",Row planting
+275,0,original,what important role does agriculture play?,feeding the growing population.
+276,0,original,what are the causes of soil degradation?,"erosion, compaction, and nutrient depletion"
+277,0,original,what is plant biotechnology,a set of techniques used to adapt plants for specific needs or opportunities
+278,0,original,what is seed dormancy,Seed dormancy is the condition in which a seed fails to germinate even under conditions that are normally favorable for germination
+279,0,original,What are some of the methods that farmers in Uganda use to control armyworms?,"early detection, biological control, chemical control, crop rotation, and cultural control"
+280,0,original,what are other merits of increasing the density of cattles on the grazing land?,"restores the environment, it protects against climate change"
+281,0,original,how do i check for corn maturity?,"test the kernel moisture content using a moisture meter. Additionally, the husks on the ears should have turned brown and dry"
+282,0,original,what is the approximate Global agricultural production,32 million tonnes of natural fibres
+283,0,original,Poor irrigation leads to?,"waterlogging, soil salinization, and other negative environmental consequences."
+284,0,original,name Spodoptera exempta species that have chisel-like mandibels.,"S. triturata, S. m. mauritia, S. m. acronyctoides, S. umbraculata, S. cilium, Spodoptera depravata [sv], and S. pecten"
+285,0,original,Name the various activities done during crop cultivation.,"land preparation, planting, weed and pest control, fertilization, irrigation, harvesting, and storage"
+286,0,original,how can the information collected for precision agriculture used?,make more informed decisions about planting and harvesting
+287,0,original,what is micropropagation.,"The practice of rapidly multiplying stock plant material to produce a large number
+of progeny plants using plant tissue culture techniques"
+288,0,original,why are Gregaria caterpillars considered very deleterious pests.,capable of destroying entire crops in a matter of weeks
+289,0,original,What are some sustainable farming practices that can help reduce environmental impact?,Sustainable farming practices can help
+290,0,original,what is the importance of agriculture.,"It creates jobs, helps our economy and provides our basic necessities"
+291,0,original,How can I improve the quality of my grapes for winemaking?,"Grape quality can be improved by careful management of the vines, such as proper pruning and trellising. Additionally, thinning the grape clusters can help ensure even ripening and improve the quality of the fruit"
+292,0,original,"apart from suppressing weeds, what are other properties of allelopathic cover crops.","they can also break disease cycles and reduce populations of bacterial and fungal diseases, and parasitic nematodes"
+293,0,original,How can I increase the yield of my potato crop?,"Potato yield can be increased by taking steps to improve soil fertility, such as using organic matter and maintaining proper soil pH"
+294,0,original,how many farms were there in United States in 1935,6.8 million farms in the United States
+295,0,original,How does the combine harvester help farmers?,The combine harvester saves the farmers time and labor.
+296,0,original,what are cover crops,are plants that are planted to cover the soil rather than for the purpose of being harvested
+297,0,original,what is agricultural automation?,refers to autonomous navigation by robots without human intervention.
+298,0,original,What farming practice helps prevent soil erosion?,Crop Rotation
+299,0,original,name the major categories of Natural fibers.,"cotton, wool, hemp, silk and flax"
+300,0,original,Is agriculture a luxury or a matter of national security?,American agriculture is a matter of national security
+301,0,original,what is RFID used for?,is a technology that has been used to identify and track livestock animals
+302,0,original,what is FDA,Food and Drug Administration
+303,0,original,How should the soil be prepared before planting beans?,the soil must be prepared by removing weeds and incorporating organic matter such as compost or manure to improve soil fertility.
+304,0,original,Name factors that causes seed dormancy,"mechanical barriers, chemical inhibitors, immature embryos, scarification requirements, and environmental cues"
+305,0,original,how many teats or nipples does a cow has?,"four nipples, or teats"
+306,0,original,"Is buying organic food better for the environment than buying food
+produced conventionally?","Ultimately, environmental sustainability comes down to the farmer, whether they produce goods organically or conventionally."
+307,0,original,which year did methane emission decline to 35%,1975
+308,0,original,give two ways in which frozen vegetables can even be more nutritious than fresh vegetables.,"frozen vegetables are often left to ripen longer than fresh vegetables. As they ripen and mature, they become full of vitamins, minerals and antioxidants. Second, vegetables begin to lose their nutritional value as soon as they are harvested. Freezing slows this process."
+309,0,original,What kind of technology do farmers use in the field to help the environment?,"GPS (global positioning systems) is a common technology used by farmers. With GPS, farmers can track every location on the farm and know what the soil needs at that exact location"
+310,0,original,what type of fertilizers can be applied for maize?,"DAP, NPK, and CAN"
+311,0,original,Does my food price go up because farmers want to make more money?,"When you see an increase in price at the grocery story, don�t assume it�s going into the pocket of your local farmers"
+312,0,original,what should grapes be harvested?,"when they have reached their full flavor and sugar content, but before they become overripe."
+313,0,original,what is rotenone?,Rotenone is a plant extract found in some species within the pea family
+314,0,original,what does  nitrogen deficiency causes?,"stunted growth, yellowing leaves, and reduced yield."
+315,0,original,how are cover crops used in agroecosystem where water for crop production is in short supply,cover crops can be used as a mulch to conserve water by shading and cooling the soil surface
+316,0,original,what are the sustainable approaches to cassava disease management?,breeding disease-resistant varieties and using natural pest control methods.
+317,0,original,why do we manage soil quality?,to produce optimum circumstances for crops to flourish
+318,0,original,"How is the spread of armyworms facilitated, and why is it challenging to contain their spread?","The spread of armyworms is facilitated by their ability to fly long distances, which makes it difficult to contain their spread. The pest can also survive in crop residues, making it challenging to eradicate them completely"
+319,0,original,Which crops are most susceptible to armyworm infestation in Uganda?,"maize, sorghum, millet, and rice"
+320,0,original,which countries in United States has fish farms,"California, Idaho, Alabama, Arkansas, Louisiana, Mississippi, and along the southeastern U.S. coast"
+321,0,original,which symptoms are evident of Micronutrient deficiencies,"leaf discoloration, reduced growth, and poor reproductive performance"
+322,0,original,What is rouging.,"Removal of plants which are diseased or not of the desired type contaminants to purify and
+clean the stock,"
+323,0,original,what concerns have recently been raised about GMO's?,safety and potential environmental impacts
+324,0,original,which type of family do green manure crops belongs to.,leguminous
+325,0,original,what is the percentage of moisture content before storage?,13.5% or less
+326,0,original,What type of soil is best suited for growing beans?,Beans require well-draining soils with a pH level between 6.0 and 7.5
+327,0,original,Is beef a healthy protein option?,serving of beef provides 10 essential nutrients including vitamins B6 and B12 and about half the daily requirement of protein.
+328,0,original,The deficiency of phosphorus results into?,"poor root development, slow growth, and reduced flowering and fruiting"
+329,0,original,what is Thiram,"Thiram is a fungicide that is used to control a variety of seed-borne and soil-borne fungal diseases, such as damping-off, seed rot, and seedling bligh"
+330,0,original,which other way can make a cow produces more milk?,by milking the cows regularly�two or three times a day
+331,0,original,what is the use of wind mill.,"to saw wood and make typical household items, such as oil, paper, spices, chalk, and pottery."
+332,0,original,what is shifting cultivation.,"is a system in which forests are burnt, releasing nutrients to support cultivation of annual and then perennial crops for a period of several years"
+333,0,original,which diseases can be spread by whiteflies?,"The whiteflies can spread viruses such as CMD and CBSD, which can cause significant losses for farmers."
+334,0,original,The major agricultural products can be broadly grouped into ?,"foods, fibers, fuels, and raw materials (such as rubber)"
+335,0,original,which countries do we find african armyworm,"Tanzania, Kenya, Uganda, Ethiopia, Somalia, Malawi, Zimbabwe, Zambia, and South Africa"
+336,0,original,why do farmers to use chemicals,"to control weeds and insects and to produce increased amounts of vegetables, milk, or eggs"
+337,0,original,Is agriculture a necessary industry?,Agriculture is a necessity!
+338,0,original,what are some of the challenges faced by S. exempta.,"predators, parasites, parasitoids, diseases, and viruses"
+339,0,original,What are the potential crop losses due to armyworm infestation?,"Its infestation can lead to yield losses of up to 50% and, in some cases, total crop failure"
+340,0,original,in which areas are irrigation done.,areas with low rainfall or unreliable water sources.
+341,0,original,Farmers are focused on conserving water for several reasons,1) Farmers know water wasted could mean a lack of the resource for future crops. 2) Water is expensive. Water wasted is money lost. 3) Farmers are cultivators. They use precise technology to know exactly how much water a plant needs to grow. Too much could mean poor production. 4) Many farmers rely on Mother Nature for water.
+342,0,original,name the types of irrigation.,"flood, furrow, drip, and sprinkler irrigation"
+343,0,original,what is RFID in full,Radio frequency identification
+344,0,original,Give one example of  natural erosion caused by water.,Grand Canyon
+345,0,original,how can i differentiate sprinkler irrigation from drip irrigation.,"Sprinkler irrigation involves spraying water over the field, while drip irrigation involves applying water directly to the root zone of the crop through a system of pipes and emitters"
+346,0,original,Do brown cows produce chocolate milk?,No
+347,0,original,what is the estimates of the annual work-related death toll among agricultural employees.,"at least 170,000"
+348,0,original,what are combine harvesters?,"machines, which are loaded with technology, are very efficient and combine all three jobs of cutting, collecting, and threshing a crop"
+349,0,original,what is Food Supply Continuum,The process of getting food from the farm to the table
+350,0,original,Where does our food come from?,People in developed countries such as the United States eat food that comes from all over the world.
+351,0,original,how do cover crops suppress weeds during growth.,"During growth these cover crops compete vigorously with weeds for available space, light, and nutrients"
+352,0,original,what is the approximate Global agricultural production of food.,11 billion tonnes
+353,0,original,How do I know when my corn is ready to harvest?,"Corn is typically ready to harvest when the kernels are firm and have reached their full size, and the ears have a mature appearance"
+354,0,original,how are plants harvested?,by hand or machine
+355,0,original,A large diary cows can eat up of?,150 pounds
+356,0,original,what is a fish farm,Fish farms are businesses that produce a limited number of fish for sale in restaurants and supermarkets
+357,0,original,what is the size of the armyworms laid eggs.,Their eggs are relatively small at 0.5 mm in diameter
+358,0,original,why is soil health vital?,"Soil health is critical to crop growth and productivity, as it provides the necessary nutrients and support for plants to thrive."
+359,0,original,When is the ideal time to harvest maize?,"Harvesting is typically done when the kernels are fully developed and hard, and the husks have dried up and turned brown"
+360,0,original,do plants have naturally occurring B12?,no
+361,0,original,give examples of macronutrients?,"nitrogen, phosphorus, and potassium,"
+362,0,original,what are other reasons  why crops are sprayed,"to prevent rats, mice, and insects from contaminating foods while they are being stored"
+363,0,original,when do the intensity of outbreak increases.,"during the start of the wet season after a drought, which allows moths to lay eggs in areas of dense vegetation which supports the larval stage growth"
+364,0,original,name the various forms in which fertilizers can be applied?,"granular, liquid, and foliar applications."
+365,0,original,name some of the common water management practices,"soil moisture monitoring, crop water requirements estimation, crop selection, and crop rotation."
+366,0,original,What are the ideal conditions for planting maize?,Maize requires well-draining soils with a pH level between 5.5 and 7.5. The site should also receive full sunlight to promote optimal growth
+367,0,original,how do you control Cassava mosaic disease,"planting disease-resistant varieties, using virus-free planting materials, and maintaining good field sanitation, as well as chemical control measures"
+368,0,original,what is monoculture.,one cultivar is planted on a large acreage
+369,0,original,name working animals that have been used to cultivate fields.,"horses, mules, oxen, water buffalo, camels, llamas, alpacas, donkeys, and dogs"
+370,0,original,What are the common pests and diseases that affect maize?,"armyworms, cutworms, and aphids, while diseases such as corn smut and gray leaf spot can also affect the crop"
+371,0,original,what does poverty results in?,"inability to purchase food, safely store food or transport food from where it is grown to where it is needed."
+372,0,original,where do I submit my answer?,Right here
+373,0,original,why are fertilizers used in farming?,to improve the growth and quality of crops
+374,0,original,why should we have more livestock on the grazzing ground?,their movement and their waste and their relentless chomping stimulate grasses to grow
+375,0,original,what is High fructose corn syrup,is a common sweetener in sodas and drinks
+376,0,original,how do we define a cover crop biomass.,"a physical barrier between rainfall and the soil surface, allowing raindrops to steadily trickle down through the soil profile"
+377,0,original,what is fertilization?,the process of adding nutrients to the soil to improve crop growth and yield
+378,0,original,What are windmills used for?,to generate power and grind wheat since ancient times
+379,0,original,how many chambers does a cow has,four chambers
+380,0,original,what is the use of vitamin B6?,B6 is related to metabolism and immune function as well as brain development during pregnancy
+381,0,original,which agricultural products accounted for the exports in 2019,"soybeans, beef, veal, pork, poultry and fresh and processed fruits and veggies"
+382,0,original,what are ponnies?,"Ponies are small breeds of horses that, because of their size, appear much smaller when fully grown than larger breeds of horses"
+383,0,original,what are the different methods of irrigation?,"surface irrigation, drip irrigation, and sprinkler irrigation"
+384,0,original,Are beef animals consuming grain that could be used to feed humans?,lifetime
+385,0,original,what is crop rotation,Crop rotation is the practice of growing a series of different crops in the same area over several seasons
+386,0,original,Can I eat healthy without spending a lot of money?,es. Food in the United States is very affordable
+387,0,original,excessive tillage can lead to ?,soil erosion and nutrient loss
+388,0,original,what is the other name of Couch grass.,Bermuda grass
+389,0,original,When was the fall armyworm first detected in Uganda?,2016
+390,0,original,how does  Brassicaceae family crops suppress fungal disease.,through the release of naturally occurring toxic chemicals during the degradation of glucosinolate compounds in their plant cell tissues
+391,0,original,what causes Cassava mosaic disease,"Cassava mosaic disease (CMD) is caused by several species of single-stranded DNA viruses in the genus Begomovirus, family Geminiviridae."
+392,0,original,what are the effects of climate change,"decreased crop yields, increased pest and disease pressure, and other challenges for farmers."
+393,0,original,Name the pest control management practices.,"Chemical (pesticides), biological (biocontrol), mechanical (tillage), and cultural practices are used"
+394,0,original,what are fertilizers?,Fertilizers are substances that are added to soil to improve the growth and quality of crops
+395,0,original,What are genetically modified organisms (GMOs)?,GMOs are defined as �organisms in which the genetic material (DNA) has been altered in a way that does not occur naturally.
+396,0,original,Name one breed of a horse,ponies
+397,0,original,Does organic farming contribute to less pollution?,Yes
+398,0,original,how do the moths migrate?,"migration is based on winds brought by the Intertropical Convergence Zone, which move northwards or southwards depending on the season"
+399,0,original,what is plant nutrition?,refers to the process by which plants obtain and utilize essential nutrients for growth and development.
+400,0,original,what is ratoon crop.,"A sprout or shoot from the root, stem or vine of a plant after it has been cut back"
+401,0,original,what is animal welfare?,refers to the conditions in which an animal is raised
+402,0,original,what kind of practices are used for crop protection?,"use of pesticides, fungicides, and other chemicals, as well as cultural practices"
+403,0,original,What is the recommended dosage of fertilizer for growing strawberries in sandy soil?,"Generally, a balanced fertilizer with an NPK ratio of 10-10-10 is recommended for sandy soil. However, the exact dosage may vary depending on the specific soil conditions and the age of the plants"
