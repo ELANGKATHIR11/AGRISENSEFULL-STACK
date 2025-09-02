@@ -1508,6 +1508,7 @@ _chatbot_answer_tokens: Optional[List[Set[str]]] = None
 _chatbot_alpha: float = 0.7  # blend weight for embedding vs lexical
 _chatbot_min_cos: float = 0.28  # fallback threshold for cosine similarity
 _chatbot_metrics_cache: Optional[Dict[str, Any]] = None
+_chatbot_artifact_sig: Optional[Dict[str, float]] = None  # mtimes to detect changes
 
 
 def _tokenize(text: str) -> Set[str]:
@@ -1515,8 +1516,21 @@ def _tokenize(text: str) -> Set[str]:
         t = text.lower()
         # keep alphanumerics and spaces
         t = "".join(ch if ch.isalnum() else " " for ch in t)
-        toks = [w for w in t.split() if len(w) >= 3]
-        return set(toks)
+        raw = [w for w in t.split() if len(w) >= 3]
+        norm: Set[str] = set()
+        for w in raw:
+            base = w
+            # very light stemming: plural/tense normalization
+            if base.endswith("es") and len(base) > 4:
+                base = base[:-2]
+            elif base.endswith("s") and len(base) > 3:
+                base = base[:-1]
+            elif base.endswith("ing") and len(base) > 5:
+                base = base[:-3]
+            elif base.endswith("ed") and len(base) > 4:
+                base = base[:-2]
+            norm.add(base)
+        return norm
     except Exception:
         return set()
 
@@ -1529,15 +1543,44 @@ def _clean_text(text: str) -> str:
         return text
 
 
+def _artifact_signature(
+    qenc_dir: Path, index_npz: Path, index_json: Path, metrics_path: Path
+) -> Dict[str, float]:
+    def mtime(p: Path) -> float:
+        try:
+            return p.stat().st_mtime
+        except Exception:
+            return 0.0
+
+    # For SavedModel, use the saved_model.pb as freshness signal when present
+    saved_pb = qenc_dir / "saved_model.pb"
+    return {
+        "qenc": mtime(saved_pb if saved_pb.exists() else qenc_dir),
+        "npz": mtime(index_npz),
+        "json": mtime(index_json),
+        "metrics": mtime(metrics_path),
+    }
+
+
 def _load_chatbot_artifacts() -> bool:
-    global _chatbot_loaded, _chatbot_q_layer, _chatbot_emb, _chatbot_answers, _chatbot_answer_tokens, _chatbot_alpha, _chatbot_min_cos, _chatbot_metrics_cache
-    if _chatbot_loaded:
-        return True
+    global _chatbot_loaded, _chatbot_q_layer, _chatbot_emb, _chatbot_answers, _chatbot_answer_tokens, _chatbot_alpha, _chatbot_min_cos, _chatbot_metrics_cache, _chatbot_artifact_sig
     try:
         backend_dir = Path(__file__).resolve().parent
         qenc_dir = backend_dir / "chatbot_question_encoder"
         index_npz = backend_dir / "chatbot_index.npz"
         index_json = backend_dir / "chatbot_index.json"
+        metrics_path = backend_dir / "chatbot_metrics.json"
+        # If already loaded, only reload when artifacts changed on disk
+        if _chatbot_loaded:
+            try:
+                sig_now = _artifact_signature(
+                    qenc_dir, index_npz, index_json, metrics_path
+                )
+                if _chatbot_artifact_sig == sig_now:
+                    return True
+            except Exception:
+                # if signature calc fails, fall through to attempt reload
+                pass
         if not (qenc_dir.exists() and index_npz.exists() and index_json.exists()):
             logger.warning("Chatbot artifacts not found; skipping load.")
             return False
@@ -1561,7 +1604,6 @@ def _load_chatbot_artifacts() -> bool:
         _chatbot_answer_tokens = [_tokenize(a) for a in _chatbot_answers]
         # Optionally read metrics and tune blend/threshold
         try:
-            metrics_path = backend_dir / "chatbot_metrics.json"
             if metrics_path.exists():
                 with open(metrics_path, "r", encoding="utf-8") as mf:
                     _chatbot_metrics_cache = json.load(mf)
@@ -1583,6 +1625,12 @@ def _load_chatbot_artifacts() -> bool:
             # Non-fatal
             pass
         _chatbot_loaded = True
+        try:
+            _chatbot_artifact_sig = _artifact_signature(
+                qenc_dir, index_npz, index_json, metrics_path
+            )
+        except Exception:
+            _chatbot_artifact_sig = None
         logger.info("Chatbot artifacts loaded: %d answers", len(_chatbot_answers or []))
         return True
     except Exception:
@@ -1725,3 +1773,25 @@ def chatbot_metrics() -> Dict[str, Any]:
     except Exception:
         logger.exception("Failed to read chatbot metrics")
         raise HTTPException(status_code=500, detail="failed to read metrics")
+
+
+@app.post("/chatbot/reload")
+def chatbot_reload(_: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """Force reload of chatbot artifacts from disk (after retraining)."""
+    global _chatbot_loaded, _chatbot_q_layer, _chatbot_emb, _chatbot_answers, _chatbot_answer_tokens, _chatbot_metrics_cache, _chatbot_artifact_sig, _chatbot_cache
+    # Clear current state
+    _chatbot_loaded = False
+    _chatbot_q_layer = None
+    _chatbot_emb = None
+    _chatbot_answers = None
+    _chatbot_answer_tokens = None
+    _chatbot_metrics_cache = None
+    _chatbot_artifact_sig = None
+    _chatbot_cache.clear()
+    ok = _load_chatbot_artifacts()
+    return {
+        "ok": bool(ok),
+        "answers": len(_chatbot_answers or []),
+        "alpha": _chatbot_alpha,
+        "min_cos": _chatbot_min_cos,
+    }

@@ -34,9 +34,21 @@ from tensorflow.keras import layers
 
 def load_datasets(repo_root: Path) -> pd.DataFrame:
     frames: List[pd.DataFrame] = []
+    # Support both workspace root and project folder layouts
+    roots = [repo_root]
+    proj = repo_root / "AGRISENSEFULL-STACK"
+    if proj.exists():
+        roots.append(proj)
 
     # 1) KisanVaani prepared CSV
-    kisan_csv = repo_root / "KisanVaani_agriculture_qa.csv"
+    kisan_csv = next(
+        (
+            r / "KisanVaani_agriculture_qa.csv"
+            for r in roots
+            if (r / "KisanVaani_agriculture_qa.csv").exists()
+        ),
+        None,
+    )
     if kisan_csv.exists():
         df = pd.read_csv(kisan_csv)
         cols = {c.lower(): c for c in df.columns}
@@ -48,12 +60,17 @@ def load_datasets(repo_root: Path) -> pd.DataFrame:
             frames.append(df)
 
     # 2) Soil QA CSV from Hugging Face clone
-    soil_csv = (
-        repo_root
-        / "Agriculture-Soil-QA-Pairs-Dataset"
-        / "qna-dataset-farmgenie-soil-v2.csv"
-    )
-    if soil_csv.exists():
+    soil_csv = None
+    for r in roots:
+        c1 = (
+            r
+            / "Agriculture-Soil-QA-Pairs-Dataset"
+            / "qna-dataset-farmgenie-soil-v2.csv"
+        )
+        if c1.exists():
+            soil_csv = c1
+            break
+    if soil_csv is not None and soil_csv.exists():
         df = pd.read_csv(soil_csv)
         # Columns typically: index, ANSWER, QUESTION.question, QUESTION.paragraph
         # Prefer QUESTION.question as the question text; ANSWER as answer
@@ -103,8 +120,8 @@ def load_datasets(repo_root: Path) -> pd.DataFrame:
         "Farming_FAQ_Assistant_Dataset.csv",
         "Farming_FAQ_Assistant_Dataset (2).csv",
     ]:
-        fpath = repo_root / fname
-        if fpath.exists():
+        fpath = next((r / fname for r in roots if (r / fname).exists()), None)
+        if fpath and fpath.exists():
             try:
                 df = pd.read_csv(fpath)
                 cols = {str(c).strip().lower(): c for c in df.columns}
@@ -120,8 +137,10 @@ def load_datasets(repo_root: Path) -> pd.DataFrame:
                 pass
 
     # 5) Generic data_core.csv (try to map question/answer)
-    data_core = repo_root / "data_core.csv"
-    if data_core.exists():
+    data_core = next(
+        (r / "data_core.csv" for r in roots if (r / "data_core.csv").exists()), None
+    )
+    if data_core and data_core.exists():
         try:
             df = pd.read_csv(data_core)
             cols = {str(c).strip().lower(): c for c in df.columns}
