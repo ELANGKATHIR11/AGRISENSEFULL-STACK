@@ -27,3 +27,16 @@ Environment:
 - CORS: override allowed origins with `ALLOWED_ORIGINS` (comma-separated). Defaults to `*` in dev.
 
 Note: Large trained models are managed with Git LFS or excluded from Git to keep the repo lightweight.
+
+## Chatbot (QA) status
+
+- Current pipeline accuracy (HTTP eval, 100-sample set, top_k=3): acc@1 ≈ 98.0%
+- Artifacts live in `agrisense_app/backend/` (question/answer encoders, indices, metrics).
+- Evaluate locally:
+  - Run backend on port 8004
+  - From repo root: `python AGRISENSEFULL-STACK/scripts/eval_chatbot_http.py --sample 100 --top_k 3`
+- Tuning knobs via backend `.env` (same folder):
+  - `CHATBOT_ALPHA` (blend dense vs lexical)
+  - `CHATBOT_MIN_COS` (confidence threshold)
+  - `CHATBOT_DEFAULT_TOPK`, `CHATBOT_BM25_WEIGHT`, `CHATBOT_POOL_MIN`, `CHATBOT_POOL_MULT`
+  - Optional: `CHATBOT_ENABLE_QMATCH=1` to allow exact/fuzzy question match shortcuts

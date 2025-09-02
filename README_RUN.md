@@ -64,3 +64,18 @@ Notes:
 
 - In containers or constrained environments, set `AGRISENSE_DISABLE_ML=1` to skip loading models.
 - `requirements.txt` includes TensorFlow. For lighter dev installs, use `requirements-dev.txt` (no TF) and keep ML disabled.
+
+## Chatbot (QA) – run and evaluate
+
+- Artifacts: `agrisense_app/backend/chatbot_*.npz/json/keras`
+- Quick health check: `GET http://127.0.0.1:8004/health`
+- Ask: `POST http://127.0.0.1:8004/chatbot/ask` with body `{ "question":"...", "top_k":3 }`
+- Reload artifacts at runtime: `POST /chatbot/reload`
+- Metrics file: `agrisense_app/backend/chatbot_metrics.json`
+- Evaluate via HTTP:
+  - From `AGRISENSEFULL-STACK/`: `python scripts/eval_chatbot_http.py --sample 100 --top_k 3`
+  - Writes failures to `agrisense_app/backend/chatbot_eval_failures.json`
+- Tuning via `agrisense_app/backend/.env`:
+  - `CHATBOT_ALPHA`, `CHATBOT_MIN_COS`, `CHATBOT_DEFAULT_TOPK`, `CHATBOT_BM25_WEIGHT`, `CHATBOT_POOL_MIN`, `CHATBOT_POOL_MULT`
+  - Optional: `CHATBOT_ENABLE_QMATCH=1` to enable exact/fuzzy dataset question match
+  - Optional: `CHATBOT_ENABLE_CROP_FACTS=1` for generic crop facts fallback when confidence is low

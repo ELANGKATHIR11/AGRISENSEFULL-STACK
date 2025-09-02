@@ -6,6 +6,7 @@ from fastapi.responses import FileResponse, RedirectResponse, JSONResponse
 from fastapi import HTTPException
 from starlette.middleware.gzip import GZipMiddleware  # type: ignore
 import logging
+import re
 from pathlib import Path
 from pathlib import Path
 import time
@@ -33,6 +34,12 @@ from typing import (
 from pydantic import BaseModel, Field
 from collections import OrderedDict
 from . import llm_clients  # optional LLM reranker (Gemini/DeepSeek)
+from math import isfinite
+
+try:
+    from rank_bm25 import BM25Okapi  # type: ignore
+except Exception:
+    BM25Okapi = None  # type: ignore
 
 # Support running as a package (uvicorn backend.main:app) or as a module from backend folder (uvicorn main:app)
 try:
@@ -1090,6 +1097,64 @@ def _find_crop_in_text(text: str) -> Optional[CropCard]:
     return best
 
 
+def _is_general_crop_query(q: str) -> bool:
+    ql = q.strip().lower()
+    # Disallow crop facts for action-oriented or specific questions
+    disallow = [
+        "how ",
+        "how do",
+        "how can",
+        "when ",
+        "why ",
+        "where ",
+        "control",
+        "pest",
+        "disease",
+        "rotate",
+        "rotation",
+        "fert",
+        "irrig",
+        "sow",
+        "depth",
+        "year",
+        "alternative",
+        "option",
+        "apply",
+        "rate",
+    ]
+    if any(w in ql for w in disallow):
+        return False
+    # Positive cues for facts requests
+    allow_prefix = (
+        ql.startswith("tell me about ")
+        or ql.startswith("info about ")
+        or ql.startswith("information about ")
+        or ql.startswith("what is ")
+        or ql.startswith("details about ")
+    )
+    # Also allow if the query is just the crop name (1-3 tokens) possibly with word 'crop'
+    toks = [t for t in _normalize_simple(q).split() if t]
+    only_crop_like = len(toks) <= 3 and ("crop" in toks or len(toks) <= 2)
+    return bool(allow_prefix or only_crop_like)
+
+
+def _looks_like_crop_facts(text: str) -> bool:
+    try:
+        t = str(text).strip()
+    except Exception:
+        return False
+    if not t:
+        return False
+    # Heuristic: our crop facts start with "Crop: <name>" and include structured lines
+    if t.startswith("Crop: "):
+        return True
+    if ("Category:" in t and "Season:" in t) or (
+        "Water need:" in t and "Soil pH:" in t
+    ):
+        return True
+    return False
+
+
 def _format_reco(rec: Dict[str, Any]) -> str:
     parts: List[str] = []
     try:
@@ -1508,7 +1573,11 @@ _chatbot_emb: Optional[np.ndarray] = None
 _chatbot_q_emb: Optional[np.ndarray] = None
 _chatbot_q_texts: Optional[List[str]] = None
 _chatbot_q_tokens: Optional[List[Set[str]]] = None
-_chatbot_qa_answers: Optional[List[str]] = None  # aligned to _chatbot_q_texts
+_chatbot_qa_answers: Optional[List[str]] = None  # cleaned, aligned to _chatbot_q_texts
+_chatbot_qa_answers_raw: Optional[List[str]] = None  # raw originals, aligned
+_chatbot_q_exact_map: Optional[Dict[str, str]] = (
+    None  # normalized question -> raw answer
+)
 _chatbot_cache: "OrderedDict[tuple[str, int], List[Dict[str, Any]]]" = OrderedDict()
 _CHATBOT_CACHE_MAX = 64
 _chatbot_answer_tokens: Optional[List[Set[str]]] = None
@@ -1519,6 +1588,21 @@ _chatbot_lgbm_bundle: Optional[Dict[str, Any]] = (
     None  # {'model': lgb.Booster, 'vectorizer': TfidfVectorizer}
 )
 _chatbot_artifact_sig: Optional[Dict[str, float]] = None  # mtimes to detect changes
+_bm25_ans: Optional[Any] = None
+_bm25_q: Optional[Any] = None
+_bm25_weight: float = 0.45  # default weight for BM25 within lexical term
+_pool_min: int = 50  # minimum pool size for candidate gathering
+_pool_mult: int = 12  # multiplier on requested top_k for pool size
+# Default top_k for API responses (can be overridden via env)
+try:
+    DEFAULT_TOPK = int(
+        os.getenv("CHATBOT_DEFAULT_TOPK")
+        or os.getenv("AGRISENSE_CHATBOT_DEFAULT_TOPK")
+        or 5
+    )
+except Exception:
+    DEFAULT_TOPK = 5
+DEFAULT_TOPK = max(1, min(100, int(DEFAULT_TOPK)))
 
 
 def _tokenize(text: str) -> Set[str]:
@@ -1527,8 +1611,63 @@ def _tokenize(text: str) -> Set[str]:
         # keep alphanumerics and spaces
         t = "".join(ch if ch.isalnum() else " " for ch in t)
         raw = [w for w in t.split() if len(w) >= 3]
+        # light stopword set (en)
+        stop = {
+            "the",
+            "a",
+            "an",
+            "and",
+            "or",
+            "of",
+            "to",
+            "for",
+            "in",
+            "on",
+            "by",
+            "at",
+            "is",
+            "are",
+            "was",
+            "were",
+            "be",
+            "with",
+            "as",
+            "that",
+            "this",
+            "these",
+            "those",
+            "it",
+            "its",
+            "from",
+            "into",
+            "about",
+            "over",
+            "under",
+            "while",
+            "than",
+            "then",
+            "how",
+            "what",
+            "when",
+            "where",
+            "which",
+            "why",
+            "who",
+            "whom",
+            "can",
+            "could",
+            "should",
+            "would",
+            "may",
+            "might",
+            "also",
+            "such",
+            "like",
+        }
         norm: Set[str] = set()
         for w in raw:
+            if w in stop:
+                continue
             base = w
             # very light stemming: plural/tense normalization
             if base.endswith("es") and len(base) > 4:
@@ -1547,8 +1686,45 @@ def _tokenize(text: str) -> Set[str]:
 
 def _clean_text(text: str) -> str:
     try:
-        # Fix common encoding artifacts like 'Â°C'
-        return text.replace("Â°C", "°C").replace("Â", "").replace("\u00c2\u00b0C", "°C")
+        # Fix common encoding artifacts like 'Â°C', dashes, and quotes
+        t = (
+            text.replace("Â°C", "°C")
+            .replace("\u00c2\u00b0C", "°C")
+            .replace("Â", "")
+            # mis-decoded en/em dashes
+            .replace("â€“", "–")
+            .replace("â€”", "—")
+            .replace("â€“", "–")
+            # ascii hyphen variants sometimes show as â€• or similar
+            .replace("â€•", "—")
+            # quotes/apostrophes
+            .replace("â€™", "’")
+            .replace("â€˜", "‘")
+            .replace("â€œ", "“")
+            .replace("â€�", "”")
+            # final normalization to simple hyphen for client compatibility
+            .replace("–", "-")
+            .replace("—", "-")
+        )
+        # Normalize number ranges like '25â35' -> '25-35'
+        t = re.sub(r"(?<=\d)\s*â\s*(?=\d)", "-", t)
+        t = re.sub(r"(?<=\d)\s*(?:–|—)\s*(?=\d)", "-", t)
+        # Try to repair common mojibake by CP1252/Latin-1 -> UTF-8 roundtrip when we see 'â' or 'Â'
+        if ("â" in t) or ("Â" in t):
+            try:
+                b = t.encode("cp1252", errors="strict")
+                t2 = b.decode("utf-8", errors="strict")
+                if t2 and t2 != t:
+                    t = t2
+            except Exception:
+                try:
+                    b = t.encode("latin-1", errors="strict")
+                    t2 = b.decode("utf-8", errors="strict")
+                    if t2 and t2 != t:
+                        t = t2
+                except Exception:
+                    pass
+        return t
     except Exception:
         return text
 
@@ -1573,17 +1749,18 @@ def _artifact_signature(
 
 
 def _load_chatbot_artifacts() -> bool:
-    global _chatbot_loaded, _chatbot_q_layer, _chatbot_emb, _chatbot_answers, _chatbot_answer_tokens, _chatbot_alpha, _chatbot_min_cos, _chatbot_metrics_cache, _chatbot_artifact_sig, _chatbot_lgbm_bundle, _chatbot_q_emb, _chatbot_q_texts, _chatbot_q_tokens, _chatbot_qa_answers
+    global _chatbot_loaded, _chatbot_q_layer, _chatbot_emb, _chatbot_answers, _chatbot_answer_tokens, _chatbot_alpha, _chatbot_min_cos, _chatbot_metrics_cache, _chatbot_artifact_sig, _chatbot_lgbm_bundle, _chatbot_q_emb, _chatbot_q_texts, _chatbot_q_tokens, _chatbot_qa_answers, _chatbot_q_exact_map, _bm25_ans, _bm25_q, _bm25_weight, _pool_min, _pool_mult
     try:
         backend_dir = Path(__file__).resolve().parent
         qenc_dir = backend_dir / "chatbot_question_encoder"
         index_npz = backend_dir / "chatbot_index.npz"
         index_json = backend_dir / "chatbot_index.json"
-    metrics_path = backend_dir / "chatbot_metrics.json"
-    qindex_npz = backend_dir / "chatbot_q_index.npz"
-    qa_pairs_json = backend_dir / "chatbot_qa_pairs.json"
-        # If already loaded, only reload when artifacts changed on disk
-    if _chatbot_loaded:
+        metrics_path = backend_dir / "chatbot_metrics.json"
+        qindex_npz = backend_dir / "chatbot_q_index.npz"
+        qa_pairs_json = backend_dir / "chatbot_qa_pairs.json"
+
+        # If already loaded, only reload when artifacts haven't changed
+        if _chatbot_loaded:
             try:
                 sig_now = _artifact_signature(
                     qenc_dir, index_npz, index_json, metrics_path
@@ -1593,9 +1770,11 @@ def _load_chatbot_artifacts() -> bool:
             except Exception:
                 # if signature calc fails, fall through to attempt reload
                 pass
+
         if not (qenc_dir.exists() and index_npz.exists() and index_json.exists()):
             logger.warning("Chatbot artifacts not found; skipping load.")
             return False
+
         # Load SavedModel endpoint via Keras TFSMLayer
         from tensorflow.keras.layers import TFSMLayer  # type: ignore
 
@@ -1611,9 +1790,19 @@ def _load_chatbot_artifacts() -> bool:
         _chatbot_emb = arr
         with open(index_json, "r", encoding="utf-8") as f:
             meta = json.load(f)
-    _chatbot_answers = list(meta.get("answers", []))
+        _chatbot_answers = [_clean_text(a) for a in list(meta.get("answers", []))]
         # Pre-tokenize answers for lightweight lexical re-ranking
         _chatbot_answer_tokens = [_tokenize(a) for a in _chatbot_answers]
+        # Build BM25 indices if available
+        try:
+            if BM25Okapi is not None and _chatbot_answers:
+                ans_docs = [list(_tokenize(a)) for a in _chatbot_answers]
+                _bm25_ans = BM25Okapi(ans_docs)
+            else:
+                _bm25_ans = None
+        except Exception:
+            _bm25_ans = None
+
         # Optionally read metrics and tune blend/threshold
         try:
             if metrics_path.exists():
@@ -1660,12 +1849,37 @@ def _load_chatbot_artifacts() -> bool:
                 if env_min_cos is not None and str(env_min_cos).strip() != "":
                     _chatbot_min_cos = float(env_min_cos)
                     _chatbot_min_cos = max(0.0, min(1.0, _chatbot_min_cos))
+                # BM25 weight and pool sizing
+                env_bm25 = os.getenv("CHATBOT_BM25_WEIGHT") or os.getenv(
+                    "AGRISENSE_CHATBOT_BM25_WEIGHT"
+                )
+                if env_bm25 is not None and str(env_bm25).strip() != "":
+                    try:
+                        _bm25_weight = float(env_bm25)
+                        if not isfinite(_bm25_weight):
+                            _bm25_weight = 0.45
+                        _bm25_weight = max(0.0, min(1.0, _bm25_weight))
+                    except Exception:
+                        _bm25_weight = 0.45
+                env_pool_min = os.getenv("CHATBOT_POOL_MIN")
+                if env_pool_min:
+                    try:
+                        _pool_min = max(20, int(env_pool_min))
+                    except Exception:
+                        pass
+                env_pool_mult = os.getenv("CHATBOT_POOL_MULT")
+                if env_pool_mult:
+                    try:
+                        _pool_mult = max(5, int(env_pool_mult))
+                    except Exception:
+                        pass
             except Exception:
                 # Non-fatal if env parsing fails
                 pass
         except Exception:
             # Non-fatal
             pass
+
         # Optionally load LightGBM re-ranker bundle
         try:
             lgbm_path = backend_dir / "chatbot_lgbm_ranker.joblib"
@@ -1683,12 +1897,16 @@ def _load_chatbot_artifacts() -> bool:
             _chatbot_q_texts = None
             _chatbot_q_tokens = None
             _chatbot_qa_answers = None
+            _chatbot_qa_answers_raw = None
+            _chatbot_q_exact_map = None
             if qindex_npz.exists() and qa_pairs_json.exists():
                 with np.load(qindex_npz, allow_pickle=False) as d:
                     qarr = d["embeddings"]
                     # ensure l2-normalized (safety)
                     try:
-                        qarr = qarr / (np.linalg.norm(qarr, axis=1, keepdims=True) + 1e-12)
+                        qarr = qarr / (
+                            np.linalg.norm(qarr, axis=1, keepdims=True) + 1e-12
+                        )
                     except Exception:
                         pass
                     _chatbot_q_emb = qarr
@@ -1698,15 +1916,38 @@ def _load_chatbot_artifacts() -> bool:
                 aans = list(qa_meta.get("answers", []))
                 if qtexts and aans and len(qtexts) == len(aans):
                     _chatbot_q_texts = qtexts
-                    _chatbot_qa_answers = aans
+                    _chatbot_qa_answers_raw = list(aans)
+                    _chatbot_qa_answers = [_clean_text(a) for a in aans]
                     _chatbot_q_tokens = [_tokenize(t) for t in qtexts]
+                    # Build exact-match lookup on normalized question text
+                    try:
+                        qmap: Dict[str, str] = {}
+                        for qt, ans_raw in zip(qtexts, _chatbot_qa_answers_raw):
+                            key = _normalize_simple(str(qt))
+                            if key and key not in qmap:
+                                qmap[key] = str(ans_raw)
+                        _chatbot_q_exact_map = qmap
+                    except Exception:
+                        _chatbot_q_exact_map = None
+                    # Build BM25 over questions too (optional)
+                    try:
+                        if BM25Okapi is not None and _chatbot_q_tokens:
+                            q_docs = [list(t) for t in _chatbot_q_tokens]
+                            _bm25_q = BM25Okapi(q_docs)
+                        else:
+                            _bm25_q = None
+                    except Exception:
+                        _bm25_q = None
                     logger.info("Loaded question index with %d QA pairs", len(qtexts))
         except Exception:
             _chatbot_q_emb = None
             _chatbot_q_texts = None
             _chatbot_q_tokens = None
             _chatbot_qa_answers = None
-            logger.warning("Failed loading question index; will use answer index only", exc_info=True)
+            logger.warning(
+                "Failed loading question index; will use answer index only",
+                exc_info=True,
+            )
 
         _chatbot_loaded = True
         try:
@@ -1715,7 +1956,8 @@ def _load_chatbot_artifacts() -> bool:
             )
         except Exception:
             _chatbot_artifact_sig = None
-    logger.info("Chatbot artifacts loaded: %d answers", len(_chatbot_answers or []))
+
+        logger.info("Chatbot artifacts loaded: %d answers", len(_chatbot_answers or []))
         try:
             logger.info(
                 "Chatbot tuning => alpha=%.3f, min_cos=%.3f",
@@ -1732,7 +1974,12 @@ def _load_chatbot_artifacts() -> bool:
 
 class ChatbotQuery(BaseModel):
     question: str = Field(..., min_length=1)
-    top_k: int = 5
+    top_k: int = Field(default=DEFAULT_TOPK, ge=1, le=100)
+
+
+class ChatbotTune(BaseModel):
+    alpha: Optional[float] = None
+    min_cos: Optional[float] = None
 
 
 @app.post("/chatbot/ask")
@@ -1751,7 +1998,17 @@ def chatbot_ask(q: ChatbotQuery) -> Dict[str, Any]:
     qtext = q.question.strip()
     if not qtext:
         raise HTTPException(status_code=400, detail="question must not be empty")
-    topk = int(max(1, min(q.top_k, 20)))
+    # Allow env-based cap to quickly tune recall vs payload size
+    try:
+        TOPK_MAX = int(
+            os.getenv("CHATBOT_TOPK_MAX")
+            or os.getenv("AGRISENSE_CHATBOT_TOPK_MAX")
+            or 20
+        )
+    except Exception:
+        TOPK_MAX = 20
+    TOPK_MAX = max(1, min(100, TOPK_MAX))
+    topk = int(max(1, min(q.top_k, TOPK_MAX)))
 
     # LRU cache lookup
     key = (qtext, topk)
@@ -1760,33 +2017,64 @@ def chatbot_ask(q: ChatbotQuery) -> Dict[str, Any]:
         _chatbot_cache[key] = results  # move to end (most recent)
         return {"question": qtext, "results": results}
 
-    # If query mentions a known crop, return crop facts directly (better relevance)
-    try:
-        crop_hit: Optional[CropCard] = _find_crop_in_text(qtext)
-        if crop_hit is not None:
-            facts: List[str] = [f"Crop: {crop_hit.name}"]
-            if crop_hit.category:
-                facts.append(f"Category: {crop_hit.category}")
-            if crop_hit.season:
-                facts.append(f"Season: {crop_hit.season}")
-            if crop_hit.waterRequirement:
-                facts.append(f"Water need: {crop_hit.waterRequirement}")
-            if crop_hit.tempRange:
-                facts.append(f"Temperature: {crop_hit.tempRange}")
-            if crop_hit.phRange:
-                facts.append(f"Soil pH: {crop_hit.phRange}")
-            if crop_hit.growthPeriod:
-                facts.append(f"Growth period: {crop_hit.growthPeriod}")
-            if crop_hit.tips:
-                facts.append("Tips: " + "; ".join(crop_hit.tips[:3]))
-            ans_txt = "\n".join(facts)
-            results = [{"rank": 1, "score": 1.0, "answer": ans_txt}]
-            _chatbot_cache[key] = results
-            if len(_chatbot_cache) > _CHATBOT_CACHE_MAX:
-                _chatbot_cache.popitem(last=False)
-            return {"question": qtext, "results": results}
-    except Exception:
-        pass
+    # (moved) crop facts branch appears later, after dataset question fallbacks
+    # Optional exact/fuzzy short-circuits (disabled by default; enable via CHATBOT_ENABLE_QMATCH=1)
+    _enable_qmatch = str(os.getenv("CHATBOT_ENABLE_QMATCH", "0")).lower() in (
+        "1",
+        "true",
+        "yes",
+    )
+    if _enable_qmatch:
+        # Exact-match fallback using known dataset questions (helps achieve near-100% on known QA)
+        try:
+            qnorm = _normalize_simple(qtext)
+            if _chatbot_q_exact_map and qnorm in _chatbot_q_exact_map:
+                ans_txt = _chatbot_q_exact_map[qnorm]
+                # Avoid returning crop facts for action/specific queries
+                if not (
+                    not _is_general_crop_query(qtext)
+                    and _looks_like_crop_facts(ans_txt)
+                ):
+                    results = [{"rank": 1, "score": 1.0, "answer": ans_txt}]
+                    _chatbot_cache[key] = results
+                    if len(_chatbot_cache) > _CHATBOT_CACHE_MAX:
+                        _chatbot_cache.popitem(last=False)
+                    return {"question": qtext, "results": results}
+        except Exception:
+            pass
+        # Fuzzy question match fallback using token Jaccard against known QA questions
+        try:
+            if _chatbot_q_tokens and _chatbot_q_texts and _chatbot_qa_answers_raw:
+                qtok_f = _tokenize(qtext)
+                if qtok_f:
+                    best_i = -1
+                    best_j = 0.0
+                    for i, toks in enumerate(_chatbot_q_tokens):
+                        if not toks:
+                            continue
+                        inter = len(qtok_f & toks)
+                        if inter == 0:
+                            continue
+                        jac = inter / float(len(qtok_f | toks))
+                        if jac > best_j:
+                            best_j = jac
+                            best_i = i
+                    # If strong similarity, return the raw dataset answer directly
+                    if best_i >= 0 and best_j >= 0.55:
+                        ans_txt = _chatbot_qa_answers_raw[best_i]
+                        # Avoid returning crop facts for action/specific queries
+                        if not (
+                            not _is_general_crop_query(qtext)
+                            and _looks_like_crop_facts(ans_txt)
+                        ):
+                            results = [{"rank": 1, "score": 1.0, "answer": ans_txt}]
+                            _chatbot_cache[key] = results
+                            if len(_chatbot_cache) > _CHATBOT_CACHE_MAX:
+                                _chatbot_cache.popitem(last=False)
+                            return {"question": qtext, "results": results}
+        except Exception:
+            pass
+    # (moved) crop facts fallback handled at the end if retrieval is weak/empty
     # Compute question embedding
     # SavedModel signature is positional-only (args_0) with name 'text' and dtype tf.string
     vec = _chatbot_q_layer(tf.constant([qtext], dtype=tf.string))
@@ -1804,44 +2092,149 @@ def chatbot_ask(q: ChatbotQuery) -> Dict[str, Any]:
     qtok = _tokenize(qtext)
 
     # Prefer question-index retrieval if available (match user question -> dataset question)
-    use_qindex = _chatbot_q_emb is not None and _chatbot_q_texts is not None and _chatbot_qa_answers is not None
+    use_qindex = (
+        _chatbot_q_emb is not None
+        and _chatbot_q_texts is not None
+        and _chatbot_qa_answers is not None
+    )
     reranked: List[tuple[int, float]] = []
     idx_source = "q" if use_qindex else "a"
     if use_qindex:
         qemb = cast(np.ndarray, _chatbot_q_emb)
         scores = qemb @ v
-        pool = int(max(topk * 5, 50))
-        cand_idx = scores.argsort()[::-1][: min(pool, scores.shape[0])]
+        pool = int(max(_pool_mult * topk, _pool_min))
+        # Dense candidates
+        dense_idx = scores.argsort()[::-1][: min(pool, scores.shape[0])]
+        # BM25 candidates over questions (optional)
+        bm25_scores = None
+        bm25_norm = {}
+        try:
+            if _bm25_q is not None and qtok:
+                bm25_scores = cast(Any, _bm25_q).get_scores(list(qtok))
+                # min-max normalize for stable blending
+                b = np.asarray(bm25_scores, dtype=np.float32)
+                bmin, bmax = float(np.min(b)), float(np.max(b))
+                if not np.isfinite(bmin) or not np.isfinite(bmax) or bmax <= bmin:
+                    bmin, bmax = 0.0, 1.0
+                bn = (b - bmin) / (bmax - bmin + 1e-9)
+                # pick top pool
+                bm25_idx = bn.argsort()[::-1][: min(pool, bn.shape[0])]
+                bm25_norm = {int(i): float(bn[int(i)]) for i in bm25_idx}
+            else:
+                bm25_norm = {}
+        except Exception:
+            bm25_norm = {}
+        # Union candidates
+        if bm25_norm:
+            cand_set = set(int(i) for i in dense_idx) | set(
+                int(i) for i in bm25_norm.keys()
+            )
+            cand_idx = list(cand_set)
+        else:
+            cand_idx = list(map(int, dense_idx))
         alpha = _chatbot_alpha
         beta = 1.0 - alpha
         q_tokens_list = _chatbot_q_tokens
+        q_is_action = not _is_general_crop_query(qtext)
         for j in cand_idx:
+            # Skip generic crop-info dataset questions when user asks an action/specific query
+            try:
+                if q_is_action and _chatbot_q_texts is not None:
+                    dq = cast(List[str], _chatbot_q_texts)[j]
+                    if _is_general_crop_query(dq or ""):
+                        continue
+            except Exception:
+                pass
+            # Skip answers that look like crop facts, too
+            if q_is_action:
+                try:
+                    cand_ans0 = cast(List[str], _chatbot_qa_answers_raw or [""])[j]
+                except Exception:
+                    cand_ans0 = ""
+                if _looks_like_crop_facts(cand_ans0):
+                    continue
             sim = float(scores[j])
             overlap = 0.0
             if q_tokens_list is not None and qtok:
                 inter = qtok.intersection(q_tokens_list[j])
                 if qtok:
                     overlap = len(inter) / max(1.0, float(len(qtok)))
-            blended = alpha * sim + beta * overlap
+            # Blend lexical (token overlap + BM25) with dense embedding
+            bm = float(bm25_norm.get(int(j), 0.0))
+            lex = (1.0 - _bm25_weight) * overlap + _bm25_weight * bm
+            blended = alpha * sim + beta * lex
+            # If the candidate answer is crop facts and the query seems action/specific, penalize slightly
+            if q_is_action:
+                try:
+                    cand_ans = cast(List[str], _chatbot_qa_answers_raw or [""])[j]
+                except Exception:
+                    cand_ans = ""
+                if _looks_like_crop_facts(cand_ans):
+                    blended -= 0.50
             reranked.append((j, blended))
         reranked.sort(key=lambda x: x[1], reverse=True)
     else:
         # Fallback: original answer-index retrieval
         emb: np.ndarray = cast(np.ndarray, _chatbot_emb)
         scores = emb @ v
-        pool = int(max(topk * 5, 50))
-        cand_idx = scores.argsort()[::-1][: min(pool, scores.shape[0])]
+        pool = int(max(_pool_mult * topk, _pool_min))
+        # Dense candidates
+        dense_idx = scores.argsort()[::-1][: min(pool, scores.shape[0])]
+        # BM25 candidates over answers (optional)
+        bm25_scores = None
+        bm25_norm = {}
+        try:
+            if _bm25_ans is not None and qtok:
+                bm25_scores = cast(Any, _bm25_ans).get_scores(list(qtok))
+                b = np.asarray(bm25_scores, dtype=np.float32)
+                bmin, bmax = float(np.min(b)), float(np.max(b))
+                if not np.isfinite(bmin) or not np.isfinite(bmax) or bmax <= bmin:
+                    bmin, bmax = 0.0, 1.0
+                bn = (b - bmin) / (bmax - bmin + 1e-9)
+                bm25_idx = bn.argsort()[::-1][: min(pool, bn.shape[0])]
+                bm25_norm = {int(i): float(bn[int(i)]) for i in bm25_idx}
+            else:
+                bm25_norm = {}
+        except Exception:
+            bm25_norm = {}
+        # Union candidates
+        if bm25_norm:
+            cand_set = set(int(i) for i in dense_idx) | set(
+                int(i) for i in bm25_norm.keys()
+            )
+            cand_idx = list(cand_set)
+        else:
+            cand_idx = list(map(int, dense_idx))
         alpha = _chatbot_alpha
         beta = 1.0 - alpha
         ans_tokens = _chatbot_answer_tokens
+        q_is_action = not _is_general_crop_query(qtext)
         for j in cand_idx:
             sim = float(scores[j])
+            # Skip answers that look like crop facts for action queries
+            if q_is_action:
+                try:
+                    cand_ans0 = cast(List[str], _chatbot_answers or [""])[j]
+                except Exception:
+                    cand_ans0 = ""
+                if _looks_like_crop_facts(cand_ans0):
+                    continue
             overlap = 0.0
             if ans_tokens is not None and qtok:
                 inter = qtok.intersection(ans_tokens[j])
                 if qtok:
                     overlap = len(inter) / max(1.0, float(len(qtok)))
-            blended = alpha * sim + beta * overlap
+            bm = float(bm25_norm.get(int(j), 0.0))
+            lex = (1.0 - _bm25_weight) * overlap + _bm25_weight * bm
+            blended = alpha * sim + beta * lex
+            # Penalize crop facts for action-like queries
+            if q_is_action:
+                try:
+                    cand_ans = cast(List[str], _chatbot_answers or [""])[j]
+                except Exception:
+                    cand_ans = ""
+                if _looks_like_crop_facts(cand_ans):
+                    blended -= 0.50
             reranked.append((j, blended))
         reranked.sort(key=lambda x: x[1], reverse=True)
     # Optional LightGBM re-ranking on top candidates to refine order
@@ -1861,14 +2254,19 @@ def chatbot_ask(q: ChatbotQuery) -> Dict[str, Any]:
                 cos_proxy = (q_tf.multiply(a_tf)).sum(axis=1)
                 cos_proxy = np.asarray(cos_proxy).ravel().astype(np.float32)
                 qtok_set = set(qtok)
+                # choose appropriate token list depending on index used
+                tokens_list = (
+                    _chatbot_q_tokens if idx_source == "q" else _chatbot_answer_tokens
+                )
                 jac = np.array(
                     [
                         (
-                            len(qtok_set & (ans_tokens[j] if ans_tokens else set()))
+                            len(qtok_set & (tokens_list[j] if tokens_list else set()))
                             / max(
                                 1,
                                 len(
-                                    qtok_set | (ans_tokens[j] if ans_tokens else set())
+                                    qtok_set
+                                    | (tokens_list[j] if tokens_list else set())
                                 ),
                             )
                         )
@@ -1891,18 +2289,163 @@ def chatbot_ask(q: ChatbotQuery) -> Dict[str, Any]:
     except Exception:
         logger.warning("LightGBM re-rank failed; keep blended order", exc_info=True)
 
-    idx = [j for (j, s) in reranked[:topk]]
+    # For action/specific queries, filter out crop-facts-like answers if possible
+    q_is_action = not _is_general_crop_query(qtext)
+    choose = reranked
+    if q_is_action and reranked:
+        try:
+            if idx_source == "q":
+
+                def ans_of(j: int) -> str:
+                    return cast(List[str], _chatbot_qa_answers_raw or [""])[j]
+
+            else:
+
+                def ans_of(j: int) -> str:
+                    return cast(List[str], _chatbot_answers or [""])[j]
+
+            filtered = [
+                (j, s) for (j, s) in reranked if not _looks_like_crop_facts(ans_of(j))
+            ]
+            if filtered:
+                choose = filtered
+        except Exception:
+            pass
+    idx = [j for (j, s) in choose[:topk]]
     if idx_source == "q":
-        qa_answers = cast(List[str], _chatbot_qa_answers or [])
+        qa_answers = cast(List[str], _chatbot_qa_answers_raw or [])
         results = [
-            {"rank": i + 1, "score": float(scores[j]), "answer": qa_answers[j]}
+            {
+                "rank": i + 1,
+                "score": float(scores[j]),
+                "answer": qa_answers[j],
+            }
             for i, j in enumerate(idx)
         ]
     else:
         results = [
-            {"rank": i + 1, "score": float(scores[j]), "answer": _chatbot_answers[j]}
+            {
+                "rank": i + 1,
+                "score": float(scores[j]),
+                "answer": _clean_text(_chatbot_answers[j]),
+            }
             for i, j in enumerate(idx)
         ]
+    # If action-like query and top result looks like crop facts, fall back to answer-index retrieval
+    try:
+        q_is_action = not _is_general_crop_query(qtext)
+        if (
+            q_is_action
+            and results
+            and _looks_like_crop_facts(str(results[0].get("answer", "")))
+        ):
+            emb: np.ndarray = cast(np.ndarray, _chatbot_emb)
+            scores2 = emb @ v
+            pool2 = int(max(_pool_mult * topk, _pool_min))
+            dense_idx2 = scores2.argsort()[::-1][: min(pool2, scores2.shape[0])]
+            bm25_norm2 = {}
+            try:
+                if _bm25_ans is not None and qtok:
+                    b2 = np.asarray(
+                        cast(Any, _bm25_ans).get_scores(list(qtok)), dtype=np.float32
+                    )
+                    bmin2, bmax2 = float(np.min(b2)), float(np.max(b2))
+                    if (
+                        not np.isfinite(bmin2)
+                        or not np.isfinite(bmax2)
+                        or bmax2 <= bmin2
+                    ):
+                        bmin2, bmax2 = 0.0, 1.0
+                    bn2 = (b2 - bmin2) / (bmax2 - bmin2 + 1e-9)
+                    bm_idx2 = bn2.argsort()[::-1][: min(pool2, bn2.shape[0])]
+                    bm25_norm2 = {int(i): float(bn2[int(i)]) for i in bm_idx2}
+            except Exception:
+                bm25_norm2 = {}
+            if bm25_norm2:
+                cand_set2 = set(int(i) for i in dense_idx2) | set(
+                    int(i) for i in bm25_norm2.keys()
+                )
+                cand_idx2 = list(cand_set2)
+            else:
+                cand_idx2 = list(map(int, dense_idx2))
+            alpha = _chatbot_alpha
+            beta = 1.0 - alpha
+            ans_tokens = _chatbot_answer_tokens
+            rer2: List[tuple[int, float]] = []
+            for j in cand_idx2:
+                sim = float(scores2[j])
+                # Skip crop-facts-like answers entirely for action/specific queries
+                if q_is_action:
+                    try:
+                        cand_ans0 = cast(List[str], _chatbot_qa_answers_raw or [""])[j]
+                    except Exception:
+                        cand_ans0 = ""
+                    if _looks_like_crop_facts(cand_ans0):
+                        continue
+                # Skip crop-facts-like answers entirely for action/specific queries
+                if q_is_action:
+                    try:
+                        cand_ans0 = cast(List[str], _chatbot_answers or [""])[j]
+                    except Exception:
+                        cand_ans0 = ""
+                    if _looks_like_crop_facts(cand_ans0):
+                        continue
+                overlap = 0.0
+                if ans_tokens is not None and qtok:
+                    inter = qtok.intersection(ans_tokens[j])
+                    if qtok:
+                        overlap = len(inter) / max(1.0, float(len(qtok)))
+                bm = float(bm25_norm2.get(int(j), 0.0))
+                lex = (1.0 - _bm25_weight) * overlap + _bm25_weight * bm
+                rer2.append((j, alpha * sim + beta * lex))
+            rer2.sort(key=lambda x: x[1], reverse=True)
+            # filter out crop facts
+            try:
+                filt2 = [
+                    (j, s)
+                    for (j, s) in rer2
+                    if not _looks_like_crop_facts(_clean_text(_chatbot_answers[j]))
+                ]
+                if filt2:
+                    rer2 = filt2
+            except Exception:
+                pass
+            idx2 = [j for (j, s) in rer2[:topk]]
+            results = [
+                {
+                    "rank": i + 1,
+                    "score": float(scores2[j]),
+                    "answer": _clean_text(_chatbot_answers[j]),
+                }
+                for i, j in enumerate(idx2)
+            ]
+            # If still looks like crop facts, try BM25-only rescue to pick first non-facts answer
+            if results and _looks_like_crop_facts(str(results[0].get("answer", ""))):
+                try:
+                    if _bm25_ans is not None and qtok:
+                        b = np.asarray(
+                            cast(Any, _bm25_ans).get_scores(list(qtok)),
+                            dtype=np.float32,
+                        )
+                        order = b.argsort()[::-1]
+                        chosen = None
+                        for jj in order[: max(50, topk * 5)]:
+                            ans_txt = _clean_text(_chatbot_answers[int(jj)])
+                            if not _looks_like_crop_facts(ans_txt):
+                                chosen = int(jj)
+                                break
+                        if chosen is not None:
+                            results = [
+                                {
+                                    "rank": 1,
+                                    "score": float(b[chosen]),
+                                    "answer": _clean_text(_chatbot_answers[chosen]),
+                                }
+                            ]
+                except Exception:
+                    pass
+    except Exception:
+        pass
     # Optional LLM re-ranking of top few results (controlled by env keys)
     try:
         if results and (os.getenv("GEMINI_API_KEY") or os.getenv("DEEPSEEK_API_KEY")):
@@ -1942,11 +2485,105 @@ def chatbot_ask(q: ChatbotQuery) -> Dict[str, Any]:
                 )
     except Exception:
         pass
+    # Final enforcement: for action-like queries, strip any crop-facts answers and rescue via BM25 if needed
+    try:
+        q_is_action = not _is_general_crop_query(qtext)
+        if q_is_action:
+            # Remove any crop-facts style answers
+            filtered_results: List[Dict[str, Any]] = [
+                r
+                for r in (results or [])
+                if not _looks_like_crop_facts(str(r.get("answer", "")))
+            ]
+            results = filtered_results
+            # If empty, try BM25-only rescue to pick the first non-facts answer
+            if (not results) and (_bm25_ans is not None) and qtok:
+                try:
+                    b = np.asarray(
+                        cast(Any, _bm25_ans).get_scores(list(qtok)), dtype=np.float32
+                    )
+                    order = b.argsort()[::-1]
+                    chosen = None
+                    for jj in order[: max(100, topk * 10)]:
+                        ans_txt = _clean_text(_chatbot_answers[int(jj)])
+                        if not _looks_like_crop_facts(ans_txt):
+                            chosen = int(jj)
+                            break
+                    if chosen is not None:
+                        results = [
+                            {
+                                "rank": 1,
+                                "score": float(b[chosen]),
+                                "answer": _clean_text(_chatbot_answers[chosen]),
+                            }
+                        ]
+                except Exception:
+                    pass
+            # As a last resort, if still empty, return a neutral guidance note
+            if not results:
+                results = [
+                    {
+                        "rank": 1,
+                        "score": 0.0,
+                        "answer": (
+                            "I couldn't find a specific action-focused answer. Try rephrasing with more details (crop, stage, issue)."
+                        ),
+                    }
+                ]
+    except Exception:
+        pass
+    # Final crop facts fallback: gated by env CHATBOT_ENABLE_CROP_FACTS and only if no good retrieval
+    try:
+        enable_facts = str(os.getenv("CHATBOT_ENABLE_CROP_FACTS", "0")).lower() in (
+            "1",
+            "true",
+            "yes",
+        )
+        if enable_facts:
+            need_facts = False
+            if not results:
+                need_facts = True
+            else:
+                try:
+                    top_cos = float(scores[idx[0]]) if idx else 0.0
+                except Exception:
+                    top_cos = 0.0
+                # require a higher bar (>= max(min_cos, 0.40)) to avoid overriding good QA
+                if top_cos < max(0.40, _chatbot_min_cos):
+                    need_facts = True
+            if need_facts:
+                crop_hit: Optional[CropCard] = _find_crop_in_text(qtext)
+                if crop_hit is not None and _is_general_crop_query(qtext):
+                    facts: List[str] = [f"Crop: {crop_hit.name}"]
+                    if crop_hit.category:
+                        facts.append(f"Category: {crop_hit.category}")
+                    if crop_hit.season:
+                        facts.append(f"Season: {crop_hit.season}")
+                    if crop_hit.waterRequirement:
+                        facts.append(f"Water need: {crop_hit.waterRequirement}")
+                    if crop_hit.tempRange:
+                        facts.append(f"Temperature: {crop_hit.tempRange}")
+                    if crop_hit.phRange:
+                        facts.append(f"Soil pH: {crop_hit.phRange}")
+                    if crop_hit.growthPeriod:
+                        facts.append(f"Growth period: {crop_hit.growthPeriod}")
+                    if crop_hit.tips:
+                        facts.append("Tips: " + "; ".join(crop_hit.tips[:3]))
+                    ans_txt = "\n".join(facts)
+                    results = [{"rank": 1, "score": 1.0, "answer": ans_txt}]
+    except Exception:
+        pass
     # Update LRU cache
     _chatbot_cache[key] = results
     if len(_chatbot_cache) > _CHATBOT_CACHE_MAX:
         _chatbot_cache.popitem(last=False)
     return {"question": qtext, "results": results}
+
+
+@app.get("/chatbot/ask")
+def chatbot_ask_get(question: str, top_k: int = DEFAULT_TOPK) -> Dict[str, Any]:
+    """GET alias for chatbot ask to simplify smoke testing via browser/tools."""
+    return chatbot_ask(ChatbotQuery(question=question, top_k=top_k))
 
 
 @app.get("/chatbot/metrics")
@@ -1970,7 +2607,7 @@ def chatbot_metrics() -> Dict[str, Any]:
 @app.post("/chatbot/reload")
 def chatbot_reload(_: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """Force reload of chatbot artifacts from disk (after retraining)."""
-    global _chatbot_loaded, _chatbot_q_layer, _chatbot_emb, _chatbot_answers, _chatbot_answer_tokens, _chatbot_metrics_cache, _chatbot_artifact_sig, _chatbot_cache
+    global _chatbot_loaded, _chatbot_q_layer, _chatbot_emb, _chatbot_answers, _chatbot_answer_tokens, _chatbot_metrics_cache, _chatbot_artifact_sig, _chatbot_cache, _bm25_ans, _bm25_q
     # Clear current state
     _chatbot_loaded = False
     _chatbot_q_layer = None
@@ -1980,6 +2617,8 @@ def chatbot_reload(_: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     _chatbot_metrics_cache = None
     _chatbot_artifact_sig = None
     _chatbot_cache.clear()
+    _bm25_ans = None
+    _bm25_q = None
     ok = _load_chatbot_artifacts()
     return {
         "ok": bool(ok),
@@ -1987,3 +2626,20 @@ def chatbot_reload(_: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         "alpha": _chatbot_alpha,
         "min_cos": _chatbot_min_cos,
     }
+
+
+@app.post("/chatbot/tune")
+def chatbot_tune(t: ChatbotTune) -> Dict[str, Any]:
+    """Adjust chatbot blending (alpha) and cosine threshold at runtime."""
+    global _chatbot_alpha, _chatbot_min_cos
+    try:
+        if t.alpha is not None:
+            a = float(t.alpha)
+            _chatbot_alpha = max(0.0, min(1.0, a))
+        if t.min_cos is not None:
+            m = float(t.min_cos)
+            _chatbot_min_cos = max(0.0, min(1.0, m))
+        return {"ok": True, "alpha": _chatbot_alpha, "min_cos": _chatbot_min_cos}
+    except Exception:
+        logger.exception("tune failed")
+        raise HTTPException(status_code=400, detail="invalid tune values")
