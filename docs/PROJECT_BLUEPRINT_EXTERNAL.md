@@ -26,6 +26,12 @@ Key components
 - Infra: `infra/bicep/main.bicep` + `azure.yaml`, containerized by `Dockerfile`
 - Chatbot: retrieval endpoint `/chatbot/ask` with saved encoders and `/chatbot/metrics` for Recall@K (optional)
 
+Chatbot training datasets (if present at repo root)
+
+- `KisanVaani_agriculture_qa.csv`
+- `Farming_FAQ_Assistant_Dataset.csv` and `Farming_FAQ_Assistant_Dataset (2).csv`
+- `data_core.csv` (auto-mapped columns)
+
 ASCII map
 
 ```text
@@ -292,6 +298,13 @@ curl -X POST http://127.0.0.1:8004/recommend -H "Content-Type: application/json"
   "plant":"tomato","soil_type":"loam","area_m2":100,
   "ph":6.5,"moisture_pct":35,"temperature_c":28,"ec_dS_m":1.0
 }'
+```
+
+Train the chatbot (optional)
+
+```powershell
+.venv\Scripts\python.exe scripts\train_chatbot.py -e 8 -bs 256 --vocab 50000 --seq-len 96 --temperature 0.05 --lr 5e-4 --augment --aug-repeats 1 --aug-prob 0.35
+.venv\Scripts\python.exe scripts\compute_chatbot_metrics.py --sample 2000
 ```
 
 ---

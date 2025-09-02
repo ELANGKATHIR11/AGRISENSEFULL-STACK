@@ -77,6 +77,13 @@ Included CSVs (root or backend directory):
 - `agrisense_app/backend/india_crop_dataset.csv` — Primary catalog for crop names and properties used by UI and crop cards
 - `sikkim_crop_dataset.csv` — Optional supplement for region-specific crops
 
+Chatbot training CSVs (if present at repo root):
+
+- `KisanVaani_agriculture_qa.csv` — normalized KisanVaani QA
+- `Farming_FAQ_Assistant_Dataset.csv` — FAQ pairs (Question, Answer)
+- `Farming_FAQ_Assistant_Dataset (2).csv` — alt FAQ pairs (Question, Answer)
+- `data_core.csv` — generic pairs; columns auto-mapped among [question|questions|q] and [answer|answers|a]
+
 Columns (union across datasets; not all are required):
 
 - `Crop` or `crop` — Crop name (string)
@@ -104,6 +111,36 @@ Artifacts (optional for runtime)
 - Water requirement: `agrisense_app/backend/water_model.keras` or `water_model.joblib`
 - Fertilizer adjustment: `agrisense_app/backend/fert_model.keras` or `fert_model.joblib`
 - Additional models for classification/yield (e.g., `crop_tf.keras`, `yield_tf.keras`) may exist but are not required to operate core API.
+
+Chatbot (retrieval) training
+
+- Scripts: `scripts/train_chatbot.py` (train bi-encoder), `scripts/compute_chatbot_metrics.py` (Recall@K), `scripts/prepare_kisan_qa_csv.py` (utility)
+- Inputs: the CSVs listed in §4 (question/answer columns auto-mapped)
+- Outputs under backend:
+  - `agrisense_app/backend/chatbot_question_encoder/` (SavedModel)
+  - `agrisense_app/backend/chatbot_answer_encoder/` (SavedModel)
+  - `agrisense_app/backend/chatbot_index.npz` + `chatbot_index.json` (generated index)
+  - `agrisense_app/backend/chatbot_metrics.json` (evaluation)
+- Git hygiene: heavy artifacts above are gitignored; regenerate locally as needed
+
+Train (PowerShell examples)
+
+```powershell
+# Quick run
+.venv\Scripts\python.exe scripts\train_chatbot.py -e 6 -bs 256 --vocab 50000 --seq-len 96 --temperature 0.05 --lr 5e-4 --augment --aug-repeats 1 --aug-prob 0.35
+
+# Longer run for better Recall@K
+.venv\Scripts\python.exe scripts\train_chatbot.py -e 12 -bs 256 --vocab 60000 --seq-len 128 --temperature 0.05 --lr 5e-4 --augment --aug-repeats 2 --aug-prob 0.35
+
+# Compute retrieval metrics (Recall@{1,3,5,10}) for the API
+.venv\Scripts\python.exe scripts\compute_chatbot_metrics.py --sample 2000
+```
+
+Runtime behavior
+
+- The backend `/chatbot/ask` endpoint loads the SavedModels, uses cosine similarity with hybrid lexical re-ranking, and returns top answers
+- `/chatbot/metrics` serves `chatbot_metrics.json`
+- The backend auto-tunes retrieval blend and a low-confidence threshold from metrics
 
 Runtime behavior
 
@@ -318,6 +355,15 @@ curl -X POST http://127.0.0.1:8004/recommend -H "Content-Type: application/json"
 }'
 ```
 
+Train Chatbot (optional)
+
+```powershell
+.venv\Scripts\python.exe scripts\train_chatbot.py -e 8 -bs 256 --vocab 50000 --seq-len 96 --temperature 0.05 --lr 5e-4 --augment --aug-repeats 1 --aug-prob 0.35
+.venv\Scripts\python.exe scripts\compute_chatbot_metrics.py --sample 2000
+curl http://127.0.0.1:8004/chatbot/metrics
+curl -X POST http://127.0.0.1:8004/chatbot/ask -H "Content-Type: application/json" -d '{"question":"Which crop grows best in sandy soil?","top_k":3}'
+```
+
 ---
 
 ## 12) Containerization & Azure Deployment
@@ -419,6 +465,7 @@ Smoke tests
 
 - `agrisense_app/scripts/api_smoke_client.py` and `scripts/test_backend_inprocess.py`
 - Basic manual checks: `/health`, `/ready`, `/metrics`, simple `/recommend`
+- Chatbot: `/chatbot/metrics` and `/chatbot/ask` with a few sample queries
 
 Quality gates (suggested)
 
