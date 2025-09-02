@@ -23,6 +23,7 @@ import json
 import os
 from pathlib import Path
 from typing import List, Tuple
+import random
 
 import numpy as np
 import pandas as pd
@@ -152,7 +153,7 @@ def load_datasets(repo_root: Path) -> pd.DataFrame:
 
 
 def build_biencoder(
-    vocab_size: int = 30000, seq_len: int = 64, emb_dim: int = 256
+    vocab_size: int = 50000, seq_len: int = 96, emb_dim: int = 256
 ) -> Tuple[keras.Model, keras.Model]:
     # Shared TextVectorization
     vectorizer = layers.TextVectorization(
@@ -236,6 +237,84 @@ class BiEncoderTrainer(keras.Model):
         return {"loss": loss, "recall_at_1": r1}
 
 
+def _tokenize_basic(text: str) -> List[str]:
+    return [t for t in text.strip().split() if t]
+
+
+_STOPWORDS = {
+    "the",
+    "a",
+    "an",
+    "is",
+    "are",
+    "in",
+    "on",
+    "for",
+    "of",
+    "to",
+    "and",
+}
+
+
+_SYNONYMS = {
+    "fertilizer": ["fertiliser", "manure"],
+    "pesticide": ["insecticide", "spray"],
+    "soil": ["earth"],
+    "crop": ["plant"],
+    "water": ["irrigate", "watering"],
+}
+
+
+def augment_question(text: str, prob: float = 0.3) -> str:
+    """Light, safe augmentation: random dropout/swap/synonym.
+    Applied with probability per transform; multiple can apply.
+    """
+    toks = _tokenize_basic(text)
+    if not toks:
+        return text
+    # Random dropout of a non-critical token
+    if random.random() < prob and len(toks) > 4:
+        idxs = [i for i, t in enumerate(toks) if t.lower() not in _STOPWORDS]
+        if idxs:
+            del toks[random.choice(idxs)]
+    # Random swap of adjacent tokens
+    if random.random() < prob and len(toks) > 3:
+        i = random.randrange(0, len(toks) - 1)
+        toks[i], toks[i + 1] = toks[i + 1], toks[i]
+    # Random synonym replacement
+    if random.random() < prob:
+        ixs = list(range(len(toks)))
+        random.shuffle(ixs)
+        for i in ixs:
+            base = toks[i].lower().strip(",.?!")
+            if base in _SYNONYMS:
+                toks[i] = random.choice(_SYNONYMS[base])
+                break
+    return " ".join(toks)
+
+
+def augment_dataframe(
+    df: pd.DataFrame, repeats: int = 1, prob: float = 0.3
+) -> pd.DataFrame:
+    if repeats <= 0:
+        return df
+    aug_rows = []
+    for _ in range(repeats):
+        q_aug = [augment_question(q, prob) for q in df["question"].astype(str).tolist()]
+        aug_rows.append(
+            pd.DataFrame(
+                {
+                    "question": q_aug,
+                    "answer": df["answer"].values,
+                    "source": df.get("source", "Aug"),
+                }
+            )
+        )
+    df_aug = pd.concat([df] + aug_rows, ignore_index=True)
+    df_aug.drop_duplicates(subset=["question", "answer"], inplace=True)
+    return df_aug
+
+
 def make_tf_datasets(
     df: pd.DataFrame,
     batch_size: int = 256,
@@ -288,10 +367,29 @@ def save_index(a_encoder: keras.Model, answers: List[str], out_dir: Path) -> Non
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--epochs", "-e", type=int, default=3)
+    parser.add_argument("--epochs", "-e", type=int, default=8)
     parser.add_argument("--batch-size", "-bs", type=int, default=256)
-    parser.add_argument("--vocab", type=int, default=30000)
-    parser.add_argument("--seq-len", type=int, default=64)
+    parser.add_argument("--vocab", type=int, default=50000)
+    parser.add_argument("--seq-len", type=int, default=96)
+    parser.add_argument("--temperature", type=float, default=0.05)
+    parser.add_argument("--lr", type=float, default=1e-3)
+    parser.add_argument(
+        "--augment", action="store_true", help="Enable question augmentation"
+    )
+    parser.add_argument("--no-augment", dest="augment", action="store_false")
+    parser.set_defaults(augment=True)
+    parser.add_argument(
+        "--aug-repeats",
+        type=int,
+        default=1,
+        help="How many augmented copies per example",
+    )
+    parser.add_argument(
+        "--aug-prob",
+        type=float,
+        default=0.3,
+        help="Probability for each augmentation op",
+    )
     args = parser.parse_args()
 
     script_path = Path(__file__).resolve()
@@ -306,6 +404,15 @@ def main():
     print(
         f"Total pairs: {len(df_all)} from sources: {sorted(df_all['source'].unique().tolist())}"
     )
+
+    # Optional augmentation on the question side
+    if args.augment:
+        random.seed(42)
+        df_all = augment_dataframe(
+            df_all,
+            repeats=max(0, args.aug_repeats),
+            prob=max(0.0, min(1.0, args.aug_prob)),
+        )
 
     # Build datasets
     train_ds, val_ds, df_train, df_val = make_tf_datasets(
@@ -323,11 +430,21 @@ def main():
     print("Adapting vectorizer on corpus...")
     adapt_vectorizer(q_encoder, corpus)
 
-    model = BiEncoderTrainer(q_encoder, a_encoder)
-    model.compile(optimizer=keras.optimizers.Adam(1e-3))
+    model = BiEncoderTrainer(q_encoder, a_encoder, temperature=float(args.temperature))
+    model.compile(optimizer=keras.optimizers.Adam(float(args.lr), clipnorm=1.0))
 
     print("Training...")
-    history = model.fit(train_ds, validation_data=val_ds, epochs=args.epochs)
+    callbacks = [
+        keras.callbacks.ReduceLROnPlateau(
+            monitor="val_loss", factor=0.5, patience=2, min_lr=1e-5, verbose=1
+        ),
+        keras.callbacks.EarlyStopping(
+            monitor="val_loss", patience=3, restore_best_weights=True
+        ),
+    ]
+    history = model.fit(
+        train_ds, validation_data=val_ds, epochs=args.epochs, callbacks=callbacks
+    )
     print(
         {
             k: (float(v[-1]) if isinstance(v, list) else float(v))
