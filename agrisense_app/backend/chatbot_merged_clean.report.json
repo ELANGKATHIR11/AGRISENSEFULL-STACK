@@ -1,0 +1,8 @@
+{
+  "counts": {
+    "SoilQA": 3447,
+    "FarmingFAQ": 500
+  },
+  "total_after_clean": 3435,
+  "out": "D:\\AGRISENSE FULL-STACK\\AGRISENSEFULL-STACK\\agrisense_app\\backend\\chatbot_merged_clean.csv"
+}

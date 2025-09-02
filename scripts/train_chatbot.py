@@ -33,6 +33,23 @@ from tensorflow.keras import layers
 
 
 def load_datasets(repo_root: Path) -> pd.DataFrame:
+    # Prefer pre-cleaned merged CSV if available
+    merged = repo_root / "agrisense_app" / "backend" / "chatbot_merged_clean.csv"
+    if merged.exists():
+        df = pd.read_csv(merged)
+        cols = {str(c).strip().lower(): c for c in df.columns}
+        q = cols.get("question") or cols.get("questions") or cols.get("q")
+        a = cols.get("answer") or cols.get("answers") or cols.get("a")
+        if q and a:
+            df = df.rename(columns={q: "question", a: "answer"})[["question", "answer"]]
+            df["source"] = df.get("source", "Merged")
+            df["question"] = df["question"].astype(str).str.strip()
+            df["answer"] = df["answer"].astype(str).str.strip()
+            df = df[(df["question"] != "") & (df["answer"] != "")]
+            df.drop_duplicates(subset=["question", "answer"], inplace=True)
+            df.drop_duplicates(subset=["question"], inplace=True)
+            return df
+
     frames: List[pd.DataFrame] = []
     # Support both workspace root and project folder layouts
     roots = [repo_root]
