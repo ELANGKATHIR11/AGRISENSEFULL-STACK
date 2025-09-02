@@ -75,6 +75,42 @@ def load_datasets(repo_root: Path) -> pd.DataFrame:
             df = df.rename(columns={q: "question", a: "answer"})[["question", "answer"]]
             df["source"] = "Curated"
             frames.append(df)
+    # Farming FAQ assistant CSVs in repo root
+    for fname in [
+        "Farming_FAQ_Assistant_Dataset.csv",
+        "Farming_FAQ_Assistant_Dataset (2).csv",
+    ]:
+        fpath = repo_root / fname
+        if fpath.exists():
+            try:
+                df = pd.read_csv(fpath)
+                cols = {str(c).strip().lower(): c for c in df.columns}
+                q = cols.get("question")
+                a = cols.get("answer")
+                if q and a:
+                    df = df.rename(columns={q: "question", a: "answer"})[
+                        ["question", "answer"]
+                    ]
+                    df["source"] = "FarmingFAQ"
+                    frames.append(df)
+            except Exception:
+                pass
+    # Generic data_core.csv
+    data_core = repo_root / "data_core.csv"
+    if data_core.exists():
+        try:
+            df = pd.read_csv(data_core)
+            cols = {str(c).strip().lower(): c for c in df.columns}
+            q = cols.get("question") or cols.get("questions") or cols.get("q")
+            a = cols.get("answer") or cols.get("answers") or cols.get("a")
+            if q and a:
+                df = df.rename(columns={q: "question", a: "answer"})[
+                    ["question", "answer"]
+                ]
+                df["source"] = "DataCore"
+                frames.append(df)
+        except Exception:
+            pass
     if not frames:
         raise FileNotFoundError(
             "No datasets found. Ensure at least one CSV is present."
@@ -84,6 +120,7 @@ def load_datasets(repo_root: Path) -> pd.DataFrame:
     df_all["answer"] = df_all["answer"].astype(str).str.strip()
     df_all = df_all[(df_all["question"] != "") & (df_all["answer"] != "")]
     df_all.drop_duplicates(subset=["question", "answer"], inplace=True)
+    df_all.drop_duplicates(subset=["question"], inplace=True)
     return df_all
 
 
