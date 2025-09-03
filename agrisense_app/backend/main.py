@@ -33,7 +33,13 @@ from typing import (
 )
 from pydantic import BaseModel, Field
 from collections import OrderedDict
-from . import llm_clients  # optional LLM reranker (Gemini/DeepSeek)
+try:
+    from . import llm_clients  # optional LLM reranker (Gemini/DeepSeek)
+except ImportError:
+    try:
+        import llm_clients  # type: ignore
+    except ImportError:
+        llm_clients = None  # type: ignore
 from math import isfinite
 
 try:
@@ -1565,6 +1571,52 @@ def version() -> Dict[str, Any]:
 
 
 # --------------- Chatbot Retrieval Endpoint -----------------
+
+
+class PyTorchSentenceEncoder:
+    """PyTorch-based sentence encoder using SentenceTransformers.
+    
+    Provides compatibility with TensorFlow TFSMLayer interface while using PyTorch backend.
+    """
+    
+    def __init__(self, model_name: str = "sentence-transformers/all-MiniLM-L6-v2"):
+        self.model_name = model_name
+        self.model = None
+        self._load_model()
+    
+    def _load_model(self):
+        """Lazily load the SentenceTransformer model."""
+        try:
+            from sentence_transformers import SentenceTransformer
+            self.model = SentenceTransformer(self.model_name)
+            logger.info(f"Loaded PyTorch SentenceTransformer model: {self.model_name}")
+        except Exception as e:
+            logger.warning(f"Failed to load PyTorch SentenceTransformer: {e}")
+            self.model = None
+    
+    def __call__(self, inputs):
+        """Encode text inputs to embeddings.
+        
+        Compatible with TFSMLayer interface - accepts TensorFlow constant or list of strings.
+        Returns numpy array with shape (batch_size, embedding_dim).
+        """
+        if self.model is None:
+            raise RuntimeError("PyTorch SentenceTransformer model not loaded")
+        
+        # Handle TensorFlow tensor input (from existing code)
+        if hasattr(inputs, 'numpy'):
+            texts = [t.decode('utf-8') if isinstance(t, bytes) else str(t) 
+                    for t in inputs.numpy()]
+        elif isinstance(inputs, (list, tuple)):
+            texts = [str(t) for t in inputs]
+        else:
+            texts = [str(inputs)]
+        
+        # Encode and normalize embeddings
+        embeddings = self.model.encode(texts, convert_to_numpy=True, normalize_embeddings=True)
+        return embeddings.astype(np.float32)
+
+
 _chatbot_loaded = False
 _chatbot_q_layer = None  # type: ignore
 _chatbot_answers: Optional[List[str]] = None
@@ -1794,14 +1846,44 @@ def _load_chatbot_artifacts() -> bool:
                 # if signature calc fails, fall through to attempt reload
                 pass
 
-        if not (qenc_dir.exists() and index_npz.exists() and index_json.exists()):
+        if not (index_npz.exists() and index_json.exists()):
             logger.warning("Chatbot artifacts not found; skipping load.")
             return False
 
-        # Load SavedModel endpoint via Keras TFSMLayer
-        from tensorflow.keras.layers import TFSMLayer  # type: ignore
+        # Try PyTorch SentenceTransformer first if requested or TF artifacts not available
+        use_pytorch = os.getenv("AGRISENSE_USE_PYTORCH_SBERT", "auto").lower()
+        pytorch_loaded = False
+        
+        if use_pytorch in ("1", "true", "yes", "auto"):
+            try:
+                # Check if we can determine model name from existing config or use default
+                model_name = os.getenv("AGRISENSE_SBERT_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
+                
+                # Try to load PyTorch model
+                _chatbot_q_layer = PyTorchSentenceEncoder(model_name)
+                if _chatbot_q_layer.model is not None:
+                    pytorch_loaded = True
+                    logger.info(f"Using PyTorch SentenceTransformer: {model_name}")
+                else:
+                    logger.warning("PyTorch SentenceTransformer loading failed, falling back to TensorFlow")
+            except Exception as e:
+                logger.warning(f"PyTorch SentenceTransformer unavailable ({e}), falling back to TensorFlow")
 
-        _chatbot_q_layer = TFSMLayer(str(qenc_dir), call_endpoint="serve")
+        # Fallback to TensorFlow SavedModel if PyTorch failed or not requested
+        if not pytorch_loaded:
+            if not qenc_dir.exists():
+                logger.warning("Neither PyTorch model nor TensorFlow SavedModel available; skipping load.")
+                return False
+            
+            try:
+                # Load SavedModel endpoint via Keras TFSMLayer
+                from tensorflow.keras.layers import TFSMLayer  # type: ignore
+                
+                _chatbot_q_layer = TFSMLayer(str(qenc_dir), call_endpoint="serve")
+                logger.info("Using TensorFlow SavedModel for chatbot embeddings")
+            except Exception as e:
+                logger.error(f"Failed to load TensorFlow SavedModel: {e}")
+                return False
         with np.load(index_npz, allow_pickle=False) as data:
             arr = data["embeddings"]
         # L2-normalize answer embeddings to use cosine similarity robustly

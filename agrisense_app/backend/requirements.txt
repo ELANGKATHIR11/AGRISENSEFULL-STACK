@@ -16,3 +16,6 @@ pymongo==4.8.0
 google-generativeai
 openai
 rank-bm25==0.2.2
+# PyTorch and sentence-transformers for direct SBERT usage
+torch>=2.0.0
+sentence-transformers>=2.2.0
