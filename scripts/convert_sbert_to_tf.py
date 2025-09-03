@@ -24,17 +24,27 @@ def convert_and_build(model_name: str, out_dir: Path, csv_path: Path):
             super().__init__()
             self._pt = model
 
-        @tf.function(input_signature=[tf.TensorSpec([None], tf.string, name="text")])
-        def serve(self, texts):
-            # SentenceTransformer expects list[str]
-            strs = [t.decode("utf-8") if isinstance(t, bytes) else str(t) for t in texts.numpy()]
+        def _encode_py(self, texts_tensor):
+            # Called by tf.py_function: texts_tensor is a numpy-like array of bytes/str
+            strs = [t.decode("utf-8") if isinstance(t, bytes) else str(t) for t in texts_tensor]
             emb = self._pt.encode(strs, convert_to_numpy=True)
-            emb = emb.astype('float32')
+            emb = emb.astype("float32")
             # ensure L2-normalized
             n = np.linalg.norm(emb, axis=1, keepdims=True)
             n[n == 0] = 1.0
             emb = emb / n
-            return tf.convert_to_tensor(emb)
+            return emb
+
+        @tf.function(input_signature=[tf.TensorSpec([None], tf.string, name="text")])
+        def serve(self, texts):
+            # Use tf.py_function to call the Python SBERT encode implementation
+            # tf.py_function executes eagerly and returns a Tensor with unknown shape,
+            # so we must set the static shape afterwards using the model's dim.
+            dim = int(self._pt.get_sentence_embedding_dimension())
+            emb = tf.py_function(func=lambda x: self._encode_py(x), inp=[texts], Tout=tf.float32)
+            # Tell TensorFlow the output shape: (batch, dim)
+            emb.set_shape([None, dim])
+            return emb
 
     # Export SavedModel
     wrapper = Wrapper(s)
