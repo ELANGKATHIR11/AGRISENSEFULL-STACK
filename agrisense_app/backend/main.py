@@ -33,7 +33,13 @@ from typing import (
 )
 from pydantic import BaseModel, Field
 from collections import OrderedDict
-from . import llm_clients  # optional LLM reranker (Gemini/DeepSeek)
+try:
+    from . import llm_clients  # optional LLM reranker (Gemini/DeepSeek)
+except ImportError:
+    try:
+        import llm_clients  # type: ignore
+    except ImportError:
+        llm_clients = None  # type: ignore
 from math import isfinite
 
 try:
@@ -1565,6 +1571,52 @@ def version() -> Dict[str, Any]:
 
 
 # --------------- Chatbot Retrieval Endpoint -----------------
+
+
+class PyTorchSentenceEncoder:
+    """PyTorch-based sentence encoder using SentenceTransformers.
+    
+    Provides compatibility with TensorFlow TFSMLayer interface while using PyTorch backend.
+    """
+    
+    def __init__(self, model_name: str = "sentence-transformers/all-MiniLM-L6-v2"):
+        self.model_name = model_name
+        self.model = None
+        self._load_model()
+    
+    def _load_model(self):
+        """Lazily load the SentenceTransformer model."""
+        try:
+            from sentence_transformers import SentenceTransformer
+            self.model = SentenceTransformer(self.model_name)
+            logger.info(f"Loaded PyTorch SentenceTransformer model: {self.model_name}")
+        except Exception as e:
+            logger.warning(f"Failed to load PyTorch SentenceTransformer: {e}")
+            self.model = None
+    
+    def __call__(self, inputs):
+        """Encode text inputs to embeddings.
+        
+        Compatible with TFSMLayer interface - accepts TensorFlow constant or list of strings.
+        Returns numpy array with shape (batch_size, embedding_dim).
+        """
+        if self.model is None:
+            raise RuntimeError("PyTorch SentenceTransformer model not loaded")
+        
+        # Handle TensorFlow tensor input (from existing code)
+        if hasattr(inputs, 'numpy'):
+            texts = [t.decode('utf-8') if isinstance(t, bytes) else str(t) 
+                    for t in inputs.numpy()]
+        elif isinstance(inputs, (list, tuple)):
+            texts = [str(t) for t in inputs]
+        else:
+            texts = [str(inputs)]
+        
+        # Encode and normalize embeddings
+        embeddings = self.model.encode(texts, convert_to_numpy=True, normalize_embeddings=True)
+        return embeddings.astype(np.float32)
+
+
 _chatbot_loaded = False
 _chatbot_q_layer = None  # type: ignore
 _chatbot_answers: Optional[List[str]] = None
@@ -1729,6 +1781,29 @@ def _clean_text(text: str) -> str:
         return text
 
 
+def _safe_get(lst: Optional[List[Any]], j: int, default: Any = "") -> Any:
+    """Safe index into a list-like object. Returns default for None or OOB indices."""
+    try:
+        if not lst:
+            return default
+        if j < 0 or j >= len(lst):
+            return default
+        return lst[j]
+    except Exception:
+        return default
+
+
+def _safe_tokens(tokens_list: Optional[List[Set[str]]], j: int) -> Set[str]:
+    """Return token set for index j, or empty set on any error."""
+    try:
+        if not tokens_list:
+            return set()
+        t = tokens_list[j]
+        return t if t else set()
+    except Exception:
+        return set()
+
+
 def _artifact_signature(
     qenc_dir: Path, index_npz: Path, index_json: Path, metrics_path: Path
 ) -> Dict[str, float]:
@@ -1771,14 +1846,44 @@ def _load_chatbot_artifacts() -> bool:
                 # if signature calc fails, fall through to attempt reload
                 pass
 
-        if not (qenc_dir.exists() and index_npz.exists() and index_json.exists()):
+        if not (index_npz.exists() and index_json.exists()):
             logger.warning("Chatbot artifacts not found; skipping load.")
             return False
 
-        # Load SavedModel endpoint via Keras TFSMLayer
-        from tensorflow.keras.layers import TFSMLayer  # type: ignore
+        # Try PyTorch SentenceTransformer first if requested or TF artifacts not available
+        use_pytorch = os.getenv("AGRISENSE_USE_PYTORCH_SBERT", "auto").lower()
+        pytorch_loaded = False
+        
+        if use_pytorch in ("1", "true", "yes", "auto"):
+            try:
+                # Check if we can determine model name from existing config or use default
+                model_name = os.getenv("AGRISENSE_SBERT_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
+                
+                # Try to load PyTorch model
+                _chatbot_q_layer = PyTorchSentenceEncoder(model_name)
+                if _chatbot_q_layer.model is not None:
+                    pytorch_loaded = True
+                    logger.info(f"Using PyTorch SentenceTransformer: {model_name}")
+                else:
+                    logger.warning("PyTorch SentenceTransformer loading failed, falling back to TensorFlow")
+            except Exception as e:
+                logger.warning(f"PyTorch SentenceTransformer unavailable ({e}), falling back to TensorFlow")
 
-        _chatbot_q_layer = TFSMLayer(str(qenc_dir), call_endpoint="serve")
+        # Fallback to TensorFlow SavedModel if PyTorch failed or not requested
+        if not pytorch_loaded:
+            if not qenc_dir.exists():
+                logger.warning("Neither PyTorch model nor TensorFlow SavedModel available; skipping load.")
+                return False
+            
+            try:
+                # Load SavedModel endpoint via Keras TFSMLayer
+                from tensorflow.keras.layers import TFSMLayer  # type: ignore
+                
+                _chatbot_q_layer = TFSMLayer(str(qenc_dir), call_endpoint="serve")
+                logger.info("Using TensorFlow SavedModel for chatbot embeddings")
+            except Exception as e:
+                logger.error(f"Failed to load TensorFlow SavedModel: {e}")
+                return False
         with np.load(index_npz, allow_pickle=False) as data:
             arr = data["embeddings"]
         # L2-normalize answer embeddings to use cosine similarity robustly
@@ -2140,17 +2245,14 @@ def chatbot_ask(q: ChatbotQuery) -> Dict[str, Any]:
             # Skip generic crop-info dataset questions when user asks an action/specific query
             try:
                 if q_is_action and _chatbot_q_texts is not None:
-                    dq = cast(List[str], _chatbot_q_texts)[j]
+                    dq = _safe_get(cast(List[str], _chatbot_q_texts), j, "")
                     if _is_general_crop_query(dq or ""):
                         continue
             except Exception:
                 pass
             # Skip answers that look like crop facts, too
             if q_is_action:
-                try:
-                    cand_ans0 = cast(List[str], _chatbot_qa_answers_raw or [""])[j]
-                except Exception:
-                    cand_ans0 = ""
+                cand_ans0 = _safe_get(cast(List[str], _chatbot_qa_answers_raw), j, "")
                 if _looks_like_crop_facts(cand_ans0):
                     continue
             sim = float(scores[j])
@@ -2165,10 +2267,7 @@ def chatbot_ask(q: ChatbotQuery) -> Dict[str, Any]:
             blended = alpha * sim + beta * lex
             # If the candidate answer is crop facts and the query seems action/specific, penalize slightly
             if q_is_action:
-                try:
-                    cand_ans = cast(List[str], _chatbot_qa_answers_raw or [""])[j]
-                except Exception:
-                    cand_ans = ""
+                cand_ans = _safe_get(cast(List[str], _chatbot_qa_answers_raw), j, "")
                 if _looks_like_crop_facts(cand_ans):
                     blended -= 0.50
             reranked.append((j, blended))
@@ -2213,10 +2312,7 @@ def chatbot_ask(q: ChatbotQuery) -> Dict[str, Any]:
             sim = float(scores[j])
             # Skip answers that look like crop facts for action queries
             if q_is_action:
-                try:
-                    cand_ans0 = cast(List[str], _chatbot_answers or [""])[j]
-                except Exception:
-                    cand_ans0 = ""
+                cand_ans0 = _safe_get(cast(List[str], _chatbot_answers), j, "")
                 if _looks_like_crop_facts(cand_ans0):
                     continue
             overlap = 0.0
@@ -2229,10 +2325,7 @@ def chatbot_ask(q: ChatbotQuery) -> Dict[str, Any]:
             blended = alpha * sim + beta * lex
             # Penalize crop facts for action-like queries
             if q_is_action:
-                try:
-                    cand_ans = cast(List[str], _chatbot_answers or [""])[j]
-                except Exception:
-                    cand_ans = ""
+                cand_ans = _safe_get(cast(List[str], _chatbot_answers), j, "")
                 if _looks_like_crop_facts(cand_ans):
                     blended -= 0.50
             reranked.append((j, blended))
@@ -2246,9 +2339,26 @@ def chatbot_ask(q: ChatbotQuery) -> Dict[str, Any]:
             model = _chatbot_lgbm_bundle.get("model")  # type: ignore[assignment]
             if vec is not None and model is not None:
                 q_arr = [qtext] * len(cand)
-                cand_answers = [
-                    cast(List[str], _chatbot_answers or [""])[j] for (j, _) in cand
-                ]
+                # Choose answer text source depending on which index produced the
+                # candidate ids: when using the question-index (idx_source == 'q')
+                # use the QA raw answers list; otherwise use the answer-index list.
+                # Build candidate answers defensively (some candidate ids may
+                # refer to indices not present in the chosen answer list).
+                cand_answers = []
+                if idx_source == "q":
+                    qa_list = cast(List[str], _chatbot_qa_answers_raw or [])
+                    for (j, _) in cand:
+                        try:
+                            cand_answers.append(qa_list[j] if j < len(qa_list) else "")
+                        except Exception:
+                            cand_answers.append("")
+                else:
+                    ans_list = cast(List[str], _chatbot_answers or [])
+                    for (j, _) in cand:
+                        try:
+                            cand_answers.append(ans_list[j] if j < len(ans_list) else "")
+                        except Exception:
+                            cand_answers.append("")
                 q_tf = vec.transform(q_arr)
                 a_tf = vec.transform(cand_answers)
                 cos_proxy = (q_tf.multiply(a_tf)).sum(axis=1)
@@ -2261,14 +2371,8 @@ def chatbot_ask(q: ChatbotQuery) -> Dict[str, Any]:
                 jac = np.array(
                     [
                         (
-                            len(qtok_set & (tokens_list[j] if tokens_list else set()))
-                            / max(
-                                1,
-                                len(
-                                    qtok_set
-                                    | (tokens_list[j] if tokens_list else set())
-                                ),
-                            )
+                            len(qtok_set & _safe_tokens(tokens_list, j))
+                            / max(1, len(qtok_set | _safe_tokens(tokens_list, j)))
                         )
                         for (j, _) in cand
                     ],
@@ -2297,12 +2401,12 @@ def chatbot_ask(q: ChatbotQuery) -> Dict[str, Any]:
             if idx_source == "q":
 
                 def ans_of(j: int) -> str:
-                    return cast(List[str], _chatbot_qa_answers_raw or [""])[j]
+                    return _safe_get(cast(List[str], _chatbot_qa_answers_raw), j, "")
 
             else:
 
                 def ans_of(j: int) -> str:
-                    return cast(List[str], _chatbot_answers or [""])[j]
+                    return _safe_get(cast(List[str], _chatbot_answers), j, "")
 
             filtered = [
                 (j, s) for (j, s) in reranked if not _looks_like_crop_facts(ans_of(j))
@@ -2314,14 +2418,14 @@ def chatbot_ask(q: ChatbotQuery) -> Dict[str, Any]:
     idx = [j for (j, s) in choose[:topk]]
     if idx_source == "q":
         qa_answers = cast(List[str], _chatbot_qa_answers_raw or [])
-        results = [
-            {
-                "rank": i + 1,
-                "score": float(scores[j]),
-                "answer": qa_answers[j],
-            }
-            for i, j in enumerate(idx)
-        ]
+        results = []
+        for i, j in enumerate(idx):
+            try:
+                score_val = float(scores[j]) if j < len(scores) else 0.0
+            except Exception:
+                score_val = 0.0
+            ans_txt = _safe_get(qa_answers, j, "")
+            results.append({"rank": i + 1, "score": score_val, "answer": ans_txt})
     else:
         results = [
             {
@@ -2376,23 +2480,17 @@ def chatbot_ask(q: ChatbotQuery) -> Dict[str, Any]:
                 sim = float(scores2[j])
                 # Skip crop-facts-like answers entirely for action/specific queries
                 if q_is_action:
-                    try:
-                        cand_ans0 = cast(List[str], _chatbot_qa_answers_raw or [""])[j]
-                    except Exception:
-                        cand_ans0 = ""
+                    cand_ans0 = _safe_get(cast(List[str], _chatbot_qa_answers_raw), j, "")
                     if _looks_like_crop_facts(cand_ans0):
                         continue
                 # Skip crop-facts-like answers entirely for action/specific queries
                 if q_is_action:
-                    try:
-                        cand_ans0 = cast(List[str], _chatbot_answers or [""])[j]
-                    except Exception:
-                        cand_ans0 = ""
+                    cand_ans0 = _safe_get(cast(List[str], _chatbot_answers), j, "")
                     if _looks_like_crop_facts(cand_ans0):
                         continue
                 overlap = 0.0
                 if ans_tokens is not None and qtok:
-                    inter = qtok.intersection(ans_tokens[j])
+                    inter = qtok.intersection(_safe_tokens(ans_tokens, j))
                     if qtok:
                         overlap = len(inter) / max(1.0, float(len(qtok)))
                 bm = float(bm25_norm2.get(int(j), 0.0))
@@ -2404,7 +2502,9 @@ def chatbot_ask(q: ChatbotQuery) -> Dict[str, Any]:
                 filt2 = [
                     (j, s)
                     for (j, s) in rer2
-                    if not _looks_like_crop_facts(_clean_text(_chatbot_answers[j]))
+                    if not _looks_like_crop_facts(
+                        _clean_text(_safe_get(cast(List[str], _chatbot_answers), j, ""))
+                    )
                 ]
                 if filt2:
                     rer2 = filt2
@@ -2415,7 +2515,7 @@ def chatbot_ask(q: ChatbotQuery) -> Dict[str, Any]:
                 {
                     "rank": i + 1,
                     "score": float(scores2[j]),
-                    "answer": _clean_text(_chatbot_answers[j]),
+                    "answer": _clean_text(_safe_get(cast(List[str], _chatbot_answers), j, "")),
                 }
                 for i, j in enumerate(idx2)
             ]
@@ -2430,7 +2530,7 @@ def chatbot_ask(q: ChatbotQuery) -> Dict[str, Any]:
                         order = b.argsort()[::-1]
                         chosen = None
                         for jj in order[: max(50, topk * 5)]:
-                            ans_txt = _clean_text(_chatbot_answers[int(jj)])
+                            ans_txt = _clean_text(_safe_get(cast(List[str], _chatbot_answers), int(jj), ""))
                             if not _looks_like_crop_facts(ans_txt):
                                 chosen = int(jj)
                                 break
