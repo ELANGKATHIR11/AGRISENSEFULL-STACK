@@ -16,10 +16,12 @@ High-level current layout (important paths)
 - `AGRISENSE_IoT/`, `agrisense_pi_edge_minimal/` — edge and IoT code and firmware
 - CSVs and datasets at repo root (e.g. `sikkim_crop_dataset.csv`, `data_core.csv`, `merged_chatbot_training_dataset.csv`) — move these to a `data/` folder and exclude large raw data from Git in favor of a data/README and pointers to external storage
 - Model artifacts (e.g. `best_crop_tf.keras`, `best_yield_tf.keras`, `best_fert_model.keras`) — keep them under `agrisense_app/backend/models/` and use Git LFS or external storage for large files
+- CSVs and datasets have been consolidated into a top-level `data/` directory (see `data/README.md`). A compatibility helper `scripts/_data_paths.py` provides `find_data_file()` so scripts continue to work whether files live at repo root or inside `data/`.
+- Model artifacts (e.g. `best_crop_tf.keras`, `best_yield_tf.keras`, `best_fert_model.keras`) — recommended to keep them under `agrisense_app/backend/models/` and use Git LFS or external storage for large files
 
 Concrete candidates found in this repository (non-exhaustive)
 
-CSV files at repo root that are safe to move into `data/`:
+CSV files (now in `data/`) that were moved or are candidates for `data/`:
 
 - `sikkim_crop_dataset.csv`
 - `data_core.csv`
@@ -38,9 +40,11 @@ Model and artifact files found under `agrisense_app/backend/` (consider consolid
 - `crop_tf.keras`
 - `yield_tf.keras`
 
-Notes:
+- Notes:
 
-- Many scripts reference the CSVs by name (e.g. `repo_root / "data_core.csv"`). If you move the CSVs to `data/`, update those script paths or add a small compatibility shim at repo root that forwards to `data/` (a tiny Python script that sets environment variables or symlinks).
+- Many scripts referenced CSVs at the repo root historically. The repository now includes `scripts/_data_paths.py` which centralizes dataset discovery and allows scripts to locate CSVs in either the legacy locations or the new `data/` directory.
+
+- The CSV moves in this workspace were performed on branch `reorg/move-datasets` using `git mv` so their history is preserved. Use `scripts/propose_reorg.ps1` to preview moves before committing if you repeat the process.
 - Use `git mv` so history for moved files is preserved. If files are large, consider adding them to Git LFS first and then moving.
 
 Goals for the reorganization
@@ -76,13 +80,10 @@ Non-destructive step-by-step plan (commands are suggestions — review before ru
 
 2. Move dataset CSVs into `data/` using git mv (preserves history):
 
-   git mv "sikkim_crop_dataset.csv" data/
-   git mv "data_core.csv" data/
-   git mv "merged_chatbot_training_dataset.csv" data/
-   git mv "weather_cache.csv" data/
-   git mv "Farming_FAQ_Assistant_Dataset.csv" data/
+   Note: the example moves have already been performed on branch `reorg/move-datasets` in this workspace. If you need to repeat them locally, use `scripts/propose_reorg.ps1` to preview exact commands and run them with `git mv` to preserve history.
 
-   # Keep a high-level index file
+   Keep a high-level index file for datasets. Example command (already added in this workspace):
+
    echo "# data/ — dataset index" > data/README.md
    git add data/README.md && git commit -m "docs(data): move csv datasets to data/ and add index"
 
@@ -96,6 +97,12 @@ Non-destructive step-by-step plan (commands are suggestions — review before ru
 4. Add top-level README updates and a CONTRIBUTING.md (this repo already has good READMEs; we add a short contributing file).
 
 5. Optionally create `backend/` and `frontend/` lightweight scripts or symlinks that point to `agrisense_app` to make it obvious for new contributors; avoid breaking imports.
+
+Additional helpers added to this workspace:
+
+- `scripts/_data_paths.py` — central dataset discovery helper used by training and index-building scripts.
+- `scripts/propose_reorg.ps1` — prints recommended `git mv` commands for your current repo contents so you can preview moves without changing files.
+- `CONTRIBUTING.md` and `.editorconfig` — small repo hygiene additions.
 
 Testing and validation
 

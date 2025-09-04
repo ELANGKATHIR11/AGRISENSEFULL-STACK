@@ -10,6 +10,10 @@ Recommended policy
 
 Example commands (preview first):
 
-# mkdir data && git mv sikkim_crop_dataset.csv data/
+```bash
+mkdir data && git mv sikkim_crop_dataset.csv data/
+```
 
 If you follow the repo reorganization, update any script that constructs file paths (many scripts look for `repo_root / "data_core.csv"`). Prefer using `Path(__file__).resolve().parents[1] / 'data'` if you need a robust relative path.
+
+Note: this repository includes a helper `scripts/_data_paths.py` with `find_data_file(repo_root, name)` and many training/indexing scripts were updated to use it so they work whether datasets live at the repo root or in `data/`.

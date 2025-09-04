@@ -26,11 +26,19 @@ Key components
 - Infra: `infra/bicep/main.bicep` + `azure.yaml`, containerized by `Dockerfile`
 - Chatbot: retrieval endpoint `/chatbot/ask` with saved encoders and `/chatbot/metrics` for Recall@K (optional)
 
-Chatbot training datasets (if present at repo root)
+Chatbot training datasets (canonical location: `data/`)
 
-- `KisanVaani_agriculture_qa.csv`
-- `Farming_FAQ_Assistant_Dataset.csv` and `Farming_FAQ_Assistant_Dataset (2).csv`
-- `data_core.csv` (auto-mapped columns)
+- The project now keeps CSV datasets under a top-level `data/` directory. Scripts have been updated to be compatible with either the legacy root placement or the new `data/` directory.
+- Files you may find in `data/` include:
+  - `KisanVaani_agriculture_qa.csv`
+  - `Farming_FAQ_Assistant_Dataset.csv` and `Farming_FAQ_Assistant_Dataset (2).csv`
+  - `data_core.csv` (auto-mapped columns)
+  - `weather_cache.csv`
+
+Notes:
+
+- Use `scripts/_data_paths.py`'s `find_data_file(repo_root, name)` helper to programmatically locate datasets from scripts and tooling.
+- A `scripts/propose_reorg.ps1` helper prints `git mv` suggestions (non-destructive) if you want to move legacy CSVs into `data/` while keeping history.
 
 ASCII map
 

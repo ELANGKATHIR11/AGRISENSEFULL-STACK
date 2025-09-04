@@ -1,0 +1,24 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Install deps",
+      "type": "shell",
+      "command": "pip install -r requirements.txt"
+    },
+    {
+      "label": "Build index",
+      "type": "shell",
+      "command": "python -m src.ingest --csv data/dataset.csv --text-cols question answer"
+    },
+    {
+      "label": "Run app",
+      "type": "shell",
+      "command": "streamlit run src/app.py",
+      "dependsOn": [
+        "Build index"
+      ]
+    }
+  ],
+  "inputs": []
+}

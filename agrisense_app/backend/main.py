@@ -1781,6 +1781,35 @@ def _clean_text(text: str) -> str:
         return text
 
 
+# Lightweight proxy endpoint for frontend chat UI.
+from .rag_adapter import get_rag_service  # local import
+
+
+class ChatRequest(BaseModel):
+    message: str
+    zone_id: Optional[str] = "Z1"
+    top_k: Optional[int] = None
+
+
+@app.post("/chat/ask")
+def chat_ask(req: ChatRequest):
+    """Proxy endpoint consumed by the frontend `api.chatAsk` helper.
+
+    Body: { message: string, zone_id?: string }
+    Returns: { answer: string, sources?: string[] }
+    """
+    try:
+        svc = get_rag_service()
+        top_k = int(req.top_k) if req.top_k else 3
+        out = svc.ask(req.message, top_k=top_k)
+        return out
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    except Exception as e:
+        logger.exception("chat ask failed")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 def _safe_get(lst: Optional[List[Any]], j: int, default: Any = "") -> Any:
     """Safe index into a list-like object. Returns default for None or OOB indices."""
     try:

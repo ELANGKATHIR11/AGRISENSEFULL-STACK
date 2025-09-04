@@ -4,17 +4,26 @@ This blueprint is a complete, practical manual to recreate AgriSense end-to-end:
 
 ---
 
-## What’s new (Sep 2025)
+## What’s new (Sep 2025 — updated Sep 04, 2025)
 
+- Data reorg & compatibility:
+  - Project CSV datasets have been consolidated under a top-level `data/` directory to make dataset management explicit and predictable.
+  - A compatibility helper `scripts/_data_paths.py` was added with `find_data_file(repo_root, name)` which lets existing scripts transparently locate CSVs in either the legacy root location or the new `data/` folder.
+  - A preview helper `scripts/propose_reorg.ps1` prints recommended `git mv` commands (non-destructive) for moving files while preserving history.
 - Chatbot tuning and hot-reload:
-  - Added `/chatbot/reload` to refresh artifacts and apply env tuning without restart.
-  - New envs: `CHATBOT_ALPHA` and `CHATBOT_MIN_COS` for lexical/embedding balance and min confidence.
-  - Optional LLM rerank gates exist but are disabled unless keys are provided; by default LLM is off.
-- Scripts and artifacts:
-  - New tools: `scripts/eval_chatbot_http.py`, `scripts/build_chatbot_qindex.py`, `scripts/rag_augment_qa.py`.
-  - Optional question-side artifacts: `agrisense_app/backend/chatbot_q_index.npz` and `chatbot_qa_pairs.json`.
-- Dataset consolidation: train/index scripts can merge multiple QA CSVs and Parquet sources.
-- Security hygiene: removed committed `.env` files; configure via environment instead.
+  - `/chatbot/reload` refreshes artifacts and applies env tuning without restart.
+  - Hot-reloadable envs: `CHATBOT_ALPHA`, `CHATBOT_MIN_COS` for lexical/embedding balance and min confidence.
+  - LLM reranking remains optional and disabled unless API keys are provided.
+- Scripts & tooling updates:
+  - Updated scripts to use the centralized data lookup: `scripts/train_chatbot.py`, `scripts/train_chatbot_lgbm.py`, `scripts/build_chatbot_qindex.py`, `scripts/compute_chatbot_metrics.py`, `scripts/clean_merge_qa.py`.
+  - New/updated utilities: `scripts/eval_chatbot_http.py`, `scripts/rag_augment_qa.py`, and `scripts/build_chatbot_qindex.py` (index building for HTTP evaluation).
+  - Added small repo hygiene files: `CONTRIBUTING.md` and a basic `.editorconfig`.
+- Documentation & READMEs:
+  - Added `data/README.md` (dataset index) and `models/README.md` (model artifact guidance).
+  - Top-level `README.md` updated to point to `docs/REPO_STRUCTURE.md` and the new `data/` conventions.
+- Security & git hygiene:
+  - Large model artifacts remain gitignored; consider Git LFS for any model files you want tracked.
+  - CSV moves were performed on branch `reorg/move-datasets` using `git mv` so file history is preserved.
 
 ---
 
@@ -82,6 +91,8 @@ Container & cloud (optional)
 - `Dockerfile` — Multi-stage frontend + backend image
 - `azure.yaml` — `azd` service config
 - `scripts/` and `agrisense_app/scripts/` — smoke tests, training, utilities
+
+- `data/` — canonical location for CSV datasets (see §4). Scripts search both the legacy root and `data/` via `scripts/_data_paths.py` for compatibility.
 
 ---
 

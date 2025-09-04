@@ -1,0 +1,30 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Ingest: build FAISS index",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/ingest.py",
+      "console": "integratedTerminal",
+      "args": [
+        "--csv",
+        "data/dataset.csv",
+        "--text-cols",
+        "question",
+        "answer"
+      ]
+    },
+    {
+      "name": "Run: Streamlit app",
+      "type": "python",
+      "request": "launch",
+      "module": "streamlit",
+      "console": "integratedTerminal",
+      "args": [
+        "run",
+        "src/app.py"
+      ]
+    }
+  ]
+}

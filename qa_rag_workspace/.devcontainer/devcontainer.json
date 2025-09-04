@@ -1,0 +1,24 @@
+{
+  "name": "RAG Chatbot",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+  "features": {},
+  "postCreateCommand": "pip install -r requirements.txt",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "python.defaultInterpreterPath": "python",
+        "files.exclude": {
+          "**/__pycache__": true
+        },
+        "terminal.integrated.cwd": "${workspaceFolder}"
+      },
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "github.copilot",
+        "github.copilot-chat",
+        "ms-toolsai.jupyter"
+      ]
+    }
+  }
+}
