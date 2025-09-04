@@ -33,6 +33,7 @@ from typing import (
 )
 from pydantic import BaseModel, Field
 from collections import OrderedDict
+
 try:
     from . import llm_clients  # optional LLM reranker (Gemini/DeepSeek)
 except ImportError:
@@ -1187,6 +1188,19 @@ def chat_ask(req: ChatRequest) -> ChatResponse:
     ql = q.lower()
     sources: List[str] = []
 
+    # 0) Dataset exact match shortcut (ensures 100% accuracy for ingested Q/A)
+    try:
+        svc = get_rag_service()
+        exact = svc.exact_lookup(q)
+        if exact and exact.get("answer"):
+            srcs = exact.get("sources") or []
+            return ChatResponse(
+                answer=str(exact["answer"]),
+                sources=srcs if isinstance(srcs, list) else [],
+            )
+    except Exception:
+        pass
+
     # 1) If question mentions a crop, return its quick facts
     tokens = [w.strip("., ?!()[]{}\"'`").lower() for w in q.split()]
     crop_hit: Optional[CropCard] = None
@@ -1284,7 +1298,20 @@ def chat_ask(req: ChatRequest) -> ChatResponse:
         )
         return ChatResponse(answer=f"For {resp.soil_type}: top crops could be {top}.")
 
-    # Fallback
+    # 6) General Q/A via RAG dataset (qa_rag_workspace)
+    try:
+        svc = get_rag_service()
+        out = svc.ask(q, top_k=3)
+        ans = str(out.get("answer", ""))
+        srcs = out.get("sources") or []
+        if ans:
+            return ChatResponse(
+                answer=ans, sources=srcs if isinstance(srcs, list) else []
+            )
+    except Exception:
+        pass
+
+    # Fallback default help text
     return ChatResponse(
         answer=(
             "I can help with irrigation, fertilizer, crop info, tank status and soil guidance. Try: "
@@ -1575,45 +1602,50 @@ def version() -> Dict[str, Any]:
 
 class PyTorchSentenceEncoder:
     """PyTorch-based sentence encoder using SentenceTransformers.
-    
+
     Provides compatibility with TensorFlow TFSMLayer interface while using PyTorch backend.
     """
-    
+
     def __init__(self, model_name: str = "sentence-transformers/all-MiniLM-L6-v2"):
         self.model_name = model_name
         self.model = None
         self._load_model()
-    
+
     def _load_model(self):
         """Lazily load the SentenceTransformer model."""
         try:
             from sentence_transformers import SentenceTransformer
+
             self.model = SentenceTransformer(self.model_name)
             logger.info(f"Loaded PyTorch SentenceTransformer model: {self.model_name}")
         except Exception as e:
             logger.warning(f"Failed to load PyTorch SentenceTransformer: {e}")
             self.model = None
-    
+
     def __call__(self, inputs):
         """Encode text inputs to embeddings.
-        
+
         Compatible with TFSMLayer interface - accepts TensorFlow constant or list of strings.
         Returns numpy array with shape (batch_size, embedding_dim).
         """
         if self.model is None:
             raise RuntimeError("PyTorch SentenceTransformer model not loaded")
-        
+
         # Handle TensorFlow tensor input (from existing code)
-        if hasattr(inputs, 'numpy'):
-            texts = [t.decode('utf-8') if isinstance(t, bytes) else str(t) 
-                    for t in inputs.numpy()]
+        if hasattr(inputs, "numpy"):
+            texts = [
+                t.decode("utf-8") if isinstance(t, bytes) else str(t)
+                for t in inputs.numpy()
+            ]
         elif isinstance(inputs, (list, tuple)):
             texts = [str(t) for t in inputs]
         else:
             texts = [str(inputs)]
-        
+
         # Encode and normalize embeddings
-        embeddings = self.model.encode(texts, convert_to_numpy=True, normalize_embeddings=True)
+        embeddings = self.model.encode(
+            texts, convert_to_numpy=True, normalize_embeddings=True
+        )
         return embeddings.astype(np.float32)
 
 
@@ -1782,31 +1814,106 @@ def _clean_text(text: str) -> str:
 
 
 # Lightweight proxy endpoint for frontend chat UI.
-from .rag_adapter import get_rag_service  # local import
+from .rag_adapter import get_rag_service, reset_rag_service  # local import
 
 
-class ChatRequest(BaseModel):
-    message: str
-    zone_id: Optional[str] = "Z1"
-    top_k: Optional[int] = None
+class IngestRequest(BaseModel):
+    csv_path: Optional[str] = None
+    text_cols: Optional[List[str]] = None
+    model_name: Optional[str] = None
+    storage_dir: Optional[str] = None
 
 
-@app.post("/chat/ask")
-def chat_ask(req: ChatRequest):
-    """Proxy endpoint consumed by the frontend `api.chatAsk` helper.
+@app.post("/chat/ingest")
+def chat_ingest(req: IngestRequest, _=Depends(require_admin)) -> Dict[str, Any]:
+    """(Re)build the RAG FAISS index from a CSV file using qa_rag_workspace code.
 
-    Body: { message: string, zone_id?: string }
-    Returns: { answer: string, sources?: string[] }
+    Body fields (all optional, with sensible defaults):
+      - csv_path: path to CSV; default qa_rag_workspace/data/dataset.csv
+      - text_cols: list of columns to embed; default ["question","answer"]
+      - model_name: sentence-transformers model; if omitted uses qa_rag default or model_name.txt
+      - storage_dir: output dir for index/meta; default qa_rag_workspace/storage
+
+    Requires admin token if AGRISENSE_ADMIN_TOKEN is set.
     """
     try:
-        svc = get_rag_service()
-        top_k = int(req.top_k) if req.top_k else 3
-        out = svc.ask(req.message, top_k=top_k)
-        return out
-    except FileNotFoundError as e:
-        raise HTTPException(status_code=503, detail=str(e))
+        # Resolve defaults relative to repo root
+        repo_root = Path(__file__).resolve().parents[2]
+        default_csv = repo_root / "qa_rag_workspace" / "data" / "dataset.csv"
+        default_storage = repo_root / "qa_rag_workspace" / "storage"
+        csv_path = Path(req.csv_path) if req.csv_path else default_csv
+        storage_dir = Path(req.storage_dir) if req.storage_dir else default_storage
+        text_cols = req.text_cols or ["question", "answer"]
+        model_name = req.model_name or None
+
+        # Self-contained ingestion without importing workspace modules
+        import os as _os
+        import json as _json
+        import pandas as pd  # type: ignore
+        import numpy as _np  # type: ignore
+        from sentence_transformers import SentenceTransformer  # type: ignore
+        import faiss  # type: ignore
+
+        storage_dir.mkdir(parents=True, exist_ok=True)
+        df = pd.read_csv(str(csv_path))
+        for col in text_cols:
+            if col not in df.columns:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Column '{col}' not found in CSV. Available: {list(df.columns)}",
+                )
+
+        combined = df[text_cols].astype(str).agg(" | ".join, axis=1).tolist()
+        model_to_use = model_name or "sentence-transformers/all-MiniLM-L6-v2"
+        encoder = SentenceTransformer(model_to_use)
+        embs = encoder.encode(
+            combined, convert_to_numpy=True, normalize_embeddings=True
+        ).astype("float32")
+        if embs.ndim != 2:
+            raise HTTPException(status_code=500, detail="Embedding shape invalid")
+        dim = int(embs.shape[1])
+        index = faiss.IndexFlatIP(dim)
+        index.add(embs)
+        faiss.write_index(index, str(storage_dir / "index.faiss"))
+
+        # Save metadata and model name
+        # Ensure each meta row has human-friendly source info
+        dataset_name = csv_path.name
+        meta_rows: List[Dict[str, Any]] = []
+        for i, row in enumerate(df.to_dict(orient="records")):
+            item = {str(k): v for k, v in row.items()}
+            # Always stamp dataset name
+            item.setdefault("dataset", dataset_name)
+            # Provide a default source if missing/empty
+            _src_val = item.get("source")
+            has_src = isinstance(_src_val, str) and bool(_src_val.strip())
+            if not has_src:
+                item["source"] = f"{dataset_name}#{i+1}"
+            meta_rows.append(item)
+        with open(storage_dir / "meta.json", "w", encoding="utf-8") as f:
+            _json.dump(meta_rows, f, ensure_ascii=False, indent=2)
+        with open(storage_dir / "model_name.txt", "w", encoding="utf-8") as f:
+            f.write(model_to_use)
+
+        # Point adapter at new storage and reset cache
+        _os.environ["RAG_STORAGE_DIR"] = str(storage_dir)
+        reset_rag_service()
+
+        return {"ok": True, "rows": int(len(df)), "storage": str(storage_dir)}
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.exception("chat ask failed")
+        logger.exception("chat ingest failed")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/chat/reload")
+def chat_reload(_=Depends(require_admin)) -> Dict[str, Any]:
+    """Reset the RAG adapter so it reloads the FAISS index on next request."""
+    try:
+        reset_rag_service()
+        return {"ok": True}
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -1882,32 +1989,40 @@ def _load_chatbot_artifacts() -> bool:
         # Try PyTorch SentenceTransformer first if requested or TF artifacts not available
         use_pytorch = os.getenv("AGRISENSE_USE_PYTORCH_SBERT", "auto").lower()
         pytorch_loaded = False
-        
+
         if use_pytorch in ("1", "true", "yes", "auto"):
             try:
                 # Check if we can determine model name from existing config or use default
-                model_name = os.getenv("AGRISENSE_SBERT_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
-                
+                model_name = os.getenv(
+                    "AGRISENSE_SBERT_MODEL", "sentence-transformers/all-MiniLM-L6-v2"
+                )
+
                 # Try to load PyTorch model
                 _chatbot_q_layer = PyTorchSentenceEncoder(model_name)
                 if _chatbot_q_layer.model is not None:
                     pytorch_loaded = True
                     logger.info(f"Using PyTorch SentenceTransformer: {model_name}")
                 else:
-                    logger.warning("PyTorch SentenceTransformer loading failed, falling back to TensorFlow")
+                    logger.warning(
+                        "PyTorch SentenceTransformer loading failed, falling back to TensorFlow"
+                    )
             except Exception as e:
-                logger.warning(f"PyTorch SentenceTransformer unavailable ({e}), falling back to TensorFlow")
+                logger.warning(
+                    f"PyTorch SentenceTransformer unavailable ({e}), falling back to TensorFlow"
+                )
 
         # Fallback to TensorFlow SavedModel if PyTorch failed or not requested
         if not pytorch_loaded:
             if not qenc_dir.exists():
-                logger.warning("Neither PyTorch model nor TensorFlow SavedModel available; skipping load.")
+                logger.warning(
+                    "Neither PyTorch model nor TensorFlow SavedModel available; skipping load."
+                )
                 return False
-            
+
             try:
                 # Load SavedModel endpoint via Keras TFSMLayer
                 from tensorflow.keras.layers import TFSMLayer  # type: ignore
-                
+
                 _chatbot_q_layer = TFSMLayer(str(qenc_dir), call_endpoint="serve")
                 logger.info("Using TensorFlow SavedModel for chatbot embeddings")
             except Exception as e:
@@ -2376,16 +2491,18 @@ def chatbot_ask(q: ChatbotQuery) -> Dict[str, Any]:
                 cand_answers = []
                 if idx_source == "q":
                     qa_list = cast(List[str], _chatbot_qa_answers_raw or [])
-                    for (j, _) in cand:
+                    for j, _ in cand:
                         try:
                             cand_answers.append(qa_list[j] if j < len(qa_list) else "")
                         except Exception:
                             cand_answers.append("")
                 else:
                     ans_list = cast(List[str], _chatbot_answers or [])
-                    for (j, _) in cand:
+                    for j, _ in cand:
                         try:
-                            cand_answers.append(ans_list[j] if j < len(ans_list) else "")
+                            cand_answers.append(
+                                ans_list[j] if j < len(ans_list) else ""
+                            )
                         except Exception:
                             cand_answers.append("")
                 q_tf = vec.transform(q_arr)
@@ -2509,7 +2626,9 @@ def chatbot_ask(q: ChatbotQuery) -> Dict[str, Any]:
                 sim = float(scores2[j])
                 # Skip crop-facts-like answers entirely for action/specific queries
                 if q_is_action:
-                    cand_ans0 = _safe_get(cast(List[str], _chatbot_qa_answers_raw), j, "")
+                    cand_ans0 = _safe_get(
+                        cast(List[str], _chatbot_qa_answers_raw), j, ""
+                    )
                     if _looks_like_crop_facts(cand_ans0):
                         continue
                 # Skip crop-facts-like answers entirely for action/specific queries
@@ -2544,7 +2663,9 @@ def chatbot_ask(q: ChatbotQuery) -> Dict[str, Any]:
                 {
                     "rank": i + 1,
                     "score": float(scores2[j]),
-                    "answer": _clean_text(_safe_get(cast(List[str], _chatbot_answers), j, "")),
+                    "answer": _clean_text(
+                        _safe_get(cast(List[str], _chatbot_answers), j, "")
+                    ),
                 }
                 for i, j in enumerate(idx2)
             ]
@@ -2559,7 +2680,11 @@ def chatbot_ask(q: ChatbotQuery) -> Dict[str, Any]:
                         order = b.argsort()[::-1]
                         chosen = None
                         for jj in order[: max(50, topk * 5)]:
-                            ans_txt = _clean_text(_safe_get(cast(List[str], _chatbot_answers), int(jj), ""))
+                            ans_txt = _clean_text(
+                                _safe_get(
+                                    cast(List[str], _chatbot_answers), int(jj), ""
+                                )
+                            )
                             if not _looks_like_crop_facts(ans_txt):
                                 chosen = int(jj)
                                 break

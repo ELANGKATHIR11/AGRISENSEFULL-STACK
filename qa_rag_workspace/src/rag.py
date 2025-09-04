@@ -3,9 +3,26 @@ from typing import List, Dict, Any, Tuple
 import numpy as np
 import pandas as pd
 from sentence_transformers import SentenceTransformer
-from .utils import load_index, load_meta
+
+# Support both package-relative and direct file loading
+try:
+    from .utils import load_index, load_meta  # type: ignore
+except Exception:
+    # Fallback: import utils.py by path when this module is loaded via importlib.util.spec_from_file_location
+    import importlib.util as _importlib_util  # type: ignore
+    import pathlib as _pathlib  # type: ignore
+
+    _utils_path = _pathlib.Path(__file__).resolve().parent / "utils.py"
+    _spec = _importlib_util.spec_from_file_location("qa_rag_utils", str(_utils_path))
+    if _spec is None or _spec.loader is None:
+        raise
+    _mod = _importlib_util.module_from_spec(_spec)  # type: ignore[arg-type]
+    _spec.loader.exec_module(_mod)  # type: ignore
+    load_index = getattr(_mod, "load_index")
+    load_meta = getattr(_mod, "load_meta")
 
 STORAGE_DIR = os.environ.get("RAG_STORAGE_DIR", "storage")
+
 
 class Retriever:
     def __init__(self, index_path: str, meta_path: str, model_name: str):
@@ -14,13 +31,16 @@ class Retriever:
         self.encoder = SentenceTransformer(model_name)
 
     def search(self, query: str, top_k: int = 3) -> List[Tuple[float, Dict[str, Any]]]:
-        q_vec = self.encoder.encode([query], convert_to_numpy=True, normalize_embeddings=True).astype("float32")
+        q_vec = self.encoder.encode(
+            [query], convert_to_numpy=True, normalize_embeddings=True
+        ).astype("float32")
         D, I = self.index.search(q_vec, top_k)
         hits = []
         for score, idx in zip(D[0], I[0]):
             row = self.meta[int(idx)]
             hits.append((float(score), row))
         return hits
+
 
 def synthesize_answer(query: str, hits: List[Tuple[float, Dict[str, Any]]]) -> str:
     """
@@ -30,9 +50,14 @@ def synthesize_answer(query: str, hits: List[Tuple[float, Dict[str, Any]]]) -> s
     key = os.environ.get("OPENAI_API_KEY")
     if not key or len(hits) == 0:
         # Fallback: return best answer directly
-        return hits[0][1].get("answer", "Sorry, I couldn't find an answer.") if hits else "No results."
+        return (
+            hits[0][1].get("answer", "Sorry, I couldn't find an answer.")
+            if hits
+            else "No results."
+        )
     try:
         from openai import OpenAI
+
         client = OpenAI(api_key=key)
         context_blocks = []
         for score, row in hits:
@@ -58,10 +83,14 @@ CONTEXT:
 """
         resp = client.chat.completions.create(
             model="gpt-4o-mini",
-            messages=[{"role":"user","content": prompt}],
+            messages=[{"role": "user", "content": prompt}],
             temperature=0.2,
         )
         return resp.choices[0].message.content.strip()
     except Exception as e:
         # On any failure, fallback
-        return hits[0][1].get("answer", "Sorry, I couldn't find an answer.") if hits else "No results."
+        return (
+            hits[0][1].get("answer", "Sorry, I couldn't find an answer.")
+            if hits
+            else "No results."
+        )

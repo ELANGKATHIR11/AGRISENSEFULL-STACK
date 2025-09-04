@@ -15,8 +15,12 @@ def main() -> None:
     top_k = int(sys.argv[2]) if len(sys.argv) > 2 else 3
     if len(sys.argv) > 3:
         base = sys.argv[3]
-    payload: Dict[str, Any] = {"question": question, "top_k": top_k}
-    r = requests.post(f"{base}/chatbot/ask", json=payload, timeout=30)
+    # Prefer the new /chat/ask endpoint; legacy /chatbot/ask accepted too
+    payload_new: Dict[str, Any] = {"message": question, "top_k": top_k}
+    r = requests.post(f"{base}/chat/ask", json=payload_new, timeout=30)
+    if r.status_code == 404:
+        payload: Dict[str, Any] = {"question": question, "top_k": top_k}
+        r = requests.post(f"{base}/chatbot/ask", json=payload, timeout=30)
     r.raise_for_status()
     print(json.dumps(r.json(), ensure_ascii=False, indent=2))
 

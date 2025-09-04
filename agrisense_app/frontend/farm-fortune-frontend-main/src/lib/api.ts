@@ -156,4 +156,15 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ message, zone_id }),
     }),
+  chatIngest: (csv_path?: string, text_cols?: string[], model_name?: string, storage_dir?: string) =>
+    http<{ ok: boolean; rows: number; storage: string }>(`/chat/ingest`, {
+      method: "POST",
+      headers: { "X-Admin-Token": (import.meta.env.VITE_ADMIN_TOKEN as string) || "" },
+      body: JSON.stringify({ csv_path, text_cols, model_name, storage_dir }),
+    }),
+  chatReload: () =>
+    http<{ ok: boolean }>(`/chat/reload`, {
+      method: "POST",
+      headers: { "X-Admin-Token": (import.meta.env.VITE_ADMIN_TOKEN as string) || "" },
+    }),
 };

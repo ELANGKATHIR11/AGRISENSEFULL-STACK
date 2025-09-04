@@ -89,15 +89,28 @@ const Admin = () => {
     });
   };
 
+  const [csvPath, setCsvPath] = useState("");
+  const [textCols, setTextCols] = useState("question,answer");
+  const [modelName, setModelName] = useState("sentence-transformers/all-MiniLM-L6-v2");
+  const [storageDir, setStorageDir] = useState("");
+
   const handleReloadDataset = async () => {
     setLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setLoading(false);
-    
-    toast({
-      title: t("dataset_reloaded"), 
-      description: t("dataset_reload_done"),
-    });
+    try {
+      // Parse comma-separated columns
+      const cols = textCols
+        .split(",")
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0);
+      const res = await api.chatIngest(csvPath || undefined, cols.length ? cols : undefined, modelName || undefined, storageDir || undefined);
+      await api.chatReload();
+      toast({ title: t("dataset_reloaded"), description: `${t("dataset_reload_done")} (rows: ${res.rows})` });
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      toast({ title: t("dataset_reload_failed") || "Dataset reload failed", description: msg, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleResetAll = async () => {
@@ -189,6 +202,28 @@ const Admin = () => {
                     <Database className="w-4 h-4 mr-2" />
                     {t("erase_all_data")}
                   </Button>
+                </div>
+                <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm text-muted-foreground">CSV Path (optional)</label>
+                    <input className="border px-3 py-2 rounded-md w-full" placeholder="e.g. D:\\path\\to\\dataset.csv"
+                      value={csvPath} onChange={(e) => setCsvPath(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm text-muted-foreground">Text Columns (comma-separated)</label>
+                    <input className="border px-3 py-2 rounded-md w-full" placeholder="question,answer,notes"
+                      value={textCols} onChange={(e) => setTextCols(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm text-muted-foreground">Model Name</label>
+                    <input className="border px-3 py-2 rounded-md w-full" placeholder="sentence-transformers/all-MiniLM-L6-v2"
+                      value={modelName} onChange={(e) => setModelName(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm text-muted-foreground">Storage Dir (optional)</label>
+                    <input className="border px-3 py-2 rounded-md w-full" placeholder="e.g. D:\\AGRISENSEFULL-STACK\\qa_rag_workspace\\storage"
+                      value={storageDir} onChange={(e) => setStorageDir(e.target.value)} />
+                  </div>
                 </div>
               </CardContent>
             </Card>
