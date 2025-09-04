@@ -19,13 +19,14 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 from tensorflow.keras.layers import TFSMLayer  # type: ignore
+from _data_paths import find_data_file
 
 
 def load_datasets(repo_root: Path) -> pd.DataFrame:
     frames: List[pd.DataFrame] = []
     # KisanVaani CSV
-    kisan_csv = repo_root / "KisanVaani_agriculture_qa.csv"
-    if kisan_csv.exists():
+    kisan_csv = find_data_file(repo_root, "KisanVaani_agriculture_qa.csv")
+    if kisan_csv is not None and kisan_csv.exists():
         df = pd.read_csv(kisan_csv)
         cols = {c.lower(): c for c in df.columns}
         q = cols.get("question")
@@ -35,12 +36,8 @@ def load_datasets(repo_root: Path) -> pd.DataFrame:
             df["source"] = "KisanVaani"
             frames.append(df)
     # Soil QA CSV
-    soil_csv = (
-        repo_root
-        / "Agriculture-Soil-QA-Pairs-Dataset"
-        / "qna-dataset-farmgenie-soil-v2.csv"
-    )
-    if soil_csv.exists():
+    soil_csv = find_data_file(repo_root, "Agriculture-Soil-QA-Pairs-Dataset/qna-dataset-farmgenie-soil-v2.csv")
+    if soil_csv is not None and soil_csv.exists():
         df = pd.read_csv(soil_csv)
         mapping = {}
         for col in df.columns:
@@ -80,8 +77,8 @@ def load_datasets(repo_root: Path) -> pd.DataFrame:
         "Farming_FAQ_Assistant_Dataset.csv",
         "Farming_FAQ_Assistant_Dataset (2).csv",
     ]:
-        fpath = repo_root / fname
-        if fpath.exists():
+        fpath = find_data_file(repo_root, fname)
+        if fpath is not None and fpath.exists():
             try:
                 df = pd.read_csv(fpath)
                 cols = {str(c).strip().lower(): c for c in df.columns}
@@ -96,8 +93,8 @@ def load_datasets(repo_root: Path) -> pd.DataFrame:
             except Exception:
                 pass
     # Generic data_core.csv
-    data_core = repo_root / "data_core.csv"
-    if data_core.exists():
+    data_core = find_data_file(repo_root, "data_core.csv")
+    if data_core is not None and data_core.exists():
         try:
             df = pd.read_csv(data_core)
             cols = {str(c).strip().lower(): c for c in df.columns}

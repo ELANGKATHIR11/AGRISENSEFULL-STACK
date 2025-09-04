@@ -2,7 +2,7 @@
 
 AIML BASED SMART AGRICULTURE SOLUTION
 
-See `PROJECT_DOCUMENTATION.md` for the full system architecture, API reference, configs, and deployment guide.
+See `PROJECT_DOCUMENTATION.md` and `docs/REPO_STRUCTURE.md` for the full system architecture, API reference, configs, repository layout and a safe reorganization plan.
 
 ## How to run
 
@@ -27,6 +27,8 @@ Environment:
 - CORS: override allowed origins with `ALLOWED_ORIGINS` (comma-separated). Defaults to `*` in dev.
 
 Note: Large trained models are managed with Git LFS or excluded from Git to keep the repo lightweight.
+
+Repository organization note: This repo contains a mix of code, datasets, model artifacts, and docs. A recommended non-destructive reorganization plan and an explanation of the current layout are in `docs/REPO_STRUCTURE.md` — read that before moving files.
 
 ## Chatbot (QA) status
 

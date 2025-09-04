@@ -32,6 +32,9 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 
+from _data_paths import find_data_file
+
+
 def load_datasets(repo_root: Path) -> pd.DataFrame:
     # Prefer pre-cleaned merged CSV if available
     merged = repo_root / "agrisense_app" / "backend" / "chatbot_merged_clean.csv"
@@ -58,15 +61,8 @@ def load_datasets(repo_root: Path) -> pd.DataFrame:
         roots.append(proj)
 
     # 1) KisanVaani prepared CSV
-    kisan_csv = next(
-        (
-            r / "KisanVaani_agriculture_qa.csv"
-            for r in roots
-            if (r / "KisanVaani_agriculture_qa.csv").exists()
-        ),
-        None,
-    )
-    if kisan_csv.exists():
+    kisan_csv = find_data_file(repo_root, "KisanVaani_agriculture_qa.csv")
+    if kisan_csv is not None and kisan_csv.exists():
         df = pd.read_csv(kisan_csv)
         cols = {c.lower(): c for c in df.columns}
         q = cols.get("question")
@@ -77,16 +73,7 @@ def load_datasets(repo_root: Path) -> pd.DataFrame:
             frames.append(df)
 
     # 2) Soil QA CSV from Hugging Face clone
-    soil_csv = None
-    for r in roots:
-        c1 = (
-            r
-            / "Agriculture-Soil-QA-Pairs-Dataset"
-            / "qna-dataset-farmgenie-soil-v2.csv"
-        )
-        if c1.exists():
-            soil_csv = c1
-            break
+    soil_csv = find_data_file(repo_root, "Agriculture-Soil-QA-Pairs-Dataset/qna-dataset-farmgenie-soil-v2.csv")
     if soil_csv is not None and soil_csv.exists():
         df = pd.read_csv(soil_csv)
         # Columns typically: index, ANSWER, QUESTION.question, QUESTION.paragraph
@@ -137,8 +124,8 @@ def load_datasets(repo_root: Path) -> pd.DataFrame:
         "Farming_FAQ_Assistant_Dataset.csv",
         "Farming_FAQ_Assistant_Dataset (2).csv",
     ]:
-        fpath = next((r / fname for r in roots if (r / fname).exists()), None)
-        if fpath and fpath.exists():
+        fpath = find_data_file(repo_root, fname)
+        if fpath is not None and fpath.exists():
             try:
                 df = pd.read_csv(fpath)
                 cols = {str(c).strip().lower(): c for c in df.columns}
@@ -154,10 +141,8 @@ def load_datasets(repo_root: Path) -> pd.DataFrame:
                 pass
 
     # 5) Generic data_core.csv (try to map question/answer)
-    data_core = next(
-        (r / "data_core.csv" for r in roots if (r / "data_core.csv").exists()), None
-    )
-    if data_core and data_core.exists():
+    data_core = find_data_file(repo_root, "data_core.csv")
+    if data_core is not None and data_core.exists():
         try:
             df = pd.read_csv(data_core)
             cols = {str(c).strip().lower(): c for c in df.columns}

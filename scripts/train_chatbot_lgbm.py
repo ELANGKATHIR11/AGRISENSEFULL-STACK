@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from _data_paths import find_data_file
 from typing import List, Tuple
 
 import numpy as np
@@ -24,8 +25,8 @@ import joblib
 def load_datasets(repo_root: Path) -> pd.DataFrame:
     frames: List[pd.DataFrame] = []
     # KisanVaani
-    kv = repo_root / "KisanVaani_agriculture_qa.csv"
-    if kv.exists():
+    kv = find_data_file(repo_root, "KisanVaani_agriculture_qa.csv")
+    if kv is not None and kv.exists():
         df = pd.read_csv(kv)
         cols = {c.lower(): c for c in df.columns}
         q, a = cols.get("question"), cols.get("answer")
@@ -34,12 +35,8 @@ def load_datasets(repo_root: Path) -> pd.DataFrame:
             df["source"] = "KisanVaani"
             frames.append(df)
     # Soil QA
-    soil = (
-        repo_root
-        / "Agriculture-Soil-QA-Pairs-Dataset"
-        / "qna-dataset-farmgenie-soil-v2.csv"
-    )
-    if soil.exists():
+    soil = find_data_file(repo_root, "Agriculture-Soil-QA-Pairs-Dataset/qna-dataset-farmgenie-soil-v2.csv")
+    if soil is not None and soil.exists():
         df = pd.read_csv(soil)
         mapping = {}
         for c in df.columns:
@@ -78,8 +75,8 @@ def load_datasets(repo_root: Path) -> pd.DataFrame:
         "Farming_FAQ_Assistant_Dataset.csv",
         "Farming_FAQ_Assistant_Dataset (2).csv",
     ]:
-        p = repo_root / fname
-        if p.exists():
+        p = find_data_file(repo_root, fname)
+        if p is not None and p.exists():
             try:
                 df = pd.read_csv(p)
                 cols = {str(c).strip().lower(): c for c in df.columns}
@@ -93,8 +90,8 @@ def load_datasets(repo_root: Path) -> pd.DataFrame:
             except Exception:
                 pass
     # data_core.csv
-    dc = repo_root / "data_core.csv"
-    if dc.exists():
+    dc = find_data_file(repo_root, "data_core.csv")
+    if dc is not None and dc.exists():
         try:
             df = pd.read_csv(dc)
             cols = {str(c).strip().lower(): c for c in df.columns}

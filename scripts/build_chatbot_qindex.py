@@ -25,11 +25,10 @@ from tensorflow.keras.layers import TFSMLayer  # type: ignore
 def load_datasets(repo_root: Path) -> pd.DataFrame:
     # Reuse logic similar to train_chatbot.py/compute_chatbot_metrics.py but minimal
     frames: List[pd.DataFrame] = []
-    roots = [repo_root, repo_root / "AGRISENSEFULL-STACK"]
+        roots: List[Path] = [repo_root, repo_root / "AGRISENSEFULL-STACK"]
     # KisanVaani
-    for r in roots:
-        f = r / "KisanVaani_agriculture_qa.csv"
-        if f.exists():
+        f = find_data_file(repo_root, "KisanVaani_agriculture_qa.csv")
+        if f is not None and f.exists():
             df = pd.read_csv(f)
             cols = {c.lower(): c for c in df.columns}
             q = cols.get("question")
@@ -42,13 +41,8 @@ def load_datasets(repo_root: Path) -> pd.DataFrame:
                 )
             break
     # Soil QA
-    for r in roots:
-        f = (
-            r
-            / "Agriculture-Soil-QA-Pairs-Dataset"
-            / "qna-dataset-farmgenie-soil-v2.csv"
-        )
-        if f.exists():
+        f = find_data_file(repo_root, "Agriculture-Soil-QA-Pairs-Dataset/qna-dataset-farmgenie-soil-v2.csv")
+        if f is not None and f.exists():
             df = pd.read_csv(f)
             mapping = {}
             for col in df.columns:
@@ -82,9 +76,8 @@ def load_datasets(repo_root: Path) -> pd.DataFrame:
         "Farming_FAQ_Assistant_Dataset.csv",
         "Farming_FAQ_Assistant_Dataset (2).csv",
     ):
-        for r in roots:
-            f = r / fname
-            if f.exists():
+            f = find_data_file(repo_root, fname)
+            if f is not None and f.exists():
                 try:
                     df = pd.read_csv(f)
                     cols = {str(c).strip().lower(): c for c in df.columns}
@@ -99,9 +92,8 @@ def load_datasets(repo_root: Path) -> pd.DataFrame:
                 except Exception:
                     pass
     # data_core.csv
-    for r in roots:
-        f = r / "data_core.csv"
-        if f.exists():
+        f = find_data_file(repo_root, "data_core.csv")
+        if f is not None and f.exists():
             try:
                 df = pd.read_csv(f)
                 cols = {str(c).strip().lower(): c for c in df.columns}

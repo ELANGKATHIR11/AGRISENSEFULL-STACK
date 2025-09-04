@@ -5,6 +5,7 @@ import json
 import re
 from pathlib import Path
 from typing import List, Tuple
+from _data_paths import find_data_file
 
 import pandas as pd
 
@@ -43,60 +44,55 @@ def load_all(repo_root: Path) -> List[Tuple[str, pd.DataFrame]]:
     sources: list[Tuple[str, pd.DataFrame]] = []
 
     # KisanVaani
-    for r in roots:
-        df = _load_csv_if_exists(
-            r / "KisanVaani_agriculture_qa.csv",
-            q_keys=["question", "questions", "q"],
-            a_keys=["answer", "answers", "a"],
-        )
-        if df is not None:
-            sources.append(("KisanVaani", df))
-            break
+    p = find_data_file(repo_root, "KisanVaani_agriculture_qa.csv")
+    df = _load_csv_if_exists(
+        p if p is not None else repo_root / "KisanVaani_agriculture_qa.csv",
+        q_keys=["question", "questions", "q"],
+        a_keys=["answer", "answers", "a"],
+    )
+    if df is not None:
+        sources.append(("KisanVaani", df))
 
     # Soil QA
-    for r in roots:
-        df = _load_csv_if_exists(
-            r
-            / "Agriculture-Soil-QA-Pairs-Dataset"
-            / "qna-dataset-farmgenie-soil-v2.csv",
-            q_keys=[
-                "question",
-                "question.question",
-                "question_text",
-                "questions",
-                "q",
-                "QUESTION.question".lower(),
-            ],
-            a_keys=["answer", "answers", "a", "ANSWER".lower()],
-        )
-        if df is not None:
-            sources.append(("SoilQA", df))
-            break
+    p = find_data_file(repo_root, "Agriculture-Soil-QA-Pairs-Dataset/qna-dataset-farmgenie-soil-v2.csv")
+    df = _load_csv_if_exists(
+        p if p is not None else repo_root / "Agriculture-Soil-QA-Pairs-Dataset" / "qna-dataset-farmgenie-soil-v2.csv",
+        q_keys=[
+            "question",
+            "question.question",
+            "question_text",
+            "questions",
+            "q",
+            "QUESTION.question".lower(),
+        ],
+        a_keys=["answer", "answers", "a", "ANSWER".lower()],
+    )
+    if df is not None:
+        sources.append(("SoilQA", df))
 
     # Farming FAQ (both variants)
     for name in (
         "Farming_FAQ_Assistant_Dataset.csv",
         "Farming_FAQ_Assistant_Dataset (2).csv",
     ):
-        for r in roots:
-            df = _load_csv_if_exists(
-                r / name,
-                q_keys=["question", "questions", "q"],
-                a_keys=["answer", "answers", "a"],
-            )
-            if df is not None:
-                sources.append(("FarmingFAQ", df))
-
-    # data_core.csv
-    for r in roots:
+        p = find_data_file(repo_root, name)
         df = _load_csv_if_exists(
-            r / "data_core.csv",
+            p if p is not None else repo_root / name,
             q_keys=["question", "questions", "q"],
             a_keys=["answer", "answers", "a"],
         )
         if df is not None:
-            sources.append(("DataCore", df))
-            break
+            sources.append(("FarmingFAQ", df))
+
+    # data_core.csv
+    p = find_data_file(repo_root, "data_core.csv")
+    df = _load_csv_if_exists(
+        p if p is not None else repo_root / "data_core.csv",
+        q_keys=["question", "questions", "q"],
+        a_keys=["answer", "answers", "a"],
+    )
+    if df is not None:
+        sources.append(("DataCore", df))
 
     return sources
 
