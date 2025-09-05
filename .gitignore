@@ -1,0 +1,19 @@
+# Root ignores
+.venv/
+**/.venv/
+venv/
+**/venv/
+node_modules/
+**/node_modules/
+.terraform/
+**/.terraform/
+pytest_cache/
+**/.pytest_cache/
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyd
+*.log
+.env
+.env.*
+**/.git_disabled/
