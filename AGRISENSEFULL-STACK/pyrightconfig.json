@@ -1,0 +1,22 @@
+{
+  "pythonVersion": "3.9",
+  "venvPath": "D:/AGRISENSE FULL-STACK",
+  "venv": ".venv",
+  "typeCheckingMode": "basic",
+  "include": [
+    "agrisense_app",
+    "agrisense_pi_edge_minimal",
+    "scripts/test_*.py"
+  ],
+  "exclude": [
+    "scripts/**",
+    "agrisense_app/scripts/**",
+    "agrisense_app/backend/tf_train*.py",
+    "agrisense_app/backend/synthetic_train.py"
+  ],
+  "extraPaths": [
+    "D:/AGRISENSE FULL-STACK/AGRISENSEFULL-STACK",
+    "D:/AGRISENSE FULL-STACK/AGRISENSEFULL-STACK/agrisense_app",
+    "D:/AGRISENSE FULL-STACK/AGRISENSEFULL-STACK/agrisense_pi_edge_minimal"
+  ]
+}

@@ -1,58 +1,56 @@
 {
+	// VS Code tasks for AgriSense: stable backend run (no reload) and HTTP smoke checks
+	"$schema": "https://json.schemastore.org/vscode/tasks.json",
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "Run Backend (Uvicorn)",
+			"label": "Run Backend (Uvicorn - no reload)",
 			"type": "shell",
-			"command": "cd '${workspaceFolder}/AGRISENSEFULL-STACK'; .venv\\Scripts\\python.exe -m uvicorn agrisense_app.backend.main:app --reload --port 8004",
-			"group": "build",
-			"dependsOn": "Prepare Backend Env"
-		},
-		{
-			"label": "Run Frontend (Vite)",
-			"type": "shell",
-			"command": "cd '${workspaceFolder}/AGRISENSEFULL-STACK/agrisense_app/frontend/farm-fortune-frontend-main'; npm run dev",
+			"options": {
+				"cwd": "${workspaceFolder}/AGRISENSEFULL-STACK"
+			},
+			"command": ".venv\\Scripts\\python.exe -m uvicorn agrisense_app.backend.main:app --port 8004",
 			"isBackground": true,
-			"dependsOn": "Prepare Frontend Env"
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated"
+			}
 		},
 		{
-			"label": "Prepare Frontend Env",
+			"label": "HTTP Smoke (Backend)",
 			"type": "shell",
-			"command": "cd '${workspaceFolder}/AGRISENSEFULL-STACK/agrisense_app/frontend/farm-fortune-frontend-main'; if (!(Test-Path node_modules)) { if (Test-Path package-lock.json) { npm ci } else { npm install } }",
-			"problemMatcher": []
-		},
-		{
-			"label": "Prepare Backend Env",
-			"type": "shell",
-			"command": "cd '${workspaceFolder}/AGRISENSEFULL-STACK'; if (!(Test-Path .venv)) { if (Get-Command py -ErrorAction SilentlyContinue) { py -3 -m venv .venv } else { python -m venv .venv } }; .venv\\Scripts\\python.exe -m pip install -U pip; .venv\\Scripts\\pip.exe install -r agrisense_app/backend/requirements.txt",
-			"problemMatcher": []
-		},
-		{
-			"label": "Start Dev (Backend+Frontend)",
-			"dependsOn": [
-				"Run Backend (Uvicorn)",
-				"Run Frontend (Vite)"
-			],
-			"dependsOrder": "parallel",
-			"group": "build",
-			"problemMatcher": []
-		},
-		{
-			"label": "Train ML Models",
-			"type": "shell",
-			"command": "cd '${workspaceFolder}/AGRISENSEFULL-STACK'; .venv\\Scripts\\python.exe agrisense_app/scripts/train_models.py"
-		},
-		{
-			"label": "Train TF Models",
-			"type": "shell",
-			"command": "cd '${workspaceFolder}/AGRISENSEFULL-STACK'; .venv\\Scripts\\python.exe agrisense_app/backend/tf_train.py",
-			"problemMatcher": []
-		},
-		{
-			"label": "Run Backend (Uvicorn)",
-			"type": "shell",
-			"command": "cd '${workspaceFolder}'; .venv\\Scripts\\python.exe -m uvicorn agrisense_app.backend.main:app --reload --port 8004",
-			"group": "build"
+			"options": {
+				"cwd": "${workspaceFolder}/AGRISENSEFULL-STACK"
+			},
+			"command": "$env:AGRISENSE_DISABLE_ML='1'; .venv\\Scripts\\python.exe scripts\\chatbot_http_smoke.py",
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared"
+			}
+			},
+			{
+				"label": "Build Chatbot Artifacts (CSV)",
+				"type": "shell",
+				"options": {
+					"cwd": "${workspaceFolder}/AGRISENSEFULL-STACK"
+				},
+				"command": "$ErrorActionPreference='Stop'; $env:AGRISENSE_DISABLE_ML='1'; .venv\\Scripts\\python.exe scripts\\build_chatbot_artifacts.py --csv merged_chatbot_training_dataset.csv --out-dir agrisense_app/backend",
+				"presentation": {
+					"reveal": "always",
+					"panel": "dedicated"
+				}
+			},
+			{
+				"label": "Reload Chatbot",
+				"type": "shell",
+				"options": {
+					"cwd": "${workspaceFolder}/AGRISENSEFULL-STACK"
+				},
+				"command": ".venv\\Scripts\\python.exe scripts\\reload_chatbot.py",
+				"presentation": {
+					"reveal": "always",
+					"panel": "shared"
+				}
 		}
 	]
 }
