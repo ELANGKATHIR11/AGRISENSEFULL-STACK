@@ -16,7 +16,7 @@ Labels:
   - Supervision via distant labeling: Original question vs. its own answer considered positive; others sampled as negatives.
 
 Usage (PowerShell):
-  .venv\Scripts\python.exe agrisense_app\scripts\train_chatbot_lgbm.py --limit 6000 --negatives 3
+  .venv\\Scripts\\python.exe agrisense_app\\scripts\\train_chatbot_lgbm.py --limit 6000 --negatives 3
 """
 
 from __future__ import annotations

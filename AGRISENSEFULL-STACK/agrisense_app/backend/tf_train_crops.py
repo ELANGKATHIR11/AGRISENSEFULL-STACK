@@ -7,6 +7,7 @@ Produces:
 """
 import os
 import json
+from typing import Optional
 import numpy as np
 import pandas as pd
 import tensorflow as tf
@@ -54,7 +55,7 @@ def load_data():
     }
     return X, y_yield, y_crop, meta
 
-def build_mlp(input_dim: int, output_dim: int, final_activation: str = None) -> keras.Model:
+def build_mlp(input_dim: int, output_dim: int, final_activation: Optional[str] = None) -> keras.Model:
     inp = keras.Input(shape=(input_dim,), name="features")
     norm = layers.Normalization(name="norm")(inp)
     x = layers.Dense(128, activation="relu")(norm)

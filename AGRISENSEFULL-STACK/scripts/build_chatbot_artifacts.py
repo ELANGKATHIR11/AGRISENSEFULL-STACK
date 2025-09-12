@@ -9,7 +9,7 @@ Saves artifacts into `agrisense_app/backend/`:
  - chatbot_qa_pairs.json (list of {question,answer,source})
 
 Usage:
-  .venv\Scripts\python.exe scripts\build_chatbot_artifacts.py --csv agrisense_app/backend/chatbot_merged_clean.csv
+  .venv\\Scripts\\python.exe scripts\\build_chatbot_artifacts.py --csv agrisense_app/backend/chatbot_merged_clean.csv
 
 This script uses batching to avoid OOM. If the encoder model isn't available,
 it will exit with an informative message.

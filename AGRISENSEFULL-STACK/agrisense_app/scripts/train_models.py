@@ -38,8 +38,8 @@ def main() -> None:
     # Regenerate labels metadata for frontend/backend harmony
     df: pd.DataFrame = cast(pd.DataFrame, pd.read_csv(csv_path, encoding='utf-8-sig'))  # type: ignore[reportUnknownMemberType]
     # Use set(...) instead of Series.unique() to avoid partially-unknown numpy types in type checkers
-    crops: List[str] = sorted(set(df['Crop'].dropna().astype(str).tolist()))
-    soils: List[str] = sorted(set(df['Soil_Type'].dropna().astype(str).tolist()))
+    crops: List[str] = sorted([str(x) for x in set(df['Crop'].dropna().astype(str).tolist())])
+    soils: List[str] = sorted([str(x) for x in set(df['Soil_Type'].dropna().astype(str).tolist())])
     with open(labels_path, 'w', encoding='utf-8') as f:
         json.dump({"soil_types": soils, "crops": crops}, f, ensure_ascii=False, indent=2)
     print(f"Wrote crop_labels.json with {len(crops)} crops and {len(soils)} soil types -> {labels_path}")

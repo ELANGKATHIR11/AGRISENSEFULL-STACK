@@ -2,9 +2,9 @@
 LLM-powered QA augmentation: generate paraphrased questions for existing Q/A pairs.
 
 Usage (PowerShell):
-  .venv\Scripts\python.exe agrisense_app\scripts\augment_qa_with_llm.py \
-    --input "agriculture-qa-english-only/data/train-00000-of-00001.parquet" \
-    --output "AGRISENSEFULL-STACK/agrisense_app/backend/chatbot_augmented_qa.csv" \
+  .venv\\Scripts\\python.exe agrisense_app\\scripts\\augment_qa_with_llm.py \\
+    --input "agriculture-qa-english-only/data/train-00000-of-00001.parquet" \\
+    --output "AGRISENSEFULL-STACK/agrisense_app/backend/chatbot_augmented_qa.csv" \\
     --per_question 2 --max_records 2000
 
 Environment variables used (set in agrisense_app/backend/.env if desired):
