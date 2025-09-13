@@ -55,6 +55,25 @@ ASCII map
 
 ---
 
+## 1.1) Project Navigation & Organization (September 2025)
+
+**📁 QUICK NAVIGATION:** This project has been completely reorganized for maximum efficiency. Key locations:
+
+- **🤖 ML Models:** `ml_models/` (disease_detection/, weed_management/, crop_recommendation/)
+- **🎯 Training:** `training_scripts/` (all model training and pipeline scripts)
+- **📊 Data:** `datasets/` (raw/, enhanced/, chatbot/ subdirectories)
+- **🔍 Processing:** `data_processing/` (enhancement, analysis, optimization)
+- **🧪 Testing:** `api_tests/` (comprehensive API and integration tests)
+- **📚 Docs:** `documentation/` (README files, plans, architecture)
+- **📈 Reports:** `reports/` (analysis results, success reports)
+- **⚙️ Config:** `configuration/` (Docker, environment, git settings)
+
+**📄 Complete Guide:** See `FILE_ORGANIZATION_INDEX.md` for comprehensive navigation with file descriptions and usage commands.
+
+**🔄 Path Updates:** All file references in this blueprint have been updated to reflect the new organized structure.
+
+---
+
 ## 2) Prerequisites
 
 Local development
@@ -74,31 +93,66 @@ Container & cloud (optional)
 
 ## 3) Repository Layout
 
-- `agrisense_app/backend/` — FastAPI app, engine, datasets, models, storage, MQTT, weather
+**NEW ORGANIZED STRUCTURE (September 2025):**
+
+- `agrisense_app/backend/` — FastAPI app, engine, core datasets, storage, MQTT, weather
 - `agrisense_app/frontend/farm-fortune-frontend-main/` — Vite/React UI
+- `ml_models/` — **NEW** Organized ML models and artifacts
+  - `ml_models/disease_detection/` — Disease detection models (.joblib)
+  - `ml_models/weed_management/` — Weed management models (.joblib)  
+  - `ml_models/crop_recommendation/` — Crop recommendation models (.keras)
+  - `ml_models/feature_encoders.joblib` — General feature encoders
+- `training_scripts/` — **NEW** All model training and pipeline scripts
+  - `training_scripts/train_plant_health_models_v2.py` — Enhanced plant health training
+  - `training_scripts/deep_learning_pipeline.py` — Deep learning training pipeline
+  - `training_scripts/advanced_ensemble_trainer.py` — Advanced ensemble training
+  - `training_scripts/setup_disease_weed_models.py` — Disease & weed model setup
+- `datasets/` — **NEW** Organized dataset files
+  - `datasets/raw/` — Original unprocessed datasets
+  - `datasets/enhanced/` — Enhanced and augmented datasets
+  - `datasets/chatbot/` — Chatbot training datasets
+- `data_processing/` — **NEW** Data enhancement and analysis scripts
+- `api_tests/` — **NEW** All API testing and integration tests
+- `documentation/` — **NEW** Project documentation and plans (README files, plans)
+- `reports/` — **NEW** Analysis reports and results
+- `configuration/` — **NEW** Configuration files (Docker, environment, git)
 - `agrisense_pi_edge_minimal/` — Minimal edge agent (optional)
 - `mobile/` — Minimal Expo app
 - `infra/bicep/` — Azure infra (Container Apps, ACR, identity, logs)
-- `Dockerfile` — Multi-stage frontend + backend image
-- `azure.yaml` — `azd` service config
 - `scripts/` and `agrisense_app/scripts/` — smoke tests, training, utilities
+- `FILE_ORGANIZATION_INDEX.md` — **NEW** Complete navigation guide for organized structure
 
 ---
 
 ## 4) Datasets
 
-Included CSVs (root or backend directory):
+**NEW ORGANIZED STRUCTURE:**
 
+### Core Application Datasets (Backend)
 - `agrisense_app/backend/india_crop_dataset.csv` — Primary catalog for crop names and properties used by UI and crop cards
-- `sikkim_crop_dataset.csv` — Optional supplement for region-specific crops
+- `agrisense_app/backend/crop_labels.json` — `{ "crops": ["rice", "wheat", ...] }`
 
-Chatbot training CSVs (if present at repo root):
+### Raw Datasets (`datasets/raw/`)
+- `datasets/raw/sikkim_crop_dataset.csv` — Region-specific crops for Sikkim
+- `datasets/raw/crop_disease_dataset.csv` — Crop disease classification data
+- `datasets/raw/data_core.csv` — Core agricultural data
+- `datasets/raw/weed_management_dataset.csv` — Weed management and classification data
+- `datasets/raw/qa_weeds_diseases.csv` — Q&A data for weeds and diseases
+- `datasets/raw/weather_cache.csv` — Weather data cache
 
+### Enhanced Datasets (`datasets/enhanced/`)
+- `datasets/enhanced/enhanced_chatbot_training_dataset.csv` — Enhanced chatbot training data
+- `datasets/enhanced/enhanced_disease_dataset.csv` — Enhanced disease detection data
+- `datasets/enhanced/enhanced_weed_dataset.csv` — Enhanced weed classification data
+
+### Chatbot Training Datasets (`datasets/chatbot/`)
+- `datasets/chatbot/Farming_FAQ_Assistant_Dataset.csv` — FAQ pairs (Question, Answer)
+- `datasets/chatbot/merged_chatbot_training_dataset.csv` — Merged chatbot training data
+- Plus additional QA sources from Agriculture-Soil-QA-Pairs-Dataset/
+
+**Legacy Locations:** Some chatbot training CSVs may still exist at repo root for compatibility:
 - `KisanVaani_agriculture_qa.csv` — normalized KisanVaani QA
-- `Farming_FAQ_Assistant_Dataset.csv` — FAQ pairs (Question, Answer)
-- `Farming_FAQ_Assistant_Dataset (2).csv` — alt FAQ pairs (Question, Answer)
-- `data_core.csv` — generic pairs; columns auto-mapped among [question|questions|q] and [answer|answers|a]
-- `agriculture-qa-english-only/data/train-00000-of-00001.parquet` — Parquet QA source; see `scripts/prepare_kisan_qa_csv.py`
+- `agriculture-qa-english-only/data/train-00000-of-00001.parquet` — Parquet QA source
 
 Columns (union across datasets; not all are required):
 
@@ -122,11 +176,45 @@ Dataset override (crop suggestions)
 
 ## 5) ML Models
 
-Artifacts (optional for runtime)
+**NEW ORGANIZED STRUCTURE:**
 
+### Core ML Models (`ml_models/`)
+
+#### Disease Detection Models (`ml_models/disease_detection/`)
+- `disease_model_20250913_172116.joblib` — Trained disease classification model
+- `disease_encoder_20250913_172116.joblib` — Feature encoder for disease detection  
+- `disease_scaler_20250913_172116.joblib` — Data scaler for disease features
+
+#### Weed Management Models (`ml_models/weed_management/`)
+- `weed_model_20250913_172117.joblib` — Trained weed management model
+- `weed_encoder_20250913_172117.joblib` — Feature encoder for weed classification
+- `weed_scaler_20250913_172117.joblib` — Data scaler for weed features
+
+#### Crop Recommendation Models (`ml_models/crop_recommendation/`)
+- `best_crop_tf.keras` — TensorFlow model for crop recommendation
+- `best_yield_tf.keras` — TensorFlow model for yield prediction
+
+#### General Models
+- `ml_models/feature_encoders.joblib` — General feature encoders
+
+### Legacy Backend Models (Core API)
 - Water requirement: `agrisense_app/backend/water_model.keras` or `water_model.joblib`
 - Fertilizer adjustment: `agrisense_app/backend/fert_model.keras` or `fert_model.joblib`
-- Additional models for classification/yield (e.g., `crop_tf.keras`, `yield_tf.keras`) may exist but are not required to operate core API.
+
+### Training Scripts (`training_scripts/`)
+- `training_scripts/train_plant_health_models_v2.py` — Enhanced plant health training
+- `training_scripts/deep_learning_pipeline.py` — Deep learning training pipeline  
+- `training_scripts/deep_learning_pipeline_v2.py` — Enhanced deep learning pipeline
+- `training_scripts/advanced_ensemble_trainer.py` — Advanced ensemble training
+- `training_scripts/phase2_ensemble_trainer.py` — Phase 2 ensemble training
+- `training_scripts/quick_ml_trainer.py` — Quick ML model training
+- `training_scripts/setup_disease_weed_models.py` — Disease & weed model setup
+
+### Data Processing (`data_processing/`)
+- `data_processing/advanced_data_enhancer.py` — Advanced data augmentation
+- `data_processing/analyze_datasets.py` — Dataset analysis and statistics
+- `data_processing/performance_optimization.py` — Performance optimization
+- `data_processing/ml_optimization_analyzer.py` — ML model optimization analysis
 
 Chatbot (retrieval) training
 
@@ -140,8 +228,39 @@ Chatbot (retrieval) training
   - Optional: `agrisense_app/backend/chatbot_q_index.npz` and `chatbot_qa_pairs.json`
 - Git hygiene: heavy artifacts above are gitignored; regenerate locally as needed
 
-Train (PowerShell examples)
+### Training Commands (PowerShell examples)
 
+**Plant Health & Disease/Weed Models:**
+```powershell
+# Enhanced plant health model training
+.venv\Scripts\python.exe training_scripts\train_plant_health_models_v2.py
+
+# Deep learning pipeline training  
+.venv\Scripts\python.exe training_scripts\deep_learning_pipeline_v2.py
+
+# Advanced ensemble training
+.venv\Scripts\python.exe training_scripts\advanced_ensemble_trainer.py
+
+# Quick ML training for testing
+.venv\Scripts\python.exe training_scripts\quick_ml_trainer.py
+
+# Setup disease and weed models
+.venv\Scripts\python.exe training_scripts\setup_disease_weed_models.py
+```
+
+**Data Processing & Enhancement:**
+```powershell
+# Advanced data enhancement and augmentation
+.venv\Scripts\python.exe data_processing\advanced_data_enhancer.py
+
+# Dataset analysis and statistics
+.venv\Scripts\python.exe data_processing\analyze_datasets.py
+
+# Performance optimization analysis
+.venv\Scripts\python.exe data_processing\performance_optimization.py
+```
+
+**Chatbot Training:**
 ```powershell
 # Quick run
 .venv\Scripts\python.exe scripts\train_chatbot.py -e 6 -bs 256 --vocab 50000 --seq-len 96 --temperature 0.05 --lr 5e-4 --augment --aug-repeats 1 --aug-prob 0.35
@@ -490,17 +609,43 @@ Notifications
 
 ## 14) Testing & Validation
 
-Smoke tests
+**NEW ORGANIZED TESTING STRUCTURE:**
 
+### API Tests (`api_tests/`)
+- `api_tests/comprehensive_api_test.py` — Complete API testing suite
+- `api_tests/test_api.py` — Basic API tests
+- `api_tests/test_api_integration.py` — API integration tests
+- `api_tests/comprehensive_test.py` — Comprehensive system tests
+- `api_tests/test_plant_health_api.py` — Plant health API tests
+- `api_tests/test_plant_health_integration.py` — Plant health integration tests
+- `api_tests/quick_plant_health_test.py` — Quick plant health testing
+
+### Legacy Smoke Tests (Scripts)
 - `agrisense_app/scripts/api_smoke_client.py` and `scripts/test_backend_inprocess.py`
 - Basic manual checks: `/health`, `/ready`, `/metrics`, simple `/recommend`
-- Chatbot: `/chatbot/metrics` and `/chatbot/ask` with a few sample queries
+
+### Testing Commands
+```powershell
+# Comprehensive API testing
+.venv\Scripts\python.exe api_tests\comprehensive_api_test.py
+
+# Plant health specific tests
+.venv\Scripts\python.exe api_tests\test_plant_health_api.py
+
+# Quick health check
+.venv\Scripts\python.exe api_tests\quick_plant_health_test.py
+
+# Integration tests
+.venv\Scripts\python.exe api_tests\test_integration.py
+```
+
+### Chatbot Testing
+- `/chatbot/metrics` and `/chatbot/ask` with a few sample queries
 - HTTP eval: `.venv\Scripts\python.exe scripts\eval_chatbot_http.py --sample 100 --top_k 3`
 - Optional q-index build: `.venv\Scripts\python.exe scripts\build_chatbot_qindex.py`
 
-Quality gates (suggested)
-
-- Lint/type-check with Pyright (repo contains `pyrightconfig.json`)
+### Quality Gates (suggested)
+- Lint/type-check with Pyright (config: `configuration/pyrightconfig.json`)
 - Optional: mypy/ruff
 - Automated tests in CI (`.github/workflows/ci.yml` exists; extend as needed)
 
