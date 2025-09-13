@@ -1,0 +1,14 @@
+**/__pycache__/
+**/*.pyc
+**/.pytest_cache/
+node_modules/
+dist/
+.git/
+.gitignore
+.vscode/
+.DS_Store
+*.log
+agrisense_app/backend/sensors.db
+agrisense_app/backend/*.keras
+agrisense_app/backend/*.joblib
+agrisense_app/backend/weather_cache.csv

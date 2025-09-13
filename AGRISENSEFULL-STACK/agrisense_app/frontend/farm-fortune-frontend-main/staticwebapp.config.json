@@ -1,0 +1,14 @@
+{
+	"routes": [
+		{ "route": "/api/*", "allowedRoles": ["anonymous"] },
+		{ "route": "/assets/*", "headers": { "cache-control": "public, max-age=604800, immutable" } },
+		{ "route": "/*", "rewrite": "/index.html" }
+	],
+	"responseOverrides": {
+		"404": { "rewrite": "/index.html", "statusCode": 200 }
+	},
+	"globalHeaders": {
+		"Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+		"X-Content-Type-Options": "nosniff"
+	}
+}

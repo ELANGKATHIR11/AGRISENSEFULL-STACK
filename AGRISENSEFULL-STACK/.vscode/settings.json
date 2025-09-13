@@ -1,0 +1,14 @@
+{
+  "python.defaultInterpreterPath": "d:/AGRISENSE FULL-STACK/AGRISENSEFULL-STACK/.venv/Scripts/python.exe",
+  "python.analysis.extraPaths": [
+    "d:/AGRISENSE FULL-STACK/AGRISENSEFULL-STACK",
+    "d:/AGRISENSE FULL-STACK/AGRISENSEFULL-STACK/agrisense_app",
+    "d:/AGRISENSE FULL-STACK/AGRISENSEFULL-STACK/agrisense_pi_edge_minimal"
+  ],
+  "python.analysis.typeCheckingMode": "basic",
+  "python.testing.pytestArgs": [
+    "scripts"
+  ],
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true
+}
