@@ -35,3 +35,29 @@ Notes:
 - Large model artifacts are ignored in git to avoid GitHub file size limits.
 - Provide `.env` locally if needed; it's ignored by git.
 - CORS can be restricted by setting `ALLOWED_ORIGINS` (comma-separated) in env; defaults to `*` in dev.
+
+## Blueprint generation (auto sections)
+
+The repository contains a small helper that auto-generates parts of `AGRISENSE_BLUEPRINT.md` by importing the FastAPI app and scanning models/env.
+
+Run it from the repo root using the project's virtualenv. If you don't have heavy ML runtimes installed (TensorFlow/PyTorch) or want to avoid loading large models at import-time, set `AGRISENSE_DISABLE_ML=1` when running.
+
+PowerShell (Windows):
+
+```powershell
+# activate venv then run generator with ML disabled
+& .\.venv\Scripts\Activate.ps1
+setx AGRISENSE_DISABLE_ML 1
+.venv\Scripts\python.exe scripts\generate_blueprint.py
+```
+
+POSIX (macOS / Linux):
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+export AGRISENSE_DISABLE_ML=1
+python scripts/generate_blueprint.py
+```
+
+The script will rewrite AUTO sections in `AGRISENSE_BLUEPRINT.md` when successful.

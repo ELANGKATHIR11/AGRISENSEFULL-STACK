@@ -1,4 +1,21 @@
 {
+  "preferred_order": [
+    "disease_model.joblib",
+    "disease_model_enhanced.joblib",
+    "disease_tf.keras"
+  ],
+  "models": {
+    "disease_model.joblib": {
+      "name": "my-model",
+      "type": "joblib",
+      "description": "My trained model",
+      "labels": [
+        "healthy",
+        "late_blight",
+        "powdery_mildew"
+      ]
+    }
+  },
   "trained_on": "2025-08-25T15:32:02.292408Z",
   "sklearn_version": "1.6.1",
   "feature_order": [

@@ -2,21 +2,43 @@ import os
 import json
 import warnings
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union, cast
+from typing import Any, Dict, List, Optional, Union, cast, TYPE_CHECKING
 
-import joblib  # type: ignore
-import numpy as np
-import pandas as pd
-from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from sklearn.preprocessing import LabelEncoder, StandardScaler
+# Lazy ML imports: these will be populated inside the class initializer
+# to avoid heavy import-time overhead when the module is imported by
+# tooling (generators, CI, etc.). Set placeholders here so runtime checks
+# can determine whether those libraries are available.
+joblib = None  # type: ignore
+np = None
+pd = None
+RandomForestClassifier = None
+RandomForestRegressor = None
+LabelEncoder = None
+StandardScaler = None
+
+if TYPE_CHECKING:
+    # Make types available to static checkers without importing heavy ML libs at runtime
+    import joblib as _joblib  # type: ignore
+    import numpy as _np
+    import pandas as _pd
+    from sklearn.ensemble import RandomForestClassifier as _RFC, RandomForestRegressor as _RFR
+    from sklearn.preprocessing import LabelEncoder as _LabelEncoder, StandardScaler as _StandardScaler  # type: ignore
+    # Expose for type annotations
+    joblib = _joblib  # type: ignore
+    np = _np  # type: ignore
+    pd = _pd  # type: ignore
+    RandomForestClassifier = _RFC  # type: ignore
+    RandomForestRegressor = _RFR  # type: ignore
+    LabelEncoder = _LabelEncoder  # type: ignore
+    StandardScaler = _StandardScaler  # type: ignore
 
 warnings.filterwarnings("ignore")
 
 HERE = os.path.dirname(__file__)
 
-# Type aliases
-SensorData = Dict[str, Union[float, int, str]]
-Recommendation = Dict[str, Union[str, float]]
+# small safe helpers to avoid calling attributes on None (when numpy/pandas/etc. aren't available)
+def _get_np():
+    return globals().get("np")
 
 
 class SmartFarmingRecommendationSystem:
@@ -28,17 +50,62 @@ class SmartFarmingRecommendationSystem:
     - Provides recommendations and actionable suggestions
     """
 
-    def __init__(self, dataset_path: str = "india_crop_dataset.csv") -> None:
+    def       
         self.dataset_path: str = dataset_path
-        self.crop_data: Optional[pd.DataFrame] = None
-        self.yield_model: Optional[RandomForestRegressor] = None
-        self.crop_classifier: Optional[RandomForestClassifier] = None
+
+        # Lazy-import ML libraries to avoid heavy import-time cost. When
+        # AGRISENSE_DISABLE_ML is set we skip importing ML packages so the
+        # module can be imported safely in CI or small tooling processes.
+        if os.getenv("AGRISENSE_DISABLE_ML"):
+            print(
+                "AGRISENSE_DISABLE_ML set: skipping ML library imports in SmartFarmingRecommendationSystem.__init__"
+            )
+        else:
+            try:
+                import joblib as _joblib  # type: ignore
+                import numpy as _np
+                import pandas as _pd
+                from sklearn.ensemble import (
+                    RandomForestClassifier as _RFC,
+                    RandomForestRegressor as _RFR,
+                )
+                from sklearn.preprocessing import (
+                    LabelEncoder as _LabelEncoder,
+                    StandardScaler as _StandardScaler,
+                )
+
+                globals()["joblib"] = _joblib
+                globals()["np"] = _np
+                globals()["pd"] = _pd
+                globals()["RandomForestClassifier"] = _RFC
+                globals()["RandomForestRegressor"] = _RFR
+                globals()["LabelEncoder"] = _LabelEncoder
+                globals()["StandardScaler"] = _StandardScaler
+            except Exception as e:
+                print(f"SmartFarmingRecommendationSystem: failed lazy ML imports: {e}")
+
+        # Runtime-safe storage (use Any where concrete ML classes may be absent)
+        self.crop_data: Optional[Any] = None
+        self.yield_model: Optional[Any] = None
+        self.crop_classifier: Optional[Any] = None
         self.water_optimizer: Optional[Any] = None
         self.fertilizer_optimizer: Optional[Any] = None
-        self.scaler: StandardScaler = StandardScaler()
-        self.label_encoder: LabelEncoder = LabelEncoder()
-        self.soil_encoder: Optional[LabelEncoder] = None
-        self.crop_encoder: Optional[LabelEncoder] = None
+        self.scaler: Optional[Any] = None
+        self.label_encoder: Optional[Any] = None
+        self.soil_encoder: Optional[Any] = None
+        self.crop_encoder: Optional[Any] = None
+
+        # Instantiate scaler/label encoder only if the classes were successfully imported
+        if globals().get("StandardScaler") is not None:
+            try:
+                self.scaler = _instantiate_cls("StandardScaler")
+            except Exception:
+                self.scaler = None
+        if globals().get("LabelEncoder") is not None:
+            try:
+                self.label_encoder = _instantiate_cls("LabelEncoder")
+            except Exception:
+                self.label_encoder = None
 
         # Optional TensorFlow models (loaded if available)
         self.tf_enabled: bool = False
@@ -49,16 +116,17 @@ class SmartFarmingRecommendationSystem:
         self.load_dataset()
         self.prepare_models()
         self._maybe_load_tf_models()
-
+        # Lazy-import ML libraries to avoid heavy import-time cost. When
     def load_dataset(self) -> None:
         """Load crop dataset from CSV if available, else use a small sample."""
         csv_path = self.dataset_path
         if not os.path.isabs(csv_path):
             csv_path = os.path.join(HERE, csv_path)
 
-        if os.path.exists(csv_path):
+        # Try to read CSV only if pandas is available
+        if globals().get("pd") is not None and os.path.exists(csv_path):
             try:
-                df: pd.DataFrame = pd.read_csv(csv_path, encoding="utf-8-sig")  # type: ignore[call-overload]
+                df = pd.read_csv(csv_path, encoding="utf-8-sig")  # type: ignore[call-overload]
                 required_cols: List[str] = [
                     "Crop",
                     "Soil_Type",
@@ -78,9 +146,13 @@ class SmartFarmingRecommendationSystem:
                 if missing:
                     raise ValueError(f"Dataset missing columns: {missing}")
                 self.crop_data = df[required_cols].copy()
-                print(
-                    f"Loaded dataset from {os.path.basename(csv_path)} with shape {self.crop_data.shape}"
-                )
+                try:
+                    shape_info = getattr(self.crop_data, "shape", None)
+                    print(
+                        f"Loaded dataset from {os.path.basename(csv_path)} with shape {shape_info}"
+                    )
+                except Exception:
+                    print(f"Loaded dataset from {os.path.basename(csv_path)}")
                 return
             except Exception as e:
                 print(
@@ -124,13 +196,14 @@ class SmartFarmingRecommendationSystem:
             "Expected_Yield_tonnes_ha": [4.5, 3.2, 70, 1.8, 2.5, 1.2, 1.1, 0.9, 0.8, 2.5],
             "Water_Efficiency_Index": [0.85, 0.92, 0.8, 0.88, 0.83, 0.9, 0.93, 0.95, 0.89, 0.87],
             "Fertilizer_Efficiency_Index": [0.9, 0.88, 0.85, 0.87, 0.85, 0.92, 0.9, 0.94, 0.91, 0.86],
-        }
-        self.crop_data = pd.DataFrame(data)
-        print("Loaded sample dataset (CSV not found)")
-        print(f"Dataset shape: {self.crop_data.shape}")
-
     def prepare_models(self) -> None:
         assert self.crop_data is not None, "Dataset not loaded"
+
+        # If essential ML libraries are not available, skip model preparation gracefully.
+        required = ["joblib", "np", "pd", "RandomForestRegressor", "RandomForestClassifier", "LabelEncoder"]
+        if any(globals().get(r) is None for r in required):
+            print("ML libraries not fully available; skipping model training/loading.")
+            return
 
         # Attempt to load cached models/encoders first to avoid retraining on every cold start
         yield_path = os.path.join(HERE, "yield_prediction_model.joblib")
@@ -139,28 +212,32 @@ class SmartFarmingRecommendationSystem:
         crop_enc_path = os.path.join(HERE, "crop_encoder.joblib")
         try:
             if all(os.path.exists(p) for p in [yield_path, clf_path, soil_enc_path, crop_enc_path]):
-                self.yield_model = cast(Any, joblib).load(yield_path)  # type: ignore[attr-defined]
-                self.crop_classifier = cast(Any, joblib).load(clf_path)  # type: ignore[attr-defined]
-                self.soil_encoder = cast(Any, joblib).load(soil_enc_path)  # type: ignore[attr-defined]
-                self.crop_encoder = cast(Any, joblib).load(crop_enc_path)  # type: ignore[attr-defined]
-                # Also ensure encoded columns exist for feature building when needed
-                if "Soil_Type_Encoded" not in self.crop_data.columns:
-                    assert self.soil_encoder is not None
-                    self.crop_data["Soil_Type_Encoded"] = cast(LabelEncoder, self.soil_encoder).transform(self.crop_data["Soil_Type"])  # type: ignore[index]
-                if "Crop_Encoded" not in self.crop_data.columns:
-                    assert self.crop_encoder is not None
-                    self.crop_data["Crop_Encoded"] = cast(LabelEncoder, self.crop_encoder).transform(self.crop_data["Crop"])  # type: ignore[index]
+                jb = globals().get("joblib")
+                if jb is None:
+                    raise RuntimeError("joblib not available to load models")
+                self.yield_model = cast(Any, jb).load(yield_path)  # type: ignore[attr-defined]
+                self.crop_classifier = cast(Any, jb).load(clf_path)  # type: ignore[attr-defined]
+                self.soil_encoder = cast(Any, jb).load(soil_enc_path)  # type: ignore[attr-defined]
+                self.crop_encoder = cast(Any, jb).load(crop_enc_path)  # type: ignore[attr-defined]
+                # Also ensure encoded columns exist for feature building when needed (pandas case)
+                if hasattr(self.crop_data, "columns"):
+                    if "Soil_Type_Encoded" not in self.crop_data.columns:
+                        assert self.soil_encoder is not None
+                        self.crop_data["Soil_Type_Encoded"] = cast(Any, self.soil_encoder).transform(self.crop_data["Soil_Type"])  # type: ignore[index]
+                    if "Crop_Encoded" not in self.crop_data.columns:
+                        assert self.crop_encoder is not None
+                        self.crop_data["Crop_Encoded"] = cast(Any, self.crop_encoder).transform(self.crop_data["Crop"])  # type: ignore[index]
                 print("Loaded cached ML models and encoders.")
                 return
         except Exception as e:
             print(f"Failed to load cached models, will retrain: {e}")
 
-        # Encode categorical variables for training
-        soil_encoder: LabelEncoder = LabelEncoder()
+        # Encode categorical variables for training (pandas assumed here because ML libs exist)
+        soil_encoder = _instantiate_cls("LabelEncoder")
         self.crop_data["Soil_Type_Encoded"] = soil_encoder.fit_transform(
             self.crop_data["Soil_Type"]
         )
-        crop_encoder: LabelEncoder = LabelEncoder()
+        crop_encoder = _instantiate_cls("LabelEncoder")
         self.crop_data["Crop_Encoded"] = crop_encoder.fit_transform(
             self.crop_data["Crop"]
         )
@@ -178,19 +255,19 @@ class SmartFarmingRecommendationSystem:
             "Soil_Type_Encoded",
         ]
 
-        X: pd.DataFrame = self.crop_data[feature_columns]
+        X = self.crop_data[feature_columns]
 
         # Train yield prediction model
-        y_yield: pd.Series = self.crop_data["Expected_Yield_tonnes_ha"]
-        self.yield_model = RandomForestRegressor(n_estimators=100, random_state=42)
-        X_arr = np.asarray(X, dtype=float)
-        y_yield_arr = np.asarray(y_yield, dtype=float)
+        y_yield = self.crop_data["Expected_Yield_tonnes_ha"]
+        self.yield_model = _instantiate_cls("RandomForestRegressor", n_estimators=100, random_state=42)
+        X_arr = _asarray(X, dtype=float)
+        y_yield_arr = _asarray(y_yield, dtype=float)
         cast(Any, self.yield_model).fit(X_arr, y_yield_arr)
 
         # Train crop classification model
-        y_crop: pd.Series = self.crop_data["Crop_Encoded"]
-        self.crop_classifier = RandomForestClassifier(n_estimators=100, random_state=42)
-        y_crop_arr = np.asarray(y_crop, dtype=int)
+        y_crop = self.crop_data["Crop_Encoded"]
+        self.crop_classifier = _instantiate_cls("RandomForestClassifier", n_estimators=100, random_state=42)
+        y_crop_arr = _asarray(y_crop, dtype=int)
         cast(Any, self.crop_classifier).fit(X_arr, y_crop_arr)
 
         # Store encoders
@@ -198,30 +275,208 @@ class SmartFarmingRecommendationSystem:
         self.crop_encoder = crop_encoder
 
         # Save models and encoders for next runs
-        jb: Any = joblib
-        jb.dump(self.yield_model, yield_path)
-        jb.dump(self.crop_classifier, clf_path)
-        jb.dump(self.soil_encoder, soil_enc_path)
-        jb.dump(self.crop_encoder, crop_enc_path)
+        jb: Any = globals().get("joblib")
+        if jb is not None:
+            jb.dump(self.yield_model, yield_path)
+            jb.dump(self.crop_classifier, clf_path)
+            jb.dump(self.soil_encoder, soil_enc_path)
+            jb.dump(self.crop_encoder, crop_enc_path)
 
         print("ML models trained and saved successfully!")
-
-    def _maybe_load_tf_models(self) -> None:
-        """Load optional TensorFlow models if available; otherwise keep TF disabled."""
+                1200,
+                500,
+                300,
+                350,
+                650,
+                500,
+            ],
+            "Moisture_Optimal_percent": [70, 60, 75, 55, 80, 60, 55, 50, 60, 65],
+            "Humidity_Optimal_percent": [80, 65, 80, 65, 90, 70, 60, 60, 70, 70],
+            "Expected_Yield_tonnes_ha": [
+                4.5,
+                3.2,
+                70,
+                1.8,
+                2.5,
+                1.2,
+                1.1,
+                0.9,
+                0.8,
+                2.5,
+            ],
+            "Water_Efficiency_Index": [
+    def get_crop_recommendations(self, sensor_data: SensorData) -> List[Recommendation]:
         try:
-            import tensorflow as tf  # type: ignore  # noqa: F401
-            if not hasattr(tf, "keras"):
-                raise ImportError("tensorflow.keras not available")
-        except Exception as e:
-            print(f"TensorFlow not available: {e}. Proceeding without TF models.")
-            return
+            assert self.crop_data is not None, "Dataset not loaded"
 
+            current_ph = float(sensor_data.get("ph", 7.0))
+            current_n = float(sensor_data.get("nitrogen", 100))
+            current_p = float(sensor_data.get("phosphorus", 40))
+            current_k = float(sensor_data.get("potassium", 40))
+            current_temp = float(sensor_data.get("temperature", 25))
+            current_water = float(sensor_data.get("water_level", 500))
+            current_moisture = float(sensor_data.get("moisture", 60))
+            current_humidity = float(sensor_data.get("humidity", 70))
+            soil_type = str(sensor_data.get("soil_type", "Loam"))
+
+            # Encode soil type for classic models (safe handling if encoder present)
+            try:
+                if self.soil_encoder is None:
+                    raise ValueError("Soil encoder not initialized")
+                transformed = self.soil_encoder.transform([soil_type])
+                # transformed may be numpy array or list
+                try:
+                    first_val = transformed[0]
+                except Exception:
+                    first_val = transformed
+                _soil_encoded = int(first_val) if first_val is not None else 0
+            except Exception:
+                _soil_encoded = 0  # Default encoding
+            # use variable to avoid unused warning
+            _ = _soil_encoded
+
+            def _tf_soil_ix(soil: str) -> int:
+                if self.tf_enabled and self.tf_meta and "soil_types" in self.tf_meta:
+                    try:
+                        return int(self.tf_meta["soil_types"].index(str(soil)))
+                    except ValueError:
+                        return 0
+                return 0
+
+            prob_by_crop: Dict[str, float] = {}
+            if self.tf_enabled and self.tf_crop_model is not None and self.tf_meta is not None:
+                try:
+                    soil_ix = _tf_soil_ix(soil_type)
+                    water_req_input = float(_clip(current_water, 0, 3000))
+                    X_clf = _array(
+                        [
+                            [
+                                current_ph,
+                                current_n,
+                                current_p,
+                                current_k,
+                                current_temp,
+                                water_req_input,
+                                current_moisture,
+                                current_humidity,
+                                float(soil_ix),
+                            ]
+                        ],
+                        dtype=getattr(_get_np(), "float32", None),
+                    )
+                    probs = self.tf_crop_model.predict(X_clf, verbose=0)[0]
+                    crops: List[str] = self.tf_meta.get("crops", [])
+                    for i, c in enumerate(crops):
+                        prob_by_crop[c] = float(probs[i]) if i < len(probs) else 0.0
+                except Exception as e:
+                    print(f"TF crop probability inference failed: {e}")
+
+            crop_scores: List[Recommendation] = []
+            # Support both pandas DataFrame and plain Python list of dicts
+            if hasattr(self.crop_data, "iterrows"):
+                iterator = self.crop_data.iterrows()
+                extract = lambda row, key: row[key]
+            else:
+                iterator = enumerate(self.crop_data)
+                extract = lambda row, key: row[key]
+
+            for _, crop in iterator:
+                # crop may be a pandas Series or a plain dict
+                ph_score = 1 - abs(current_ph - float(extract(crop, "pH_Optimal"))) / 2.0
+                n_score = 1 - abs(current_n - float(extract(crop, "Nitrogen_Optimal_kg_ha"))) / 200.0
+                p_score = 1 - abs(current_p - float(extract(crop, "Phosphorus_Optimal_kg_ha"))) / 100.0
+                k_score = 1 - abs(current_k - float(extract(crop, "Potassium_Optimal_kg_ha"))) / 100.0
+                temp_score = 1 - abs(current_temp - float(extract(crop, "Temperature_Optimal_C"))) / 20.0
+                moisture_score = 1 - abs(current_moisture - float(extract(crop, "Moisture_Optimal_percent"))) / 50.0
+                humidity_score = 1 - abs(current_humidity - float(extract(crop, "Humidity_Optimal_percent"))) / 50.0
+
+                similarity_score = float(
+                    _mean(
+                        [
+                            ph_score,
+                            n_score,
+                            p_score,
+                            k_score,
+                            temp_score,
+                            moisture_score,
+                            humidity_score,
+                        ]
+                    )
+                )
+                similarity_score = max(0.0, similarity_score)
+
+                expected_yield = float(extract(crop, "Expected_Yield_tonnes_ha"))
+                if (
+                    self.tf_enabled
+                    and self.tf_yield_model is not None
+                    and self.tf_meta is not None
+                ):
+                    try:
+                        soil_ix = _tf_soil_ix(soil_type)
+                        X_reg = _array(
+                            [
+                                [
+                                    float(extract(crop, "pH_Optimal")),
+                                    float(extract(crop, "Nitrogen_Optimal_kg_ha")),
+                                    float(extract(crop, "Phosphorus_Optimal_kg_ha")),
+                                    float(extract(crop, "Potassium_Optimal_kg_ha")),
+                                    float(extract(crop, "Temperature_Optimal_C")),
+                                    float(extract(crop, "Water_Requirement_mm")),
+                                    float(extract(crop, "Moisture_Optimal_percent")),
+                                    float(extract(crop, "Humidity_Optimal_percent")),
+                                    float(soil_ix),
+                                ]
+                            ],
+                            dtype=getattr(_get_np(), "float32", None),
+                        )
+                        y_pred = self.tf_yield_model.predict(X_reg, verbose=0)[0][0]
+                        expected_yield = float(max(0.0, float(y_pred)))
+                    except Exception as e:
+                        try:
+                            crop_name = str(extract(crop, "Crop"))
+                        except Exception:
+                            crop_name = "<unknown>"
+                        print(f"TF yield inference failed for {crop_name}: {e}")
+
+                prob_component = prob_by_crop.get(str(extract(crop, "Crop")), None)
+                if prob_component is None:
+                    final_score = similarity_score
+                else:
+                    eff = float(
+                        extract(crop, "Water_Efficiency_Index") if isinstance(crop, dict) else crop.get("Water_Efficiency_Index", 0.0)
+                        + extract(crop, "Fertilizer_Efficiency_Index") if isinstance(crop, dict) else crop.get("Fertilizer_Efficiency_Index", 0.0)
+    def get_farming_suggestions(self, sensor_data: SensorData, selected_crop: str) -> Dict[str, Any]:
         try:
-            y_path = os.path.join(HERE, "yield_tf.keras")
-            c_path = os.path.join(HERE, "crop_tf.keras")
-            meta_path = os.path.join(HERE, "crop_labels.json")
-            if os.path.exists(y_path) and os.path.exists(c_path) and os.path.exists(meta_path):
-                from tensorflow import keras  # type: ignore
+            assert self.crop_data is not None, "Dataset not loaded"
+            # Support both pandas DataFrame and plain list fallback
+            if hasattr(self.crop_data, "loc") or hasattr(self.crop_data, "iloc") or hasattr(self.crop_data, "columns"):
+                matches = self.crop_data[self.crop_data["Crop"] == selected_crop]
+                if getattr(matches, "empty", False):
+                    return {"error": f"Crop {selected_crop} not found in dataset"}
+                crop_info = matches.iloc[0]
+                get_val = lambda key: crop_info[key]
+            else:
+                matches = [r for r in self.crop_data if r.get("Crop") == selected_crop]
+                if not matches:
+                    return {"error": f"Crop {selected_crop} not found in dataset"}
+                crop_info = matches[0]
+                get_val = lambda key: crop_info.get(key)
+
+            suggestions: Dict[str, Any] = {
+                "crop": selected_crop,
+                "current_conditions": sensor_data,
+                "optimal_conditions": {
+                    "ph": get_val("pH_Optimal"),
+                    "nitrogen": get_val("Nitrogen_Optimal_kg_ha"),
+                    "phosphorus": get_val("Phosphorus_Optimal_kg_ha"),
+                    "potassium": get_val("Potassium_Optimal_kg_ha"),
+                    "temperature": get_val("Temperature_Optimal_C"),
+                    "moisture": get_val("Moisture_Optimal_percent"),
+                    "humidity": get_val("Humidity_Optimal_percent"),
+                    "water_requirement": get_val("Water_Requirement_mm"),
+                },
+                "recommendations": [],
+            }
 
                 self.tf_yield_model = keras.models.load_model(y_path)  # type: ignore[attr-defined]
                 self.tf_crop_model = keras.models.load_model(c_path)  # type: ignore[attr-defined]
@@ -230,13 +485,17 @@ class SmartFarmingRecommendationSystem:
                 self.tf_enabled = True
                 print("Loaded TensorFlow crop models: yield_tf.keras, crop_tf.keras")
             else:
-                missing = [p for p in [y_path, c_path, meta_path] if not os.path.exists(p)]
+                missing = [
+                    p for p in [y_path, c_path, meta_path] if not os.path.exists(p)
+                ]
                 if missing:
                     print(
                         f"TensorFlow crop models not found, missing: {', '.join(os.path.basename(m) for m in missing)}"
                     )
         except Exception as e:
-            print(f"Failed to load TensorFlow models: {e}. Proceeding without TF models.")
+            print(
+                f"Failed to load TensorFlow models: {e}. Proceeding without TF models."
+            )
 
     def get_crop_recommendations(self, sensor_data: SensorData) -> List[Recommendation]:
         try:
@@ -257,7 +516,9 @@ class SmartFarmingRecommendationSystem:
                 if self.soil_encoder is None:
                     raise ValueError("Soil encoder not initialized")
                 transformed = np.asarray(self.soil_encoder.transform([soil_type]))
-                _soil_encoded = int(transformed[0].item() if transformed.size > 0 else 0)
+                _soil_encoded = int(
+                    transformed[0].item() if transformed.size > 0 else 0
+                )
             except Exception:
                 _soil_encoded = 0  # Default encoding
 
@@ -270,7 +531,11 @@ class SmartFarmingRecommendationSystem:
                 return 0
 
             prob_by_crop: Dict[str, float] = {}
-            if self.tf_enabled and self.tf_crop_model is not None and self.tf_meta is not None:
+            if (
+                self.tf_enabled
+                and self.tf_crop_model is not None
+                and self.tf_meta is not None
+            ):
                 try:
                     soil_ix = _tf_soil_ix(soil_type)
                     water_req_input = float(np.clip(current_water, 0, 3000))
@@ -300,12 +565,28 @@ class SmartFarmingRecommendationSystem:
             crop_scores: List[Recommendation] = []
             for _, crop in self.crop_data.iterrows():
                 ph_score = 1 - abs(current_ph - float(crop["pH_Optimal"])) / 2.0
-                n_score = 1 - abs(current_n - float(crop["Nitrogen_Optimal_kg_ha"])) / 200.0
-                p_score = 1 - abs(current_p - float(crop["Phosphorus_Optimal_kg_ha"])) / 100.0
-                k_score = 1 - abs(current_k - float(crop["Potassium_Optimal_kg_ha"])) / 100.0
-                temp_score = 1 - abs(current_temp - float(crop["Temperature_Optimal_C"])) / 20.0
-                moisture_score = 1 - abs(current_moisture - float(crop["Moisture_Optimal_percent"])) / 50.0
-                humidity_score = 1 - abs(current_humidity - float(crop["Humidity_Optimal_percent"])) / 50.0
+                n_score = (
+                    1 - abs(current_n - float(crop["Nitrogen_Optimal_kg_ha"])) / 200.0
+                )
+                p_score = (
+                    1 - abs(current_p - float(crop["Phosphorus_Optimal_kg_ha"])) / 100.0
+                )
+                k_score = (
+                    1 - abs(current_k - float(crop["Potassium_Optimal_kg_ha"])) / 100.0
+                )
+                temp_score = (
+                    1 - abs(current_temp - float(crop["Temperature_Optimal_C"])) / 20.0
+                )
+                moisture_score = (
+                    1
+                    - abs(current_moisture - float(crop["Moisture_Optimal_percent"]))
+                    / 50.0
+                )
+                humidity_score = (
+                    1
+                    - abs(current_humidity - float(crop["Humidity_Optimal_percent"]))
+                    / 50.0
+                )
 
                 similarity_score = float(
                     np.mean(
@@ -319,20 +600,18 @@ class SmartFarmingRecommendationSystem:
                             humidity_score,
                         ]
                     )
-                )
-                similarity_score = max(0.0, similarity_score)
-
-                expected_yield = float(crop["Expected_Yield_tonnes_ha"])
-                if (
-                    self.tf_enabled
-                    and self.tf_yield_model is not None
-                    and self.tf_meta is not None
-                ):
-                    try:
-                        soil_ix = _tf_soil_ix(soil_type)
-                        X_reg = np.array(
-                            [
-                                [
+    def simulate_iot_data(self) -> Dict[str, Union[float, str]]:
+        return {
+            "ph": _rand_normal(6.8, 0.5),
+            "nitrogen": _rand_normal(100, 20),
+            "phosphorus": _rand_normal(40, 10),
+            "potassium": _rand_normal(40, 10),
+            "temperature": _rand_normal(25, 5),
+            "water_level": _rand_normal(500, 100),
+            "moisture": _rand_normal(60, 10),
+            "humidity": _rand_normal(70, 10),
+            "soil_type": _rand_choice(["Loam", "Clay Loam", "Sandy Loam", "Sandy", "Black Cotton"]),
+        }
                                     float(crop["pH_Optimal"]),
                                     float(crop["Nitrogen_Optimal_kg_ha"]),
                                     float(crop["Phosphorus_Optimal_kg_ha"]),
@@ -355,11 +634,16 @@ class SmartFarmingRecommendationSystem:
                 if prob_component is None:
                     final_score = similarity_score
                 else:
-                    eff = float(
-                        crop.get("Water_Efficiency_Index", 0.0)
-                        + crop.get("Fertilizer_Efficiency_Index", 0.0)
-                    ) / 2.0
-                    final_score = 0.6 * similarity_score + 0.3 * float(prob_component) + 0.1 * eff
+                    eff = (
+                        float(
+                            crop.get("Water_Efficiency_Index", 0.0)
+                            + crop.get("Fertilizer_Efficiency_Index", 0.0)
+                        )
+                        / 2.0
+                    )
+                    final_score = (
+                        0.6 * similarity_score + 0.3 * float(prob_component) + 0.1 * eff
+                    )
                 final_score = float(np.clip(final_score, 0.0, 1.0))
 
                 crop_scores.append(
@@ -368,7 +652,9 @@ class SmartFarmingRecommendationSystem:
                         "suitability_score": final_score,
                         "expected_yield": expected_yield,
                         "water_efficiency": float(crop["Water_Efficiency_Index"]),
-                        "fertilizer_efficiency": float(crop["Fertilizer_Efficiency_Index"]),
+                        "fertilizer_efficiency": float(
+                            crop["Fertilizer_Efficiency_Index"]
+                        ),
                     }
                 )
 
@@ -378,7 +664,9 @@ class SmartFarmingRecommendationSystem:
             print(f"Error in crop recommendations: {e}")
             return []
 
-    def get_farming_suggestions(self, sensor_data: SensorData, selected_crop: str) -> Dict[str, Any]:
+    def get_farming_suggestions(
+        self, sensor_data: SensorData, selected_crop: str
+    ) -> Dict[str, Any]:
         try:
             assert self.crop_data is not None, "Dataset not loaded"
             matches = self.crop_data[self.crop_data["Crop"] == selected_crop]
@@ -411,7 +699,11 @@ class SmartFarmingRecommendationSystem:
                             "parameter": "pH",
                             "action": "increase",
                             "suggestion": f"Add lime to increase pH from {current_ph:.1f} to optimal {optimal_ph:.1f}",
-                            "priority": "high" if abs(current_ph - optimal_ph) > 1.0 else "medium",
+                            "priority": (
+                                "high"
+                                if abs(current_ph - optimal_ph) > 1.0
+                                else "medium"
+                            ),
                         }
                     )
                 else:
@@ -420,7 +712,11 @@ class SmartFarmingRecommendationSystem:
                             "parameter": "pH",
                             "action": "decrease",
                             "suggestion": f"Add sulfur or organic matter to decrease pH from {current_ph:.1f} to optimal {optimal_ph:.1f}",
-                            "priority": "high" if abs(current_ph - optimal_ph) > 1.0 else "medium",
+                            "priority": (
+                                "high"
+                                if abs(current_ph - optimal_ph) > 1.0
+                                else "medium"
+                            ),
                         }
                     )
 
@@ -544,18 +840,22 @@ class SmartFarmingRecommendationSystem:
             "moisture": float(np.random.normal(60, 10)),
             "humidity": float(np.random.normal(70, 10)),
             "soil_type": str(
-                np.random.choice(["Loam", "Clay Loam", "Sandy Loam", "Sandy", "Black Cotton"])
+                np.random.choice(
+                    ["Loam", "Clay Loam", "Sandy Loam", "Sandy", "Black Cotton"]
+                )
             ),
         }
 
     def generate_report(self, sensor_data: SensorData) -> None:
         print("=" * 60)
-        print("\U0001F331 SMART FARMING RECOMMENDATION REPORT \U0001F331")
+        print("\U0001f331 SMART FARMING RECOMMENDATION REPORT \U0001f331")
         print("=" * 60)
-        print(f"\U0001F4C5 Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print(
+            f"\U0001f4c5 Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        )
         print()
 
-        print("\U0001F4CA CURRENT SENSOR READINGS:")
+        print("\U0001f4ca CURRENT SENSOR READINGS:")
         print("-" * 30)
         for key, value in sensor_data.items():
             if isinstance(value, float):
@@ -564,9 +864,11 @@ class SmartFarmingRecommendationSystem:
                 print(f"{key.replace('_', ' ').title()}: {value}")
         print()
 
-        print("\U0001F33E TOP CROP RECOMMENDATIONS:")
+        print("\U0001f33e TOP CROP RECOMMENDATIONS:")
         print("-" * 30)
-        recommendations: List[Recommendation] = self.get_crop_recommendations(sensor_data)
+        recommendations: List[Recommendation] = self.get_crop_recommendations(
+            sensor_data
+        )
 
         for i, rec in enumerate(recommendations[:3], 1):
             print(f"{i}. {rec['crop']}")
@@ -578,7 +880,7 @@ class SmartFarmingRecommendationSystem:
 
         if recommendations:
             top_crop = str(recommendations[0]["crop"])
-            print(f"\U0001F3AF DETAILED SUGGESTIONS FOR {top_crop.upper()}:")
+            print(f"\U0001f3af DETAILED SUGGESTIONS FOR {top_crop.upper()}:")
             print("-" * 40)
 
             suggestions = self.get_farming_suggestions(sensor_data, top_crop)
@@ -588,23 +890,27 @@ class SmartFarmingRecommendationSystem:
                 for rec in recs:
                     priority: str = str(rec.get("priority", "low"))
                     priority_icon = (
-                        "\U0001F534" if priority == "high" else ("\U0001F7E1" if priority == "medium" else "\U0001F7E2")
+                        "\U0001f534"
+                        if priority == "high"
+                        else ("\U0001f7e1" if priority == "medium" else "\U0001f7e2")
                     )
                     param: str = str(rec.get("parameter", ""))
                     sugg: str = str(rec.get("suggestion", ""))
                     print(f"{priority_icon} {param.upper()}: {sugg}")
                     if "eco_friendly_option" in rec:
-                        print(f"   \U0001F333 Eco-friendly option: {rec['eco_friendly_option']}")
+                        print(
+                            f"   \U0001f333 Eco-friendly option: {rec['eco_friendly_option']}"
+                        )
                     print()
 
-            print("\U0001F4C8 EXPECTED BENEFITS:")
+            print("\U0001f4c8 EXPECTED BENEFITS:")
             print("-" * 20)
             benefits = cast(Dict[str, Any], suggestions.get("expected_benefits", {}))
             for key, value in benefits.items():
                 print(f"• {key.replace('_', ' ').title()}: {value}")
 
             print()
-            print("\U0001F30D SUSTAINABILITY TIPS:")
+            print("\U0001f30d SUSTAINABILITY TIPS:")
             print("-" * 25)
             print("• Use drip irrigation to reduce water usage by 30-50%")
             print("• Apply organic compost to improve soil health")
@@ -621,14 +927,18 @@ if __name__ == "__main__":
     farming_system.generate_report(sensor_data)
 
     print("\n" + "=" * 60)
-    print("\U0001F4CB EXAMPLE API USAGE:")
+    print("\U0001f4cb EXAMPLE API USAGE:")
     print("=" * 60)
 
     crop_recs = farming_system.get_crop_recommendations(sensor_data)
     print(f"Top 3 recommended crops: {[rec['crop'] for rec in crop_recs[:3]]}")
 
     suggestions = farming_system.get_farming_suggestions(sensor_data, "Rice")
-    print(f"Number of suggestions for Rice: {len(suggestions.get('recommendations', []))}")
+    print(
+        f"Number of suggestions for Rice: {len(suggestions.get('recommendations', []))}"
+    )
 
-    print("\n\U0001F389 System ready for IoT integration!")
-    print("\U0001F4A1 Connect your sensors and start getting real-time recommendations!")
+    print("\n\U0001f389 System ready for IoT integration!")
+    print(
+        "\U0001f4a1 Connect your sensors and start getting real-time recommendations!"
+    )
