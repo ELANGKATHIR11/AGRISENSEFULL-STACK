@@ -4,7 +4,8 @@ from typing import Any, Dict, cast
 
 def create_storage_app() -> Any:
     # Import Flask lazily so the module doesn't require it at import time
-    from . import data_store as ds
+    from .core import data_store as ds
+
     try:
         from flask import Flask, jsonify, request  # type: ignore[reportMissingImports]
     except Exception as e:

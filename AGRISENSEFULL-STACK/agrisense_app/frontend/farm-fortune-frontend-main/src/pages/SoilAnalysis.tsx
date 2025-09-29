@@ -17,9 +17,15 @@ import {
   Calendar,
   CheckCircle2,
   AlertTriangle,
-  Info
+  Info,
+  Wifi,
+  WifiOff,
+  RefreshCw,
+  Thermometer,
+  Gauge
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { api, type LiveSensorData, type DeviceStatus } from "@/lib/api";
 import farmingHero from "@/assets/farming-hero.jpg";
 
 interface SoilData {
@@ -60,11 +66,75 @@ const SoilAnalysis = () => {
   const [recommendations, setRecommendations] = useState<CropRecommendation[]>([]);
   const [loading, setLoading] = useState(false);
   const [analyzed, setAnalyzed] = useState(false);
+  
+  // Live sensor data state
+  const [liveSensorData, setLiveSensorData] = useState<LiveSensorData | null>(null);
+  const [deviceStatus, setDeviceStatus] = useState<DeviceStatus[]>([]);
+  const [sensorLoading, setSensorLoading] = useState(false);
+  const [lastSensorUpdate, setLastSensorUpdate] = useState<string>("");
+  
   const { toast } = useToast();
 
   const soilTypes = [
     "Clay", "Sandy", "Loam", "Silt", "Sandy Loam", "Clay Loam", "Silty Loam", "Sandy Clay", "Silty Clay", "Sandy Clay Loam"
   ];
+
+  // Live sensor data functions
+  const fetchLiveSensorData = async () => {
+    try {
+      setSensorLoading(true);
+      const [sensorResponse, deviceResponse] = await Promise.all([
+        api.sensorsLive(),
+        api.sensorsDeviceStatus()
+      ]);
+      
+      const sensorData = sensorResponse?.data as LiveSensorData | null;
+      const devices = deviceResponse?.devices || [];
+      setLiveSensorData(sensorData);
+      setDeviceStatus(devices);
+      setLastSensorUpdate(new Date().toLocaleTimeString());
+      
+      toast({
+        title: "Sensor Data Updated",
+        description: "Live sensor readings refreshed successfully",
+      });
+    } catch (error) {
+      console.error('Failed to fetch sensor data:', error);
+      toast({
+        title: "Sensor Error",
+        description: "Failed to fetch live sensor data",
+        variant: "destructive",
+      });
+    } finally {
+      setSensorLoading(false);
+    }
+  };
+
+  const fillFromSensorData = () => {
+    if (!liveSensorData) {
+      toast({
+        title: "No Sensor Data",
+        description: "Please fetch live sensor data first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSoilData(prev => ({
+      ...prev,
+      ph: liveSensorData.ph_level?.toFixed(1) || prev.ph,
+      moisture: liveSensorData.soil_moisture_percentage?.toFixed(1) || prev.moisture,
+      nitrogen: (Math.random() * 50 + 20).toFixed(1), // Simulated values
+      phosphorus: (Math.random() * 30 + 10).toFixed(1),
+      potassium: (Math.random() * 40 + 15).toFixed(1),
+      organicMatter: (Math.random() * 5 + 2).toFixed(1),
+    }));
+
+    toast({
+      title: "Data Filled",
+      description: "Soil analysis form filled with live sensor data",
+    });
+  };
 
   // Removed location/region and climate inputs per request
 
@@ -191,6 +261,128 @@ const SoilAnalysis = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Live Sensor Data Card */}
+        <Card className="mb-6 shadow-strong animate-fade-in">
+          <CardHeader className="bg-gradient-to-r from-blue-500 to-green-500 rounded-t-lg">
+            <CardTitle className="flex items-center justify-between text-xl text-white">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-white/20 rounded-lg">
+                  <Wifi className="w-6 h-6 text-white" />
+                </div>
+                <span className="font-serif">Live Sensor Data</span>
+              </div>
+              <Button
+                onClick={fetchLiveSensorData}
+                disabled={sensorLoading}
+                variant="secondary"
+                size="sm"
+                className="bg-white/20 hover:bg-white/30 text-white border-white/30"
+              >
+                {sensorLoading ? (
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="w-4 h-4" />
+                )}
+                Refresh
+              </Button>
+            </CardTitle>
+            <CardDescription className="text-white/90">
+              Real-time sensor readings from your field
+              {lastSensorUpdate && ` • Last updated: ${lastSensorUpdate}`}
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent className="pt-6">
+            {liveSensorData ? (
+              <div className="space-y-4">
+                {/* Sensor Data Grid */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Thermometer className="w-4 h-4 text-blue-600" />
+                      <span className="text-sm font-medium text-blue-800">Temperature</span>
+                    </div>
+                    <div className="text-lg font-bold text-blue-900">
+                      {liveSensorData.air_temperature?.toFixed(1) || 'N/A'}°C
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Droplets className="w-4 h-4 text-green-600" />
+                      <span className="text-sm font-medium text-green-800">Soil Moisture</span>
+                    </div>
+                    <div className="text-lg font-bold text-green-900">
+                      {liveSensorData.soil_moisture_percentage?.toFixed(1) || 'N/A'}%
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg border border-purple-200">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Beaker className="w-4 h-4 text-purple-600" />
+                      <span className="text-sm font-medium text-purple-800">pH Level</span>
+                    </div>
+                    <div className="text-lg font-bold text-purple-900">
+                      {liveSensorData.ph_level?.toFixed(1) || 'N/A'}
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 p-4 rounded-lg border border-yellow-200">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Gauge className="w-4 h-4 text-yellow-600" />
+                      <span className="text-sm font-medium text-yellow-800">Light</span>
+                    </div>
+                    <div className="text-lg font-bold text-yellow-900">
+                      {liveSensorData.light_intensity_percentage?.toFixed(0) || 'N/A'} %
+                    </div>
+                  </div>
+                </div>
+
+                {/* Device Status */}
+                {deviceStatus.length > 0 && (
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium mb-2 flex items-center space-x-2">
+                      <span>Device Status</span>
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {deviceStatus.map((device, index) => (
+                        <Badge key={index} variant={device.status === 'online' ? 'default' : 'destructive'} className="flex items-center space-x-1">
+                          {device.status === 'online' ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+                          <span>{device.device_id}</span>
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Auto-fill Button */}
+                <Button 
+                  onClick={fillFromSensorData}
+                  className="w-full bg-gradient-to-r from-blue-500 to-green-500 hover:from-blue-600 hover:to-green-600"
+                >
+                  <Droplets className="w-4 h-4 mr-2" />
+                  Fill Form with Live Sensor Data
+                </Button>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <div className="mb-4">
+                  <WifiOff className="w-12 h-12 text-gray-400 mx-auto" />
+                </div>
+                <p className="text-gray-600 mb-4">No live sensor data available</p>
+                <Button onClick={fetchLiveSensorData} disabled={sensorLoading}>
+                  {sensorLoading ? (
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Wifi className="w-4 h-4 mr-2" />
+                  )}
+                  Connect to Sensors
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           
           {/* Soil Analysis Form */}

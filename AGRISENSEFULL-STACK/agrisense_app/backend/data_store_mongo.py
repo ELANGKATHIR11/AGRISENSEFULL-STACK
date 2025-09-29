@@ -2,7 +2,6 @@ import os
 from typing import Any, Dict, List, Optional
 import datetime as dt
 
-from typing import TYPE_CHECKING, cast
 try:
     from pymongo import MongoClient, ASCENDING, DESCENDING  # type: ignore
     from pymongo.collection import Collection  # type: ignore
@@ -11,19 +10,14 @@ except Exception:  # pragma: no cover - optional dependency
     ASCENDING = 1  # type: ignore[assignment]
     DESCENDING = -1  # type: ignore[assignment]
     from typing import Any as _Any
+
     Collection = _Any  # type: ignore
 
 
 def _get_db():
     if MongoClient is None:
-        raise ImportError(
-            "pymongo is not installed. Set AGRISENSE_DB=sqlite or install pymongo to use Mongo storage."
-        )
-    uri = (
-        os.getenv("AGRISENSE_MONGO_URI")
-        or os.getenv("MONGO_URI")
-        or "mongodb://localhost:27017"
-    )
+        raise ImportError("pymongo is not installed. Set AGRISENSE_DB=sqlite or install pymongo to use Mongo storage.")
+    uri = os.getenv("AGRISENSE_MONGO_URI") or os.getenv("MONGO_URI") or "mongodb://localhost:27017"
     dbname = os.getenv("AGRISENSE_MONGO_DB") or os.getenv("MONGO_DB") or "agrisense"
     client = MongoClient(uri)
     db = client[dbname]
@@ -85,15 +79,11 @@ def insert_reco_snapshot(
         "zone_id": zone_id,
         "plant": plant,
         "water_liters": float(rec.get("water_liters", 0.0) or 0.0),
-        "expected_savings_liters": float(
-            rec.get("expected_savings_liters", 0.0) or 0.0
-        ),
+        "expected_savings_liters": float(rec.get("expected_savings_liters", 0.0) or 0.0),
         "fert_n_g": float(rec.get("fert_n_g", 0.0) or 0.0),
         "fert_p_g": float(rec.get("fert_p_g", 0.0) or 0.0),
         "fert_k_g": float(rec.get("fert_k_g", 0.0) or 0.0),
-        "yield_potential": (
-            float(yield_potential) if yield_potential is not None else None
-        ),
+        "yield_potential": (float(yield_potential) if yield_potential is not None else None),
         "water_source": rec.get("water_source"),
     }
     # Store tips as-is if present
@@ -109,9 +99,7 @@ def recent_reco(zone_id: str, limit: int = 100) -> List[Dict[str, Any]]:
 
 
 # --- tank levels ---
-def insert_tank_level(
-    tank_id: str, level_pct: float, volume_l: float, rainfall_mm: float = 0.0
-) -> None:
+def insert_tank_level(tank_id: str, level_pct: float, volume_l: float, rainfall_mm: float = 0.0) -> None:
     _tank.insert_one(
         {
             "ts": _iso_now(),
@@ -129,9 +117,7 @@ def latest_tank_level(tank_id: str = "T1") -> Optional[Dict[str, Any]]:
 
 
 # --- valve events ---
-def log_valve_event(
-    zone_id: str, action: str, duration_s: float = 0.0, status: str = "queued"
-) -> None:
+def log_valve_event(zone_id: str, action: str, duration_s: float = 0.0, status: str = "queued") -> None:
     _valves.insert_one(
         {
             "ts": _iso_now(),
@@ -143,9 +129,7 @@ def log_valve_event(
     )
 
 
-def recent_valve_events(
-    zone_id: Optional[str] = None, limit: int = 50
-) -> List[Dict[str, Any]]:
+def recent_valve_events(zone_id: Optional[str] = None, limit: int = 50) -> List[Dict[str, Any]]:
     filt: Dict[str, Any] = {"zone_id": zone_id} if zone_id else {}
     cur = _valves.find(filt).sort("ts", DESCENDING).limit(int(limit))
     return [_clean(d) for d in cur]
@@ -164,9 +148,7 @@ def insert_alert(zone_id: str, category: str, message: str, sent: bool = False) 
     )
 
 
-def recent_alerts(
-    zone_id: Optional[str] = None, limit: int = 50
-) -> List[Dict[str, Any]]:
+def recent_alerts(zone_id: Optional[str] = None, limit: int = 50) -> List[Dict[str, Any]]:
     filt: Dict[str, Any] = {"zone_id": zone_id} if zone_id else {}
     cur = _alerts.find(filt).sort("ts", DESCENDING).limit(int(limit))
     return [_clean(d) for d in cur]
@@ -177,9 +159,7 @@ def mark_alert_ack(ts: str) -> None:
 
 
 # --- rainwater ---
-def insert_rainwater_entry(
-    tank_id: str, collected_liters: float = 0.0, used_liters: float = 0.0
-) -> None:
+def insert_rainwater_entry(tank_id: str, collected_liters: float = 0.0, used_liters: float = 0.0) -> None:
     _rain.insert_one(
         {
             "ts": _iso_now(),

@@ -1,3 +1,5 @@
+from __future__ import annotations
+__all__ = ["extraterrestrial_radiation_ra", "et0_hargreaves"]
 """
 ET0 helpers (FAO-56/Hargreaves) for irrigation modeling.
 
@@ -8,8 +10,8 @@ Implements:
 References:
 - FAO-56 Irrigation and Drainage Paper 56 (Chapter 3, equations 21, 22-26, 52)
 """
-from __future__ import annotations
 import math
+
 
 def extraterrestrial_radiation_ra(lat_deg: float, day_of_year: int) -> float:
     """Compute extraterrestrial radiation Ra (MJ m^-2 day^-1) per FAO-56 Eq. 21.
@@ -27,10 +29,14 @@ def extraterrestrial_radiation_ra(lat_deg: float, day_of_year: int) -> float:
     ws = math.acos(max(-1.0, min(1.0, -math.tan(phi) * math.tan(delta))))
     # Solar constant Gsc = 0.0820 MJ m^-2 min^-1, 24*60/pi ≈ 37.586
     Gsc = 0.0820
-    Ra = (24 * 60 / math.pi) * Gsc * dr * (
-        ws * math.sin(phi) * math.sin(delta) + math.cos(phi) * math.cos(delta) * math.sin(ws)
+    Ra = (
+        (24 * 60 / math.pi)
+        * Gsc
+        * dr
+        * (ws * math.sin(phi) * math.sin(delta) + math.cos(phi) * math.cos(delta) * math.sin(ws))
     )
     return max(0.0, Ra)
+
 
 def et0_hargreaves(tmin_c: float, tmax_c: float, tmean_c: float, ra_MJ_m2_day: float) -> float:
     """Estimate daily reference evapotranspiration ET0 (mm/day) via Hargreaves (FAO-56 Eq. 52).

@@ -4,6 +4,7 @@ Lightweight weather helper to fetch daily Tmin/Tmax and compute ET0 using Hargre
 Uses Open-Meteo public API (no key required). Intended for offline caching and
 feeding AGRISENSE_WEATHER_CACHE for the engine's optional ET0 adjustment.
 """
+
 from __future__ import annotations
 
 import csv
@@ -19,9 +20,7 @@ except Exception:
     import et0 as et  # type: ignore
 
 
-OPEN_METEO_URL = (
-    "https://api.open-meteo.com/v1/forecast"
-)
+OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
 
 
 class _Params(TypedDict):
@@ -125,3 +124,12 @@ def read_latest_from_cache(cache_path: str | Path) -> Dict[str, str]:
     if not last:
         raise RuntimeError("weather cache is empty")
     return last
+
+
+def update_weather_data(lat: float = 27.35, lon: float = 88.6, days: int = 7) -> Dict[str, str]:
+    """Update weather data and return latest values"""
+    try:
+        cache_path = fetch_and_cache_weather(lat, lon, days)
+        return read_latest_from_cache(cache_path)
+    except Exception as e:
+        return {"error": str(e), "status": "failed"}

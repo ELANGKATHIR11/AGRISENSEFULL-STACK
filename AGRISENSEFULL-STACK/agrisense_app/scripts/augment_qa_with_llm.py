@@ -105,12 +105,35 @@ def _use_deepseek() -> bool:
 def _gemini_paraphrase_batch(
     prompts: List[str], n: int, system_hint: str
 ) -> List[List[str]]:
-    import google.generativeai as genai  # type: ignore
+    try:
+        import google.generativeai as genai  # type: ignore
+    except Exception:
+        genai = None
 
-    key = os.environ["GEMINI_API_KEY"]
+    key = os.environ.get("GEMINI_API_KEY")
     model_name = os.environ.get("GEMINI_MODEL", "gemini-1.5-flash-latest")
-    genai.configure(api_key=key)
-    model = genai.GenerativeModel(model_name, system_instruction=system_hint)
+    if genai is None:
+        print("[augment] google.generativeai not available; cannot use Gemini")
+        return [[] for _ in prompts]
+
+    configure_fn = getattr(genai, "configure", None)
+    GenerativeModel = getattr(genai, "GenerativeModel", None)
+
+    if not key:
+        print("[augment] GEMINI_API_KEY not set; cannot use Gemini")
+        return [[] for _ in prompts]
+
+    if configure_fn is None or GenerativeModel is None:
+        print("[augment] Installed google.generativeai has incompatible API; cannot use Gemini")
+        return [[] for _ in prompts]
+
+    # Configure and instantiate model in a guarded way
+    try:
+        configure_fn(api_key=key)
+        model = GenerativeModel(model_name, system_instruction=system_hint)
+    except Exception as e:
+        print(f"[augment] Failed to initialize Gemini model: {e}")
+        return [[] for _ in prompts]
 
     outputs: List[List[str]] = []
     for q in prompts:

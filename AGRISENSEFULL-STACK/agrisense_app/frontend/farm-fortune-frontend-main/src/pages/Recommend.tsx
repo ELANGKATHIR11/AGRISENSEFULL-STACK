@@ -5,11 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Zap, Droplets, Thermometer, Gauge, Beaker, AlertCircle, CheckCircle, TrendingUp, Play, Square } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Zap, Droplets, Thermometer, Gauge, Beaker, AlertCircle, CheckCircle, TrendingUp, Play, Square, Wifi, WifiOff, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/i18n";
 
-import { api, type SensorReading, type BackendRecommendation, type PlantListItem } from "@/lib/api";
+import { api, type SensorReading, type BackendRecommendation, type PlantListItem, type LiveSensorData, type DeviceStatus } from "@/lib/api";
 
 interface SensorDataUI {
   temperature: string;
@@ -42,6 +43,14 @@ const Recommend = () => {
   const [plants, setPlants] = useState<PlantListItem[]>([]);
   const [soilTypes, setSoilTypes] = useState<string[]>(["sand","loam","clay"]);
   const [warnings, setWarnings] = useState<Record<string, string>>({});
+  
+  // Live sensor data state
+  const [liveSensorData, setLiveSensorData] = useState<LiveSensorData | null>(null);
+  const [deviceStatus, setDeviceStatus] = useState<DeviceStatus[]>([]);
+  const [useLiveData, setUseLiveData] = useState(false);
+  const [sensorLoading, setSensorLoading] = useState(false);
+  const [lastSensorUpdate, setLastSensorUpdate] = useState<string>("");
+  
   const { toast } = useToast();
   const { t } = useI18n();
 
@@ -59,6 +68,105 @@ const Recommend = () => {
     })();
     return () => { cancelled = true };
   }, []);
+
+  // Fetch live sensor data
+  const fetchLiveSensorData = async () => {
+    setSensorLoading(true);
+    try {
+      const [sensorRes, deviceRes] = await Promise.all([
+        api.sensorsLive().catch(() => null),
+        api.sensorsDeviceStatus().catch(() => ({ devices: [] }))
+      ]);
+      
+      if (sensorRes && sensorRes.status === "success") {
+        // Handle single device or multiple devices
+        let sensorData: LiveSensorData;
+        if (sensorRes.data && typeof sensorRes.data === 'object' && 'device_id' in sensorRes.data) {
+          sensorData = sensorRes.data as LiveSensorData;
+        } else if (sensorRes.data && typeof sensorRes.data === 'object') {
+          // Multiple devices - use first available
+          const devices = Object.values(sensorRes.data as Record<string, LiveSensorData>);
+          sensorData = devices[0];
+        } else {
+          throw new Error("No sensor data available");
+        }
+        
+        setLiveSensorData(sensorData);
+        setLastSensorUpdate(new Date().toLocaleTimeString());
+        toast({ title: "Live Data Updated", description: "Sensor data refreshed successfully" });
+      }
+      
+      if (deviceRes && deviceRes.devices) {
+        setDeviceStatus(deviceRes.devices);
+      }
+      
+    } catch (error) {
+      console.error("Failed to fetch live sensor data:", error);
+      toast({ 
+        title: "Sensor Data Error", 
+        description: "Unable to fetch live sensor data. MQTT bridge may not be running.", 
+        variant: "destructive" 
+      });
+    } finally {
+      setSensorLoading(false);
+    }
+  };
+
+  // Auto-fill sensor data from live sensors
+  const useLiveSensorData = () => {
+    if (!liveSensorData) {
+      toast({ title: "No Live Data", description: "Please fetch live sensor data first", variant: "destructive" });
+      return;
+    }
+    
+    setSensorData(prev => ({
+      ...prev,
+      temperature: liveSensorData.air_temperature.toFixed(1),
+      humidity: liveSensorData.humidity.toFixed(1),
+      soilMoisture: liveSensorData.soil_moisture_percentage.toFixed(1),
+      ph: liveSensorData.ph_level.toFixed(1),
+      // Keep existing crop type and soil type
+    }));
+    
+    setUseLiveData(true);
+    toast({ title: "Live Data Applied", description: "Sensor values automatically filled" });
+  };
+
+  // Get live recommendations directly from sensor data
+  const getLiveRecommendations = async () => {
+    setLoading(true);
+    try {
+      const res = await api.sensorsRecommendationsLive();
+      setRecommendation(res.recommendations);
+      
+      // Update sensor data display with live values
+      if (res.sensor_data) {
+        setSensorData(prev => ({
+          ...prev,
+          temperature: res.sensor_data.air_temperature.toFixed(1),
+          humidity: res.sensor_data.humidity.toFixed(1),
+          soilMoisture: res.sensor_data.soil_moisture_percentage.toFixed(1),
+          ph: res.sensor_data.ph_level.toFixed(1),
+        }));
+      }
+      
+      toast({ 
+        title: "Live Recommendations", 
+        description: "Recommendations generated from real-time sensor data" 
+      });
+    } catch (error) {
+      console.error("Failed to get live recommendations:", error);
+      toast({ 
+        title: "Live Recommendations Failed", 
+        description: "Unable to get live recommendations. Using manual input instead.", 
+        variant: "destructive" 
+      });
+      // Fall back to manual recommendations
+      await generateRecommendations();
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleInputChange = (field: keyof SensorDataUI, value: string) => {
     setSensorData(prev => ({ ...prev, [field]: value }));
@@ -149,6 +257,151 @@ const Recommend = () => {
           <h1 className="text-3xl font-bold text-foreground mb-2">{t("smart_recommendations")}</h1>
           <p className="text-muted-foreground">{t("enter_sensor_prompt")}</p>
         </div>
+
+        {/* Live Sensor Data Card */}
+        <Card className="mb-8 shadow-medium border-primary/20">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Wifi className="w-5 h-5 text-primary" />
+                <span>Live Sensor Data</span>
+                <Badge variant={liveSensorData ? "default" : "secondary"}>
+                  {liveSensorData ? "Connected" : "No Data"}
+                </Badge>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={fetchLiveSensorData}
+                  disabled={sensorLoading}
+                >
+                  {sensorLoading ? (
+                    <RefreshCw className="w-4 h-4 animate-spin mr-2" />
+                  ) : (
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                  )}
+                  Refresh
+                </Button>
+                {liveSensorData && (
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={useLiveSensorData}
+                  >
+                    Use Live Data
+                  </Button>
+                )}
+              </div>
+            </CardTitle>
+            {lastSensorUpdate && (
+              <CardDescription>
+                Last updated: {lastSensorUpdate}
+              </CardDescription>
+            )}
+          </CardHeader>
+          <CardContent>
+            {liveSensorData ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <div className="flex items-center space-x-2">
+                  <Thermometer className="w-4 h-4 text-orange-500" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Air Temp</p>
+                    <p className="text-lg font-semibold">{liveSensorData.air_temperature.toFixed(1)}°C</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Droplets className="w-4 h-4 text-blue-500" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Humidity</p>
+                    <p className="text-lg font-semibold">{liveSensorData.humidity.toFixed(1)}%</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Gauge className="w-4 h-4 text-green-500" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Soil Moisture</p>
+                    <p className="text-lg font-semibold">{liveSensorData.soil_moisture_percentage.toFixed(1)}%</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Thermometer className="w-4 h-4 text-amber-500" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Soil Temp</p>
+                    <p className="text-lg font-semibold">{liveSensorData.soil_temperature.toFixed(1)}°C</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Beaker className="w-4 h-4 text-purple-500" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">pH Level</p>
+                    <p className="text-lg font-semibold">{liveSensorData.ph_level.toFixed(1)}</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Zap className="w-4 h-4 text-yellow-500" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Light</p>
+                    <p className="text-lg font-semibold">{liveSensorData.light_intensity_percentage.toFixed(0)}%</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <WifiOff className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground mb-4">
+                  No live sensor data available. Connect ESP32 sensors and start MQTT bridge.
+                </p>
+                <Button onClick={fetchLiveSensorData} disabled={sensorLoading}>
+                  {sensorLoading ? "Connecting..." : "Connect to Sensors"}
+                </Button>
+              </div>
+            )}
+            
+            {/* Device Status */}
+            {deviceStatus.length > 0 && (
+              <div className="mt-6 pt-6 border-t">
+                <h4 className="text-sm font-semibold mb-3">Device Status</h4>
+                <div className="flex flex-wrap gap-2">
+                  {deviceStatus.map((device) => (
+                    <Badge
+                      key={device.device_id}
+                      variant={device.is_connected ? "default" : "destructive"}
+                      className="flex items-center space-x-1"
+                    >
+                      {device.is_connected ? (
+                        <Wifi className="w-3 h-3" />
+                      ) : (
+                        <WifiOff className="w-3 h-3" />
+                      )}
+                      <span>{device.device_id}</span>
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Quick Action Buttons */}
+            {liveSensorData && (
+              <div className="mt-6 pt-6 border-t flex space-x-3">
+                <Button 
+                  onClick={getLiveRecommendations}
+                  disabled={loading}
+                  className="flex-1"
+                >
+                  {loading ? "Analyzing..." : "Get Live Recommendations"}
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => window.open('/api/sensors/soil-analysis/live', '_blank')}
+                  className="flex-1"
+                >
+                  Live Soil Analysis
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Sensor Input Form */}

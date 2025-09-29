@@ -14,6 +14,7 @@ Env variables (optional):
   AGRISENSE_TWILIO_TO=+91...
   AGRISENSE_NOTIFY_WEBHOOK_URL=... -> generic webhook sink for alerts
 """
+
 from __future__ import annotations
 
 import os

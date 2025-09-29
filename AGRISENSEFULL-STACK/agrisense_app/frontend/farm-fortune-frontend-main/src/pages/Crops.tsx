@@ -12,16 +12,29 @@ const Crops = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [crops, setCrops] = useState<CropCard[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { t } = useI18n();
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
+        setLoading(true);
+        setError(null);
         const res = await api.crops();
-        if (!cancelled) setCrops(res.items);
-      } catch {
-        // ignore for now
+        if (!cancelled) {
+          setCrops(res.items);
+          console.log('Loaded crops:', res.items.length);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          const errorMessage = err instanceof Error ? err.message : 'Failed to load crops';
+          setError(errorMessage);
+          console.error('Failed to load crops:', err);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     })();
     return () => { cancelled = true };
@@ -46,7 +59,7 @@ const Crops = () => {
     });
   }, [crops, searchTerm, selectedCategory]);
 
-  const getWaterColor = (requirement: string) => {
+  const getWaterColor = (requirement: string | null | undefined) => {
     switch (requirement) {
       case "High": return "bg-primary text-primary-foreground";
       case "Medium": return "bg-accent text-accent-foreground";
@@ -177,11 +190,37 @@ const Crops = () => {
         </div>
 
         {/* No Results */}
-        {filteredCrops.length === 0 && (
+        {!loading && !error && filteredCrops.length === 0 && (
           <div className="text-center py-12">
             <Wheat className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-foreground mb-2">{t("no_crops_found")}</h3>
             <p className="text-muted-foreground">{t("try_adjusting_search")}</p>
+          </div>
+        )}
+
+        {/* Loading State */}
+        {loading && (
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <h3 className="text-lg font-semibold text-foreground mb-2">Loading crops...</h3>
+            <p className="text-muted-foreground">Please wait while we fetch the crop data</p>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && (
+          <div className="text-center py-12">
+            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-red-600 text-xl">⚠️</span>
+            </div>
+            <h3 className="text-lg font-semibold text-foreground mb-2">Failed to load crops</h3>
+            <p className="text-muted-foreground mb-4">{error}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
+            >
+              Retry
+            </button>
           </div>
         )}
       </div>

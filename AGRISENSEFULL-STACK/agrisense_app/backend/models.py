@@ -5,23 +5,25 @@ from typing import Optional, List, Dict
 SoilType = str
 PlantType = str
 
+
 class SensorReading(BaseModel):
     zone_id: str = "Z1"
     plant: PlantType = "generic"
     soil_type: SoilType = "loam"
-    area_m2: float = 100.0
-    ph: float = 6.5
-    moisture_pct: float = 35.0  # 0..100
-    temperature_c: float = 28.0
-    ec_dS_m: float = 1.0
+    area_m2: float = Field(100.0, gt=0.0, le=100000.0)
+    ph: float = Field(6.5, ge=3.5, le=9.5)
+    moisture_pct: float = Field(35.0, ge=0.0, le=100.0)
+    temperature_c: float = Field(28.0, ge=-20.0, le=60.0)
+    ec_dS_m: float = Field(1.0, ge=0.0, le=10.0)
     n_ppm: Optional[float] = None
     p_ppm: Optional[float] = None
     k_ppm: Optional[float] = None
     timestamp: Optional[str] = None  # ISO8601
 
+
 class Recommendation(BaseModel):
     # Allow extra keys from engine.recommend output without validation errors
-    model_config = ConfigDict(extra='allow')
+    model_config = ConfigDict(extra="allow")
 
     water_liters: float
     fert_n_g: float

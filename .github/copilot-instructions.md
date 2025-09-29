@@ -1,62 +1,222 @@
 ## Quick orientation — what this repo is
 
-AgriSense is a full-stack FastAPI + Vite app for smart irrigation and crop recommendation. The main runtime pieces are:
+AgriSense is a full-stack FastAPI + Vite app for smart irrigation, crop recommendation and plant disease tooling. This document is a practical, upgrade-focused guide for future automated agents and maintainers.
 
-- Backend: `agrisense_app/backend/main.py` (FastAPI app; mounted at `uvicorn agrisense_app.backend.main:app`).
-- Core logic: `agrisense_app/backend/engine.py` (RecoEngine implements water/fertilizer rules, optional ML blending).
-- Persistence: `agrisense_app/backend/data_store.py` (SQLite sensor DB + helper functions).
-- Optional Flask storage UI: `agrisense_app/backend/storage_server.py` (mounted under `/storage` when available).
-- Edge & MQTT: `agrisense_pi_edge_minimal` (edge reader) and `agrisense_app/backend/mqtt_bridge.py` + `mqtt_publish.py` (MQTT integration).
-- Frontend: `agrisense_app/frontend/farm-fortune-frontend-main` (Vite + React). Built assets served under `/ui` by the backend.
+Key runtime pieces:
 
-## High-value facts for an AI agent (concrete, code-linked)
+- Backend app (FastAPI): `agrisense_app/backend/main.py` — the ASGI entrypoint. Run with `uvicorn agrisense_app.backend.main:app`.
+- Core logic: `agrisense_app/backend/engine.py` — `RecoEngine` performs rule-based calculations and optional ML blending for water/fertilizer recommendations.
+- Persistence: `agrisense_app/backend/data_store.py` — SQLite (`sensors.db`) helpers and schema accessors.
+- MQTT & Edge: `agrisense_app/backend/mqtt_bridge.py`, `mqtt_publish.py`, and `agrisense_pi_edge_minimal` for optional edge readers.
+- Frontend (React + Vite): `agrisense_app/frontend/farm-fortune-frontend-main`. Built assets are served under `/ui` by the backend when present.
 
-- API surface and examples live in `backend/main.py` — useful endpoints: `/recommend`, `/ingest`, `/edge/ingest`, `/tank/level`, `/irrigation/start`, `/alerts` and `/reco/log`.
-- Engine behavior: `RecoEngine.recommend(reading: Dict)` returns a dict with `water_liters`, `fert_*_g`, `tips`, and `expected_savings_liters` — see numeric calculation and ML blending in `engine.py`.
-- ML models are optional. The engine auto-loads `water_model.keras` / `fert_model.keras` or `.joblib` equivalents in the backend folder. To avoid loading heavy libs in tests/dev set `AGRISENSE_DISABLE_ML=1`.
-- Edge normalization: `edge_ingest` and `edge_capture` accept flexible keys (e.g., `moisture_pct` or `soil_moisture`, `temp_c` or `temperature_c`) — follow the normalization logic in `main.py` when synthesizing sensor payloads.
-- Admin guard: requests that mutate system state use `X-Admin-Token` header checked against `AGRISENSE_ADMIN_TOKEN` (see `AdminGuard` in `main.py`).
-- Storage of crop lists and labels: `crop_labels.json`, `india_crop_dataset.csv`, and `sikkim_crop_dataset.csv` are the canonical sources for crop metadata and UI lists.
+This repo also contains utility scripts, datasets, model artifacts and training/QA scaffolding useful during upgrades.
 
-## Developer workflows and commands (exact)
+## Purpose of this file (for future agents)
 
-- Run backend (dev):
-  - Ensure Python 3.9+ and venv activated; install: `pip install -r agrisense_app/backend/requirements.txt` (dev deps are in `requirements-dev.txt`).
-  - Start: `uvicorn agrisense_app.backend.main:app --reload --port 8004`.
-  - VS Code task available: "Run Backend (Uvicorn)" (workspace tasks in this repo).
-- Run frontend (dev):
-  - cd `agrisense_app/frontend/farm-fortune-frontend-main` → `npm install` → `npm run dev` (Vite proxies `/api/*` → `http://127.0.0.1:8004`).
-  - To serve built UI from backend: `npm run build` then open `http://127.0.0.1:8004/ui`.
-- Tests / CI:
-  - Unit/smoke tests: `pytest -q scripts/test_backend_inprocess.py scripts/test_edge_endpoints.py`.
-  - CI runs tests with `AGRISENSE_DISABLE_ML=1` to avoid TF overhead (see `.github/workflows/ci.yml`).
-- Train models (optional): `agrisense_app/scripts/train_models.py` and TF training at `agrisense_app/backend/tf_train.py` (only needed if you plan to regenerate `.keras` artifacts).
+This file should let an automated agent safely and predictably perform upgrades: run, test, and validate changes without accidentally breaking CI or production. Follow the "Small contract" below and the step-by-step upgrade checklist.
 
-## Project-specific conventions & pitfalls
+---
 
-- Prefer lightweight, defensive imports: many modules lazily import TF/Flask and fallback gracefully if not installed. When modifying imports, keep this pattern to avoid breaking local dev.
-- Use environment toggles for heavy behavior: `AGRISENSE_DISABLE_ML`, `AGRISENSE_ADMIN_TOKEN`, `AGRISENSE_ALERT_ON_RECOMMEND`, and `ALLOWED_ORIGINS` are respected in `main.py` and `engine.py`.
-- Persisted files and large models live in `agrisense_app/backend/` but are excluded from git (LFS or ignored). Don’t assume ML artifacts are present in CI/dev unless explicitly added.
-- Sensor payloads are normalized in `main.py` — when generating test fixtures, use the same field names the code accepts (see `edge_ingest` for variations).
+## Small contract — guarantees to preserve
 
-## Integration points to be aware of
+When modifying core behavior, preserve backward compatibility and tests.
 
-- MQTT: `agrisense_app/backend/mqtt_bridge.py` subscribes and writes readings; `mqtt_publish.py` is used by API endpoints to send valve commands. Broker config via `MQTT_BROKER`, `MQTT_PORT`, `MQTT_TOPIC`.
-- Weather caching: `weather.py` writes to `weather_cache.csv`; admin endpoint `/admin/weather/refresh` triggers fetch.
-- Edge Reader: optional module `agrisense_pi_edge_minimal.edge.reader.SensorReader` may be present; code guards for its absence. When present, `/edge/capture` will use it.
+- Inputs: API endpoints accept JSON sensor readings (see `edge_ingest` for accepted keys). Keep normalization tolerant of earlier key names.
+- Outputs: `RecoEngine.recommend(reading: Dict)` must return a dict with at least `{"water_liters": float, "tips": List[str]}`. Extra keys allowed but do not rename/remove required keys.
+- Error modes: APIs must return appropriate HTTP status codes and JSON with a `detail` field for machine parsing.
+- Tests: Any behavior change must add/update pytest tests. CI runs with `AGRISENSE_DISABLE_ML=1` to avoid heavy ML packages.
+- Security: Maintain input validation, CORS protection, and rate limiting
+- Fallbacks: Preserve graceful degradation when ML dependencies unavailable
 
-## When you modify code — quick rules for AI edits
+---
 
-- Keep ML import and model-loading guarded by `AGRISENSE_DISABLE_ML` to keep tests fast.
-- When changing API shapes, update the examples in `scripts/test_backend_inprocess.py` to keep CI stable.
-- If you touch persistence (`data_store.py`), be conservative: it owns schema and migrations are manual (SQLite `sensors.db`).
+## Security Best Practices
 
-## Where to look first (entry points for analysis)
+### Critical Security Guarantees
+1. **Never hardcode secrets** - Use environment variables for:
+   - `AGRISENSE_ADMIN_TOKEN`
+   - Database credentials
+   - API tokens
+2. **Input validation** - All endpoints must use Pydantic models
+3. **Dependency hygiene** - Regularly audit with `pip-audit`/`npm audit`
+4. **Error handling** - Never expose stack traces in production
 
-- `agrisense_app/backend/main.py` — API, error shapes, middleware, CORS, mount points.
-- `agrisense_app/backend/engine.py` — core recommendation algorithm and ML blending.
-- `agrisense_app/backend/data_store.py` — DB schema + helpers used across tests and endpoints.
-- `agrisense_app/backend/mqtt_bridge.py`, `mqtt_publish.py` — device/edge integration.
-- `agrisense_app/frontend/farm-fortune-frontend-main` — frontend dev, proxy behavior and build output expectations.
+### Common Vulnerabilities to Monitor
+- **PYSEC-2024-110**: scikit-learn (keep ≥1.5.0)
+- **PYSEC-2024-232/233**: python-jose (keep ≥3.4.0)
+- **GHSA-f96h-pmfr-66vw**: starlette (keep ≥0.47.2)
+- Frontend build tool vulnerabilities (Vite ≥7.1.7)
 
-If anything above is unclear or you want more examples (sample sensor payloads, test fixtures, or common refactor patterns), tell me which area to expand and I will iterate.
+### Security Audit Checklist
+✅ Dependency vulnerability scan
+✅ Hardcoded secret check
+✅ Input validation verification
+✅ Error handling review
+✅ CORS configuration check
+✅ Rate limiting validation
+
+---
+
+## Production Deployment Reference
+
+### Validated Deployment Command
+```bash
+cd agrisense_app/backend && python -m uvicorn main:app --host 0.0.0.0 --port 8004
+```
+
+### Key Health Endpoints
+- Health check: `http://localhost:8004/health`
+- Ready check: `http://localhost:8004/ready`
+- VLM status: `http://localhost:8004/api/vlm/status`
+
+### Frontend Serving
+- Built frontend must be served from `/ui` endpoint
+- HTML files require `Cache-Control: no-cache` headers
+
+---
+
+## Critical Fixes Reference
+
+### Resolved Issues to Preserve
+1. **Backend Import Errors**: 
+   - Torch import guards in `weed_management.py`
+   - Core module fallback paths in `main.py`
+2. **Frontend Issues**:
+   - Service worker disabled in production
+   - JSX parsing errors resolved
+3. **Security Fixes**:
+   - scikit-learn upgraded to 1.5.0+
+   - python-jose upgraded to 3.4.0+
+   - starlette upgraded to 0.47.2+
+
+### Fallback Mechanisms
+- ML-dependent features must degrade gracefully
+- Rule-based calculations as primary fallback
+- Clear error logging when fallbacks activated
+
+---
+
+## ML Workflow
+
+### Training Models
+1. **Time-series model**: `python scripts/train_timeseries.py`
+2. **Natural Language Model**: `python scripts/train_nlm.py`
+
+### Artifact Management
+- Models are saved in `agrisense_app/backend/ml_models/{model_type}/artifacts/`
+- Each model must include a `metadata.json` with:
+  - `model_version`
+  - `trained_on`
+  - `commit_hash`
+  - `params`
+
+### Smoke Testing
+- Run `python scripts/smoke_ml_infer.py` to test the recommendation endpoint
+
+### CI/CD Integration
+- ML tests run with `AGRISENSE_DISABLE_ML=1` for fast feedback
+- Full training runs are triggered manually
+
+### Updating Models
+1. Train new model
+2. Update artifacts in versioned directory
+3. Update metadata
+4. Run smoke tests
+5. Update documentation
+
+---
+
+## Agentic AI (Cascade) Guidelines
+
+### When Making Changes
+1. Always maintain backward compatibility
+2. Preserve existing API contracts
+3. Add tests for new functionality
+4. Update documentation with changes
+
+### Vulnerability Fixing Protocol
+1. Identify vulnerable dependencies
+2. Check compatibility with current codebase
+3. Update dependency versions in:
+   - `agrisense_app/backend/requirements.txt`
+   - `agrisense_app/frontend/package.json`
+4. Verify no breaking changes
+
+### Enhancement Implementation
+1. Follow existing architectural patterns
+2. Maintain separation of concerns:
+   - Business logic in `engine.py`
+   - API endpoints in `main.py`
+   - UI components in frontend `src/`
+3. Add feature flags for major changes
+
+---
+
+## Upgrade checklist (what an automated agent should do)
+
+1) Pre-flight risk assessment
+  - Review `pytest.ini`, CI workflows, and this guide for constraints
+  - Run `pip-audit`, `npm audit`, and (if available) `safety check` for Python packages
+  - Scan for secrets using `detect-secrets scan` or `git secrets --scan`
+  - Verify Pydantic models provide strict validation on all new/modified endpoints
+  - Ensure `AGRISENSE_DISABLE_ML=1` is exported for any automated or CI test runs
+
+2) Environment preparation
+  - Create or refresh a Python 3.9+ virtual environment:
+    ```powershell
+    python -m venv .venv
+    .\.venv\Scripts\Activate.ps1
+    $env:AGRISENSE_DISABLE_ML='1'
+    pip install --upgrade pip wheel setuptools
+    pip install -r agrisense_app/backend/requirements.txt
+    pip install -r agrisense_app/backend/requirements-dev.txt
+    ```
+  - Install frontend dependencies: `cd agrisense_app/frontend/farm-fortune-frontend-main && npm install`
+  - Launch backend from repo root: `python -m uvicorn agrisense_app.backend.main:app --host 0.0.0.0 --port 8004 --reload`
+  - Start frontend dev server: `npm run dev`
+
+3) Automated verification
+  - Run backend tests with ML disabled: `$env:AGRISENSE_DISABLE_ML='1'; pytest -q scripts/test_backend_inprocess.py scripts/test_edge_endpoints.py`
+  - Execute smoke suites: `python scripts/test_backend_integration.py`, `python scripts/chatbot_http_smoke.py`
+  - Hit VLM endpoints and plant-health APIs with sample payloads (`http :8004/api/vlm/status`, `/api/disease/detect`, `/api/weed/analyze`)
+  - Re-run `pip-audit`/`npm audit` (or `npm audit --production`) to confirm zero regressions
+
+4) Resilience & performance checks
+  - Flip `AGRISENSE_DISABLE_ML` off/on to confirm graceful fallbacks remain functional
+  - Run targeted load smoke (e.g., `hey` or `locust`) against `/health`, `/api/disease/detect`, `/api/weed/analyze`
+  - Validate edge simulators via `python tools/development/scripts/test_edge_endpoints.py`
+  - Inspect backend logs for new warnings or exceptions
+
+5) Documentation & release readiness
+  - Update `CHANGELOG.md`, relevant files in `documentation/`, and `PROJECT_BLUEPRINT_UPDATED.md`
+  - Add migration notes for any DB/API schema changes
+  - Summarize dependency bumps and security outcomes in the PR description
+  - Follow PR checklist below
+
+---
+
+## PR checklist (must pass before merge)
+
+1. Update `CHANGELOG.md` or `docs/`
+2. Add/update unit tests (run with `AGRISENSE_DISABLE_ML=1`)
+3. Run security audit (dependencies, secrets, validation)
+4. Verify no hardcoded secrets
+5. Add migration notes for DB/API changes
+6. For ML changes, include artifact regeneration notes
+7. Confirm fallback mechanisms preserved
+
+---
+
+## Agentic AI Access Points
+
+Key entry points for Cascade:
+- `agrisense_app/backend/main.py` - API endpoints
+- `agrisense_app/backend/engine.py` - Core logic
+- `agrisense_app/backend/data_store.py` - Database
+- `agrisense_app/backend/weed_management.py` - ML integration
+- `agrisense_app/frontend/farm-fortune-frontend-main/src/` - UI components
+
+---
+
+If anything above is unclear or you want additional automation (example CI workflows, focused upgrade scripts, or test scaffolding), tell me which area to expand and I will implement it.

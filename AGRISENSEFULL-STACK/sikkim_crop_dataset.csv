@@ -1,7 +1,0 @@
-crop,soil_type,ph_min,ph_max,moisture_min_pct,moisture_max_pct,temperature_min_c,temperature_max_c,ec_dS_m,n_min_ppm,n_max_ppm,p_min_ppm,p_max_ppm,k_min_ppm,k_max_ppm,water_need_l_per_m2,fert_n_g,fert_p_g,fert_k_g,season
-Cardamom,loamy,5.5,6.5,40,60,18,25,1.2,25,60,20,40,100,180,6.0,50,30,40,Kharif
-Ginger,sandy_loam,5.5,6.5,35,55,20,28,1.0,30,70,25,45,120,200,5.5,60,35,45,Kharif
-Turmeric,clay_loam,5.0,6.8,40,65,20,30,1.1,35,75,20,40,110,190,6.2,55,32,42,Kharif
-Maize,alluvial,5.5,7.0,30,55,18,32,1.0,40,90,25,50,130,220,5.0,65,38,48,Kharif/Rabi
-Paddy,clay,5.0,6.5,60,90,20,30,1.4,50,100,30,55,150,250,7.5,70,40,50,Kharif
-Vegetables,loamy_sand,5.5,7.0,30,60,18,28,1.0,30,70,20,45,100,180,4.5,45,28,38,All seasons

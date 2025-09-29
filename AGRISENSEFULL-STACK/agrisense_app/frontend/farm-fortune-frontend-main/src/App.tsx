@@ -21,6 +21,9 @@ const Irrigation = lazy(() => import("./pages/Irrigation"));
 const Harvesting = lazy(() => import("./pages/Harvesting"));
 const Chatbot = lazy(() => import("./pages/Chatbot"));
 const Tank = lazy(() => import("./pages/Tank"));
+const DiseaseManagement = lazy(() => import("./pages/DiseaseManagement"));
+const WeedManagement = lazy(() => import("./pages/WeedManagement"));
+const Arduino = lazy(() => import("./pages/Arduino"));
 
 // Sensible React Query defaults for perf and UX
 const queryClient = new QueryClient({
@@ -37,8 +40,9 @@ const queryClient = new QueryClient({
   },
 });
 
-// Use '/ui' only in production when the UI is served by FastAPI under /ui.
-// In Vite dev (http://localhost:8080), use root basename to avoid route mismatch.
+// In production, FastAPI serves the app under /ui/, so use that as basename.
+// In Vite dev (http://localhost:8080), use root basename so local dev remains simple.
+// Use import.meta.env.PROD (Vite) to detect production build.
 const routerBasename = import.meta.env.PROD ? "/ui" : "/";
 
 const App = () => (
@@ -48,11 +52,12 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter basename={routerBasename}>
-          <div className="min-h-screen bg-background">
+          <div className="min-h-screen bg-gray-50">
             <Navigation />
-            <Suspense fallback={<div className="p-6 text-sm text-muted-foreground">Loading…</div>}>
+            <Suspense fallback={<div className="p-6 text-sm text-gray-600 text-center">Loading...</div>}>
               <Routes>
                 <Route path="/" element={<Dashboard />} />
+                <Route path="/home" element={<Home />} />
                 <Route path="/recommend" element={<Recommend />} />
                 <Route path="/soil-analysis" element={<SoilAnalysis />} />
                 <Route path="/crops" element={<Crops />} />
@@ -61,6 +66,9 @@ const App = () => (
                 <Route path="/tank" element={<Tank />} />
                 <Route path="/harvesting" element={<Harvesting />} />
                 <Route path="/chat" element={<Chatbot />} />
+                <Route path="/disease-management" element={<DiseaseManagement />} />
+                <Route path="/weed-management" element={<WeedManagement />} />
+                <Route path="/arduino" element={<Arduino />} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/impact" element={<ImpactGraphs />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

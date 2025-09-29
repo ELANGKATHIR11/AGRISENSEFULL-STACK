@@ -1,11 +1,28 @@
 {
-    "name": "AgriSense",
+    "name": "AgriSense - Smart Farming Intelligence",
     "short_name": "AgriSense",
+    "description": "AI-powered smart agriculture platform for precision farming, crop optimization, and sustainable water management",
     "start_url": "/ui/",
     "display": "standalone",
-    "background_color": "#0a0a0a",
-    "theme_color": "#16a34a",
+    "orientation": "portrait-primary",
+    "background_color": "#f0fdf4",
+    "theme_color": "#14532d",
+    "categories": ["agriculture", "productivity", "utilities"],
+    "lang": "en-US",
+    "scope": "/ui/",
     "icons": [
+        {
+            "src": "../src/assets/branding/favicon.svg",
+            "type": "image/svg+xml",
+            "sizes": "any",
+            "purpose": "any"
+        },
+        {
+            "src": "../src/assets/branding/agrisense_logo_icon.svg",
+            "type": "image/svg+xml",
+            "sizes": "128x128",
+            "purpose": "maskable"
+        },
         {
             "src": "icons/icon-32.png",
             "type": "image/png",
@@ -31,5 +48,52 @@
             "type": "image/png",
             "sizes": "512x512"
         }
-    ]
+    ],
+    "screenshots": [
+        {
+            "src": "screenshots/dashboard-wide.png",
+            "type": "image/png",
+            "sizes": "1280x720",
+            "form_factor": "wide",
+            "label": "AgriSense Dashboard - Desktop View"
+        },
+        {
+            "src": "screenshots/dashboard-mobile.png", 
+            "type": "image/png",
+            "sizes": "390x844",
+            "form_factor": "narrow",
+            "label": "AgriSense Dashboard - Mobile View"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Dashboard",
+            "short_name": "Dashboard",
+            "description": "View farm metrics and system status",
+            "url": "/ui/",
+            "icons": [{"src": "../src/assets/branding/favicon.svg", "sizes": "64x64"}]
+        },
+        {
+            "name": "Irrigation Control",
+            "short_name": "Water",
+            "description": "Manage irrigation and water systems",
+            "url": "/ui/irrigation",
+            "icons": [{"src": "../src/assets/branding/favicon.svg", "sizes": "64x64"}]
+        },
+        {
+            "name": "Crop Database",
+            "short_name": "Crops",
+            "description": "Browse crop information and recommendations",
+            "url": "/ui/crops",
+            "icons": [{"src": "../src/assets/branding/favicon.svg", "sizes": "64x64"}]
+        },
+        {
+            "name": "AI Chat",
+            "short_name": "Chat",
+            "description": "Ask farming questions to AI assistant",
+            "url": "/ui/chat",
+            "icons": [{"src": "../src/assets/branding/favicon.svg", "sizes": "64x64"}]
+        }
+    ],
+    "prefer_related_applications": false
 }

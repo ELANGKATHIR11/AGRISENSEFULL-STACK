@@ -6,7 +6,8 @@ import { fileURLToPath } from 'url';
 export default defineConfig(({ mode }) => ({
   base: mode === 'production' ? '/ui/' : '/',
   server: {
-    host: '::',
+    // bind to IPv4 localhost for consistent localhost access on Windows
+    host: '127.0.0.1',
     port: 8080,
     proxy: {
       '/api': {

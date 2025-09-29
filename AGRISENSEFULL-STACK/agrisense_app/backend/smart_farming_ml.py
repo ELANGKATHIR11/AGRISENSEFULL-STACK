@@ -143,10 +143,14 @@ class SmartFarmingRecommendationSystem:
                 # Also ensure encoded columns exist for feature building when needed
                 if "Soil_Type_Encoded" not in self.crop_data.columns:
                     assert self.soil_encoder is not None
-                    self.crop_data["Soil_Type_Encoded"] = cast(LabelEncoder, self.soil_encoder).transform(self.crop_data["Soil_Type"])  # type: ignore[index]
+                    self.crop_data["Soil_Type_Encoded"] = cast(LabelEncoder, self.soil_encoder).transform(
+                        self.crop_data["Soil_Type"]
+                    )  # type: ignore[index]
                 if "Crop_Encoded" not in self.crop_data.columns:
                     assert self.crop_encoder is not None
-                    self.crop_data["Crop_Encoded"] = cast(LabelEncoder, self.crop_encoder).transform(self.crop_data["Crop"])  # type: ignore[index]
+                    self.crop_data["Crop_Encoded"] = cast(LabelEncoder, self.crop_encoder).transform(
+                        self.crop_data["Crop"]
+                    )  # type: ignore[index]
                 print("Loaded cached ML models and encoders.")
                 return
         except Exception as e:
@@ -154,7 +158,9 @@ class SmartFarmingRecommendationSystem:
 
         # Encode categorical variables for training
         soil_encoder: LabelEncoder = LabelEncoder()
-        self.crop_data["Soil_Type_Encoded"] = soil_encoder.fit_transform(self.crop_data["Soil_Type"])  # type: ignore[index]
+        self.crop_data["Soil_Type_Encoded"] = soil_encoder.fit_transform(
+            self.crop_data["Soil_Type"]
+        )  # type: ignore[index]
         crop_encoder: LabelEncoder = LabelEncoder()
         self.crop_data["Crop_Encoded"] = crop_encoder.fit_transform(self.crop_data["Crop"])  # type: ignore[index]
 
@@ -207,6 +213,7 @@ class SmartFarmingRecommendationSystem:
             return
         try:
             import tensorflow as tf  # type: ignore  # noqa: F401
+
             if not hasattr(tf, "keras"):
                 raise ImportError("tensorflow.keras not available")
         except Exception as e:
@@ -239,6 +246,7 @@ class SmartFarmingRecommendationSystem:
         try:
             assert self.crop_data is not None, "Dataset not loaded"
             # Helper to coerce diverse pandas/numpy scalars or Series to float safely
+
             def _fv(x: Any) -> float:
                 try:
                     return float(x)
@@ -266,7 +274,8 @@ class SmartFarmingRecommendationSystem:
                 transformed = np.asarray(self.soil_encoder.transform([soil_type]))
                 _soil_encoded = int(transformed[0].item() if transformed.size > 0 else 0)
             except Exception:
-                _soil_encoded = 0  # Default encoding
+                # Default encoding placeholder
+                pass
 
             def _tf_soil_ix(soil: str) -> int:
                 if self.tf_enabled and self.tf_meta and "soil_types" in self.tf_meta:
@@ -330,11 +339,7 @@ class SmartFarmingRecommendationSystem:
                 similarity_score = max(0.0, similarity_score)
 
                 expected_yield = _fv(crop["Expected_Yield_tonnes_ha"])
-                if (
-                    self.tf_enabled
-                    and self.tf_yield_model is not None
-                    and self.tf_meta is not None
-                ):
+                if self.tf_enabled and self.tf_yield_model is not None and self.tf_meta is not None:
                     try:
                         soil_ix = _tf_soil_ix(soil_type)
                         X_reg = np.array(
@@ -362,9 +367,7 @@ class SmartFarmingRecommendationSystem:
                 if prob_component is None:
                     final_score = similarity_score
                 else:
-                    eff = 0.5 * (
-                        _fv(crop["Water_Efficiency_Index"]) + _fv(crop["Fertilizer_Efficiency_Index"])
-                    )
+                    eff = 0.5 * (_fv(crop["Water_Efficiency_Index"]) + _fv(crop["Fertilizer_Efficiency_Index"]))
                     final_score = 0.6 * similarity_score + 0.3 * float(prob_component) + 0.1 * eff
                 final_score = float(np.clip(final_score, 0.0, 1.0))
 
@@ -549,19 +552,17 @@ class SmartFarmingRecommendationSystem:
             "water_level": float(np.random.normal(500, 100)),
             "moisture": float(np.random.normal(60, 10)),
             "humidity": float(np.random.normal(70, 10)),
-            "soil_type": str(
-                np.random.choice(["Loam", "Clay Loam", "Sandy Loam", "Sandy", "Black Cotton"])
-            ),
+            "soil_type": str(np.random.choice(["Loam", "Clay Loam", "Sandy Loam", "Sandy", "Black Cotton"])),
         }
 
     def generate_report(self, sensor_data: SensorData) -> None:
         print("=" * 60)
-        print("\U0001F331 SMART FARMING RECOMMENDATION REPORT \U0001F331")
+        print("\U0001f331 SMART FARMING RECOMMENDATION REPORT \U0001f331")
         print("=" * 60)
-        print(f"\U0001F4C5 Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print(f"\U0001f4c5 Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         print()
 
-        print("\U0001F4CA CURRENT SENSOR READINGS:")
+        print("\U0001f4ca CURRENT SENSOR READINGS:")
         print("-" * 30)
         for key, value in sensor_data.items():
             if isinstance(value, float):
@@ -570,7 +571,7 @@ class SmartFarmingRecommendationSystem:
                 print(f"{key.replace('_', ' ').title()}: {value}")
         print()
 
-        print("\U0001F33E TOP CROP RECOMMENDATIONS:")
+        print("\U0001f33e TOP CROP RECOMMENDATIONS:")
         print("-" * 30)
         recommendations: List[Recommendation] = self.get_crop_recommendations(sensor_data)
 
@@ -584,7 +585,7 @@ class SmartFarmingRecommendationSystem:
 
         if recommendations:
             top_crop = str(recommendations[0]["crop"])
-            print(f"\U0001F3AF DETAILED SUGGESTIONS FOR {top_crop.upper()}:")
+            print(f"\U0001f3af DETAILED SUGGESTIONS FOR {top_crop.upper()}:")
             print("-" * 40)
 
             suggestions = self.get_farming_suggestions(sensor_data, top_crop)
@@ -594,23 +595,23 @@ class SmartFarmingRecommendationSystem:
                 for rec in recs:
                     priority: str = str(rec.get("priority", "low"))
                     priority_icon = (
-                        "\U0001F534" if priority == "high" else ("\U0001F7E1" if priority == "medium" else "\U0001F7E2")
+                        "\U0001f534" if priority == "high" else ("\U0001f7e1" if priority == "medium" else "\U0001f7e2")
                     )
                     param: str = str(rec.get("parameter", ""))
                     sugg: str = str(rec.get("suggestion", ""))
                     print(f"{priority_icon} {param.upper()}: {sugg}")
                     if "eco_friendly_option" in rec:
-                        print(f"   \U0001F333 Eco-friendly option: {rec['eco_friendly_option']}")
+                        print(f"   \U0001f333 Eco-friendly option: {rec['eco_friendly_option']}")
                     print()
 
-            print("\U0001F4C8 EXPECTED BENEFITS:")
+            print("\U0001f4c8 EXPECTED BENEFITS:")
             print("-" * 20)
             benefits = cast(Dict[str, Any], suggestions.get("expected_benefits", {}))
             for key, value in benefits.items():
                 print(f"• {key.replace('_', ' ').title()}: {value}")
 
             print()
-            print("\U0001F30D SUSTAINABILITY TIPS:")
+            print("\U0001f30d SUSTAINABILITY TIPS:")
             print("-" * 25)
             print("• Use drip irrigation to reduce water usage by 30-50%")
             print("• Apply organic compost to improve soil health")
@@ -627,7 +628,7 @@ if __name__ == "__main__":
     farming_system.generate_report(sensor_data)
 
     print("\n" + "=" * 60)
-    print("\U0001F4CB EXAMPLE API USAGE:")
+    print("\U0001f4cb EXAMPLE API USAGE:")
     print("=" * 60)
 
     crop_recs = farming_system.get_crop_recommendations(sensor_data)
@@ -636,5 +637,5 @@ if __name__ == "__main__":
     suggestions = farming_system.get_farming_suggestions(sensor_data, "Rice")
     print(f"Number of suggestions for Rice: {len(suggestions.get('recommendations', []))}")
 
-    print("\n\U0001F389 System ready for IoT integration!")
-    print("\U0001F4A1 Connect your sensors and start getting real-time recommendations!")
+    print("\n\U0001f389 System ready for IoT integration!")
+    print("\U0001f4a1 Connect your sensors and start getting real-time recommendations!")

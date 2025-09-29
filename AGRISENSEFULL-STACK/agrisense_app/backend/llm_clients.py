@@ -39,24 +39,43 @@ def _prompt(question: str, candidates: List[str]) -> str:
     )
 
 
-def rerank_with_gemini(
-    question: str, candidates: List[str], timeout_s: float = 6.0
-) -> Optional[List[float]]:
+def rerank_with_gemini(question: str, candidates: List[str], timeout_s: float = 6.0) -> Optional[List[float]]:
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         return None
     try:
-        import google.generativeai as genai  # type: ignore
+        import google.generativeai as generativeai  # type: ignore
 
         model_name = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel(model_name)
+        # The google.generativeai API may vary by installed version; call guarded
+        configure_fn = getattr(generativeai, "configure", None)
+        generate_fn = getattr(generativeai, "generate_content", None) or getattr(generativeai, "text", None)
+        if configure_fn is None or generate_fn is None:
+            # Unsupported installed version or API - bail gracefully
+            return None
+        configure_fn(api_key=api_key)
         p = _prompt(question, candidates)
         t0 = time.time()
-        resp = model.generate_content(p)
+        # Depending on API, generate_fn may be callable with different signatures
+        try:
+            resp = generate_fn(model=model_name, prompt=p)
+        except TypeError:
+            # Try alternative call form
+            try:
+                resp = generate_fn(prompt=p, model=model_name)
+            except Exception:
+                return None
         if time.time() - t0 > timeout_s:
             return None
-        text = (getattr(resp, "text", None) or "").strip()
+        # For Gemini, the response text is in resp.text or resp.candidates[0].content.parts[0].text depending on version
+        text = getattr(resp, "text", None)
+        if not text and hasattr(resp, "candidates"):
+            # Try to extract from candidates if present
+            try:
+                text = resp.candidates[0].content.parts[0].text
+            except Exception:
+                text = ""
+        text = (text or "").strip()
         arr = _extract_json(text)
         if not arr:
             return None
@@ -71,9 +90,7 @@ def rerank_with_gemini(
         return None
 
 
-def rerank_with_deepseek(
-    question: str, candidates: List[str], timeout_s: float = 6.0
-) -> Optional[List[float]]:
+def rerank_with_deepseek(question: str, candidates: List[str], timeout_s: float = 6.0) -> Optional[List[float]]:
     api_key = os.getenv("DEEPSEEK_API_KEY")
     if not api_key:
         return None

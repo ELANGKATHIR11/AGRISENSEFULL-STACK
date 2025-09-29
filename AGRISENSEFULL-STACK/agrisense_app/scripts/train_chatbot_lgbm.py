@@ -179,7 +179,7 @@ def main():
 
     nq = _row_norms(Xq)
     nc = _row_norms(Xc)
-    dot = (Xq.multiply(Xc)).sum(axis=1).A1
+    dot = (Xq.multiply(Xc)).sum(axis=1).A1  # type: ignore
     tfidf_cos = dot / (nq * nc)
 
     # Token Jaccard
