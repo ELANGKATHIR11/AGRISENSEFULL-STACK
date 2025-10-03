@@ -1,0 +1,42 @@
+# Dockerfile for Celery Workers
+# Optimized for background task processing
+
+FROM python:3.11-slim
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user for security
+RUN groupadd -r celery && useradd -r -g celery celery
+
+# Copy requirements first for better caching
+COPY agrisense_app/backend/requirements.txt /app/requirements.txt
+
+# Install Python dependencies
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY agrisense_app/ /app/agrisense_app/
+COPY scripts/ /app/scripts/
+
+# Create necessary directories
+RUN mkdir -p /app/data /app/reports /app/backups /app/models /app/celery-schedule && \
+    chown -R celery:celery /app
+
+# Switch to non-root user
+USER celery
+
+# Health check for worker processes
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD celery -A agrisense_app.backend.celery_config inspect ping || exit 1
+
+# Default command (can be overridden in docker-compose)
+CMD ["celery", "-A", "agrisense_app.backend.celery_config", "worker", "--loglevel=info"]

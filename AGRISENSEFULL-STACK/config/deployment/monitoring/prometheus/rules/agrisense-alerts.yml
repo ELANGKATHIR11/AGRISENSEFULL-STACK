@@ -1,0 +1,157 @@
+# AgriSense Application Alerting Rules
+groups:
+  - name: agrisense.application
+    rules:
+      # High error rate
+      - alert: HighErrorRate
+        expr: rate(agrisense_http_requests_total{status_code=~"5.."}[5m]) / rate(agrisense_http_requests_total[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+          component: backend
+        annotations:
+          summary: "High HTTP error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }} for the last 5 minutes"
+
+      # High response time
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(agrisense_http_request_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+          component: backend
+        annotations:
+          summary: "High HTTP response time"
+          description: "95th percentile response time is {{ $value }}s"
+
+      # Service down
+      - alert: ServiceDown
+        expr: up{job="agrisense-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: backend
+        annotations:
+          summary: "AgriSense backend service is down"
+          description: "Backend service has been down for more than 1 minute"
+
+      # High memory usage
+      - alert: HighMemoryUsage
+        expr: agrisense_system_memory_usage_bytes / (agrisense_system_memory_usage_bytes + agrisense_system_memory_available_bytes) > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is above 85% for more than 5 minutes"
+
+      # High CPU usage
+      - alert: HighCPUUsage
+        expr: agrisense_system_cpu_usage_percent > 80
+        for: 10m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is {{ $value }}% for more than 10 minutes"
+
+      # Database connection issues
+      - alert: HighDatabaseConnections
+        expr: agrisense_db_connections_active > 80
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "High number of database connections"
+          description: "Database connections: {{ $value }}"
+
+      # Slow database queries
+      - alert: SlowDatabaseQueries
+        expr: histogram_quantile(0.95, rate(agrisense_db_query_duration_seconds_bucket[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "Slow database queries detected"
+          description: "95th percentile query time: {{ $value }}s"
+
+      # ML model failures
+      - alert: MLModelFailures
+        expr: rate(agrisense_ml_predictions_total{status="error"}[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: critical
+          component: ml
+        annotations:
+          summary: "ML model prediction failures"
+          description: "ML model error rate: {{ $value | humanizePercentage }}"
+
+      # Low cache hit rate
+      - alert: LowCacheHitRate
+        expr: agrisense_cache_hit_ratio < 0.7
+        for: 10m
+        labels:
+          severity: warning
+          component: cache
+        annotations:
+          summary: "Low cache hit rate"
+          description: "Cache hit rate is {{ $value | humanizePercentage }}"
+
+      # WebSocket connection issues
+      - alert: WebSocketConnectionSpike
+        expr: agrisense_websocket_connections_active > 1000
+        for: 5m
+        labels:
+          severity: warning
+          component: websocket
+        annotations:
+          summary: "High number of WebSocket connections"
+          description: "WebSocket connections: {{ $value }}"
+
+      # Sensor data ingestion issues
+      - alert: LowSensorDataRate
+        expr: rate(agrisense_sensor_readings_total[10m]) < 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: sensors
+        annotations:
+          summary: "Low sensor data ingestion rate"
+          description: "Sensor data rate: {{ $value }} readings/sec"
+
+      # Alert generation spike
+      - alert: HighAlertRate
+        expr: rate(agrisense_alerts_generated_total[5m]) > 1
+        for: 2m
+        labels:
+          severity: warning
+          component: alerting
+        annotations:
+          summary: "High alert generation rate"
+          description: "Alert rate: {{ $value }} alerts/sec"
+
+      # Background task queue backup
+      - alert: TaskQueueBackup
+        expr: agrisense_task_queue_size > 100
+        for: 5m
+        labels:
+          severity: warning
+          component: tasks
+        annotations:
+          summary: "Task queue backup detected"
+          description: "Queue size: {{ $value }} tasks"
+
+      # Health check failures
+      - alert: HealthCheckFailure
+        expr: agrisense_health_check_status == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: "{{ $labels.component }}"
+        annotations:
+          summary: "Health check failure for {{ $labels.component }}"
+          description: "Component {{ $labels.component }} health check is failing"

@@ -3,7 +3,7 @@ import { api } from "@/lib/api";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useI18n } from "@/i18n";
+import { useTranslation } from "react-i18next";
 
 function Sparkline({ points, color = "#16a34a" }: { points: number[]; color?: string }) {
   if (!points.length) return <div className="h-12" />;
@@ -39,7 +39,7 @@ type RecoItem = {
 };
 
 export default function ImpactGraphs() {
-  const { t } = useI18n();
+  const { t } = useTranslation();
   const [zone, setZone] = useState("Z1");
   const [rows, setRows] = useState<RecoItem[]>([]);
   const [loading, setLoading] = useState(true);

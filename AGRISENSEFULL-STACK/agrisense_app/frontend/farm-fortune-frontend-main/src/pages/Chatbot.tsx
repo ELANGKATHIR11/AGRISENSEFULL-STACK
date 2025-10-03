@@ -1,28 +1,109 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { api } from "../lib/api";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 
-type Msg = { role: "user" | "assistant"; text: string; sources?: string[] };
+type Msg = { 
+  role: "user" | "assistant"; 
+  text: string; 
+  sources?: string[];
+  originalText?: string; // For debugging/comparison
+  followUps?: string[];
+};
+
+function generateSessionId() {
+  return `session-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+}
 
 export default function Chatbot() {
+  const { t, i18n } = useTranslation();
   const [input, setInput] = useState("");
   const [zone, setZone] = useState("Z1");
   const [messages, setMessages] = useState<Msg[]>([]);
   const [loading, setLoading] = useState(false);
+  const [sessionId] = useState(generateSessionId());
+  const [showOriginal, setShowOriginal] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  // Load greeting message on mount
+  useEffect(() => {
+    const loadGreeting = async () => {
+      try {
+        const language = i18n.language || "en";
+        const response = await fetch(`http://localhost:8004/chatbot/greeting?language=${language}`);
+        if (response.ok) {
+          const data = await response.json();
+          setMessages([{ role: "assistant", text: data.greeting }]);
+        }
+      } catch (error) {
+        console.error("Failed to load greeting:", error);
+        // Fallback greeting
+        setMessages([{ role: "assistant", text: t("chatbot.welcome", "Hello! I'm here to help with your farming questions. 😊") }]);
+      }
+    };
+    loadGreeting();
+  }, [i18n.language, t]);
 
   const send = async () => {
     const msg = input.trim();
     if (!msg) return;
-  setMessages((m) => [...m, { role: "user", text: msg }]);
+    setMessages((m) => [...m, { role: "user", text: msg }]);
     setInput("");
     setLoading(true);
     try {
-  const res = await api.chatAsk(msg, zone);
-  setMessages((m) => [...m, { role: "assistant", text: res.answer, sources: res.sources }]);
+      // Call new enhanced chatbot endpoint with session_id and language
+      const language = i18n.language || "en";
+      const response = await fetch(`http://localhost:8004/chatbot/ask`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question: msg,
+          top_k: 3,
+          session_id: sessionId,
+          language: language,
+        }),
+      });
+      
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      
+      const data = await response.json();
+      
+      // Extract answer from results
+      if (data.results && data.results.length > 0) {
+        const topResult = data.results[0];
+        const answerText = topResult.answer || topResult.original_answer || "No answer found.";
+        
+        // Extract follow-ups from answer (look for bullet points after 💡)
+        const followUps: string[] = [];
+        const followUpMatch = answerText.match(/💡.*?:\s*\n((?:•.*?\n?)+)/);
+        if (followUpMatch) {
+          const bullets = followUpMatch[1].match(/•\s*(.+)/g);
+          if (bullets) {
+            followUps.push(...bullets.map(b => b.replace(/^•\s*/, "").trim()));
+          }
+        }
+        
+        setMessages((m) => [
+          ...m,
+          {
+            role: "assistant",
+            text: answerText,
+            originalText: topResult.original_answer,
+            followUps: followUps.length > 0 ? followUps : undefined,
+          },
+        ]);
+      } else {
+        setMessages((m) => [...m, { role: "assistant", text: t("chatbot.no_answer", "I couldn't find an answer. Please try rephrasing your question.") }]);
+      }
     } catch (e: unknown) {
       const err = e instanceof Error ? e.message : String(e);
-  setMessages((m) => [...m, { role: "assistant", text: `Error: ${err}` }]);
+      setMessages((m) => [...m, { role: "assistant", text: `Error: ${err}` }]);
     } finally {
       setLoading(false);
     }
@@ -35,52 +116,132 @@ export default function Chatbot() {
     }
   };
 
+  const askFollowUp = (question: string) => {
+    setInput(question);
+  };
+
   return (
-    <div className="max-w-3xl mx-auto p-6 space-y-4">
+    <div className="max-w-4xl mx-auto p-6 space-y-4">
       <Card>
-        <CardHeader>
-          <CardTitle>Farm Chatbot</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>{t("chatbot.title", "Agricultural Assistant Chatbot")} 🌾</CardTitle>
           <div className="flex items-center gap-2">
-            <label htmlFor="zone" className="text-sm text-muted-foreground">Zone</label>
-            <input id="zone" value={zone} onChange={(e) => setZone(e.target.value)} className="border px-3 py-2 rounded-md w-28" />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowOriginal(!showOriginal)}
+              className="text-xs"
+            >
+              {showOriginal ? t("chatbot.hide_original", "Hide Original") : t("chatbot.show_original", "Show Original")}
+            </Button>
           </div>
-          <div className="border rounded-md p-3 min-h-[240px] bg-background">
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Chat messages area */}
+          <div className="border rounded-lg p-4 min-h-[400px] max-h-[600px] overflow-y-auto bg-gray-50 dark:bg-gray-900">
             {messages.length === 0 ? (
-              <div className="text-sm text-muted-foreground">Ask about irrigation, fertilizers, crops, tank status, or soil guidance.</div>
+              <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
+                {loading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                    <span>{t("chatbot.loading", "Loading...")}</span>
+                  </div>
+                ) : (
+                  t("chatbot.placeholder", "Ask about irrigation, fertilizers, crops, pests, or diseases...")
+                )}
+              </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-4">
                 {messages.map((m, i) => (
-                  <div key={i} className={`space-y-1 text-sm ${m.role === "user" ? "text-foreground" : "text-green-700"}`}>
-                    <div className="whitespace-pre-wrap">
-                      <span className="font-medium mr-2">{m.role === "user" ? "You:" : "Assistant:"}</span>
-                      {m.text}
+                  <div key={i} className="space-y-2">
+                    {/* Message bubble */}
+                    <div className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+                      <div
+                        className={`max-w-[80%] rounded-lg px-4 py-3 shadow-sm ${
+                          m.role === "user"
+                            ? "bg-blue-600 text-white"
+                            : "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700"
+                        }`}
+                      >
+                        <div className="text-xs font-semibold mb-1 opacity-75">
+                          {m.role === "user" ? t("chatbot.you", "You") : t("chatbot.assistant", "Assistant")} {m.role === "assistant" && "🌱"}
+                        </div>
+                        <div className="text-sm whitespace-pre-wrap leading-relaxed">{m.text}</div>
+                        
+                        {/* Show original answer toggle */}
+                        {m.role === "assistant" && showOriginal && m.originalText && m.originalText !== m.text && (
+                          <details className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
+                            <summary className="text-xs cursor-pointer text-gray-600 dark:text-gray-400">
+                              {t("chatbot.original_answer", "Original Answer")}
+                            </summary>
+                            <div className="mt-2 text-xs text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 p-2 rounded">
+                              {m.originalText}
+                            </div>
+                          </details>
+                        )}
+                      </div>
                     </div>
-                    {m.role === "assistant" && m.sources && m.sources.length > 0 && (
-                      <div className="text-xs text-muted-foreground flex flex-wrap gap-2">
-                        <span>Sources:</span>
-                        {m.sources.map((s, j) => (
-                          <a key={j} href={s} target="_blank" rel="noreferrer" className="underline text-blue-700 truncate max-w-[240px]" title={s}>
-                            [{j + 1}] {s}
-                          </a>
-                        ))}
+
+                    {/* Follow-up suggestions */}
+                    {m.role === "assistant" && m.followUps && m.followUps.length > 0 && (
+                      <div className="ml-2 space-y-2">
+                        <div className="text-xs text-gray-600 dark:text-gray-400 font-medium">
+                          💡 {t("chatbot.suggested_questions", "You might also want to know:")}
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {m.followUps.map((followUp, j) => (
+                            <button
+                              key={j}
+                              onClick={() => askFollowUp(followUp)}
+                              className="text-xs px-3 py-1.5 rounded-full border border-green-600 text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors"
+                            >
+                              {followUp}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
                 ))}
+                
+                {/* Typing indicator */}
+                {loading && (
+                  <div className="flex justify-start">
+                    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3 shadow-sm">
+                      <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                <div ref={messagesEndRef} />
               </div>
             )}
           </div>
+
+          {/* Input area */}
           <div className="flex items-center gap-2">
             <input
-              className="border px-3 py-2 rounded-md w-full"
-              placeholder="Type your question..."
+              className="border border-gray-300 dark:border-gray-700 px-4 py-3 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-800"
+              placeholder={t("chatbot.input_placeholder", "Type your farming question...")}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={onKey}
+              disabled={loading}
             />
-            <Button onClick={send} disabled={loading}>{loading ? "Thinking..." : "Send"}</Button>
+            <Button onClick={send} disabled={loading || !input.trim()} className="px-6">
+              {loading ? t("chatbot.thinking", "Thinking...") : t("chatbot.send", "Send")}
+            </Button>
+          </div>
+
+          {/* Info footer */}
+          <div className="text-xs text-center text-muted-foreground">
+            {t("chatbot.footer", "Ask questions about crops, irrigation, fertilizers, pests, diseases, and more!")} 
+            {" • "}
+            <span className="text-green-600 dark:text-green-400">Session: {sessionId.substring(0, 15)}...</span>
           </div>
         </CardContent>
       </Card>

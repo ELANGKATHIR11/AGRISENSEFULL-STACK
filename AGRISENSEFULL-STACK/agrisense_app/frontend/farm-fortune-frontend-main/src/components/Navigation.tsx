@@ -1,9 +1,10 @@
 import { NavLink } from "react-router-dom";
 import { Home, Zap, Wheat, Settings, LineChart, Droplets, CloudRain, MessageSquare, Droplet, Bug, Sprout, Activity, BarChart3, Shield, Scissors, Cpu } from "lucide-react";
-import { useI18n } from "../i18n";
+import { useTranslation } from "react-i18next";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 
 const Navigation = () => {
-  const { t } = useI18n();
+  const { t } = useTranslation();
   
   const navItems = [
     { to: "/", icon: Home, label: t("nav_home") },
@@ -32,8 +33,8 @@ const Navigation = () => {
               <Sprout className="w-6 h-6 text-white" />
             </div>
             <div className="text-xl font-bold text-white">
-              AgriSense
-              <div className="text-xs text-green-100 font-normal">Smart Agriculture</div>
+              {t("app_title")}
+              <div className="text-xs text-green-100 font-normal">{t("app_tagline")}</div>
             </div>
           </div>
 
@@ -54,6 +55,11 @@ const Navigation = () => {
                 <span className="hidden sm:inline">{item.label}</span>
               </NavLink>
             ))}
+            
+            {/* Language Switcher */}
+            <div className="ml-2">
+              <LanguageSwitcher />
+            </div>
           </div>
         </div>
       </div>

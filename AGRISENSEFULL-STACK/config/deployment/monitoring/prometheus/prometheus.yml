@@ -1,0 +1,66 @@
+# Prometheus configuration for AgriSense monitoring
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'agrisense-production'
+    environment: 'prod'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+# Rules configuration
+rule_files:
+  - "rules/*.yml"
+
+# Scrape configurations
+scrape_configs:
+  # AgriSense Backend
+  - job_name: 'agrisense-backend'
+    static_configs:
+      - targets: ['backend:8004']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    honor_labels: true
+    
+  # Node Exporter for system metrics
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 15s
+
+  # PostgreSQL Exporter
+  - job_name: 'postgres-exporter'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+    scrape_interval: 30s
+
+  # Redis Exporter
+  - job_name: 'redis-exporter'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    scrape_interval: 30s
+
+  # TensorFlow Serving metrics
+  - job_name: 'tensorflow-serving'
+    static_configs:
+      - targets: ['tf-serving:8501']
+    metrics_path: '/monitoring/prometheus/metrics'
+    scrape_interval: 30s
+
+  # MQTT Broker metrics (if available)
+  - job_name: 'mosquitto'
+    static_configs:
+      - targets: ['mosquitto:9234']
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

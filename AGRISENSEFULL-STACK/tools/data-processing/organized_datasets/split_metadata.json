@@ -1,0 +1,17 @@
+{
+  "train": {
+    "files": [],
+    "count": 0,
+    "stats": {}
+  },
+  "val": {
+    "files": [],
+    "count": 0,
+    "stats": {}
+  },
+  "test": {
+    "files": [],
+    "count": 0,
+    "stats": {}
+  }
+}

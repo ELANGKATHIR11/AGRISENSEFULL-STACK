@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Zap, Droplets, Thermometer, Gauge, Beaker, AlertCircle, CheckCircle, TrendingUp, Play, Square, Wifi, WifiOff, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useI18n } from "@/i18n";
+import { useTranslation } from "react-i18next";
 
 import { api, type SensorReading, type BackendRecommendation, type PlantListItem, type LiveSensorData, type DeviceStatus } from "@/lib/api";
 
@@ -52,7 +52,7 @@ const Recommend = () => {
   const [lastSensorUpdate, setLastSensorUpdate] = useState<string>("");
   
   const { toast } = useToast();
-  const { t } = useI18n();
+  const { t } = useTranslation();
 
   useEffect(() => {
     let cancelled = false;

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Search, Wheat, Droplets, Thermometer, Sun, Calendar, TrendingUp } from "lucide-react";
 
 import { api, type CropCard } from "@/lib/api";
-import { useI18n } from "@/i18n";
+import { useTranslation } from "react-i18next";
 
 const Crops = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -14,7 +14,7 @@ const Crops = () => {
   const [crops, setCrops] = useState<CropCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { t } = useI18n();
+  const { t } = useTranslation();
 
   useEffect(() => {
     let cancelled = false;

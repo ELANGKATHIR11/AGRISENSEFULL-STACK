@@ -1,0 +1,58 @@
+{
+  "data_info": {
+    "total_diseases": 8,
+    "total_weeds": 8,
+    "disease_classes": [
+      "tomato_early_blight",
+      "tomato_late_blight",
+      "corn_rust",
+      "wheat_rust",
+      "potato_blight",
+      "apple_scab",
+      "grape_downy_mildew",
+      "rice_blast"
+    ],
+    "weed_classes": [
+      "dandelion",
+      "crabgrass",
+      "clover",
+      "chickweed",
+      "plantain",
+      "lambsquarters",
+      "pigweed",
+      "foxtail"
+    ]
+  },
+  "training_config": {
+    "image_size": [
+      224,
+      224
+    ],
+    "batch_size": 16,
+    "epochs": 50,
+    "learning_rate": 0.001,
+    "validation_split": 0.2,
+    "augmentation": true
+  },
+  "model_config": {
+    "disease_models": [
+      "resnet50",
+      "mobilenetv3",
+      "vit_base"
+    ],
+    "weed_models": [
+      "deeplabv3",
+      "resnet50",
+      "mobilenetv3"
+    ],
+    "output_dir": "trained_models"
+  },
+  "data_collection": {
+    "status": "structure_created",
+    "next_steps": [
+      "Add training images to class directories",
+      "Run data validation",
+      "Start model training"
+    ]
+  }
+}

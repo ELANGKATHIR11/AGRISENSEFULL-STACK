@@ -1,0 +1,15 @@
+{
+  "classes": [
+    "Healthy",
+    "Blast Disease",
+    "Bacterial Blight",
+    "Brown Spot",
+    "Leaf Smut"
+  ],
+  "metadata": {
+    "model_version": "enhanced_1.0",
+    "trained_on": "2025-10-02",
+    "num_classes": 5,
+    "description": "Enhanced disease detection model for Indian crops"
+  }
+}

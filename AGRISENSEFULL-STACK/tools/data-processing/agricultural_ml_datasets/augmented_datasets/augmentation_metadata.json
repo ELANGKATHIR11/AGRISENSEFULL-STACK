@@ -1,0 +1,105 @@
+{
+  "strategy": {
+    "disease_anthracnose_anthracnose": 1,
+    "disease_bacterial_blight_bacterial_blight": 1,
+    "disease_bacterial_canker_bacterial_canker": 1,
+    "disease_bacterial_spot_bacterial_spot": 1,
+    "disease_bacterial_wilt_bacterial_wilt": 1,
+    "disease_black_black": 1,
+    "disease_blight_blight": 1,
+    "disease_downy_downy": 1,
+    "disease_fire_fire": 1,
+    "disease_fusarium_fusarium": 1,
+    "disease_iron_deficiency_iron_deficiency": 1,
+    "disease_leaf_leaf": 1,
+    "disease_magnesium_deficiency_magnesium_deficiency": 1,
+    "disease_mosaic_mosaic": 1,
+    "disease_nitrogen_deficiency_nitrogen_deficiency": 1,
+    "disease_phosphorus_deficiency_phosphorus_deficiency": 1,
+    "disease_potassium_deficiency_potassium_deficiency": 1,
+    "disease_powdery_powdery": 1,
+    "disease_ring_ring": 1,
+    "disease_rust_rust": 1,
+    "disease_streak_streak": 1,
+    "disease_yellow_leaf_yellow_leaf": 1,
+    "weed_canada_thistle_canada_thistle": 1,
+    "weed_chickweed_chickweed": 1,
+    "weed_crabgrass_crabgrass": 1,
+    "weed_dandelion_dandelion": 1,
+    "weed_field_bindweed_field_bindweed": 1,
+    "weed_foxtail_foxtail": 1,
+    "weed_lambsquarters_lambsquarters": 1,
+    "weed_pigweed_pigweed": 1,
+    "weed_plantain_plantain": 1,
+    "weed_purple_nutsedge_purple_nutsedge": 1,
+    "weed_purslane_purslane": 1,
+    "weed_yellow_nutsedge_yellow_nutsedge": 1,
+    "general_fertilization_fertilization": 1,
+    "general_irrigation_irrigation": 3,
+    "general_pest_pest": 1
+  },
+  "statistics": {
+    "original_images": 0,
+    "augmented_images": 0,
+    "augmentation_types": {},
+    "failed_augmentations": 0
+  },
+  "config": {
+    "basic_transforms": {
+      "rotation_range": [
+        -30,
+        30
+      ],
+      "brightness_range": [
+        0.7,
+        1.3
+      ],
+      "contrast_range": [
+        0.8,
+        1.2
+      ],
+      "saturation_range": [
+        0.8,
+        1.2
+      ],
+      "hue_shift_range": [
+        -20,
+        20
+      ],
+      "blur_kernel_range": [
+        1,
+        5
+      ]
+    },
+    "agricultural_specific": {
+      "lighting_conditions": [
+        "natural",
+        "artificial",
+        "shadow",
+        "overcast"
+      ],
+      "field_conditions": [
+        "wet",
+        "dry",
+        "dusty",
+        "clean"
+      ],
+      "growth_stages": [
+        "early",
+        "middle",
+        "late"
+      ],
+      "seasonal_effects": [
+        "spring",
+        "summer",
+        "fall",
+        "winter"
+      ]
+    },
+    "augmentation_ratios": {
+      "basic": 0.8,
+      "advanced": 0.6,
+      "agricultural": 0.4
+    }
+  }
+}

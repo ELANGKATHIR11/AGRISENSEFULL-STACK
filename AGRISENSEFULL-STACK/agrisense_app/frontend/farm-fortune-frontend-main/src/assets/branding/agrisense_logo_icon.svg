@@ -1,0 +1,38 @@
+<!-- AgriSense Icon Mark -->
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-label="AgriSense Icon">
+  <defs>
+    <linearGradient id="gLeaf" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#14532d" />
+      <stop offset="100%" stop-color="#198754" />
+    </linearGradient>
+    <linearGradient id="gAI" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#06b6d4" />
+      <stop offset="100%" stop-color="#0ea5e9" />
+    </linearGradient>
+    <linearGradient id="gIoT" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f97316" />
+      <stop offset="100%" stop-color="#fb923c" />
+    </linearGradient>
+    <linearGradient id="gWater" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0ea5e9" />
+      <stop offset="100%" stop-color="#0369a1" />
+    </linearGradient>
+  </defs>
+  <circle cx="64" cy="64" r="60" fill="#f0fdf4" stroke="#198754" stroke-width="4" />
+  <path d="M64 28 C52 38 46 52 46 66 c0 12 8 22 18 28 c10 -6 18 -16 18 -28 C82 52 76 38 64 28 z" fill="url(#gLeaf)" stroke="#14532d" stroke-width="2" />
+  <path d="M64 36 C60 44 56 50 56 58 a8 8 0 0 0 16 0 c0 -8 -4 -14 -8 -22 z" fill="url(#gWater)" opacity="0.9" />
+  <g stroke="url(#gAI)" stroke-width="3" stroke-linecap="round">
+    <circle cx="78" cy="50" r="5" fill="#ffffff" stroke="#0ea5e9" />
+    <circle cx="84" cy="70" r="5" fill="#ffffff" stroke="#0ea5e9" />
+    <circle cx="72" cy="82" r="5" fill="#ffffff" stroke="#0ea5e9" />
+    <circle cx="54" cy="84" r="5" fill="#ffffff" stroke="#0ea5e9" />
+    <line x1="78" y1="50" x2="84" y2="70" />
+    <line x1="84" y1="70" x2="72" y2="82" />
+    <line x1="72" y1="82" x2="54" y2="84" />
+    <line x1="54" y1="84" x2="78" y2="50" />
+  </g>
+  <g stroke="url(#gIoT)" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.9">
+    <path d="M94 64 q12 0 18 10" />
+    <path d="M94 58 q18 0 26 16" />
+  </g>
+</svg>

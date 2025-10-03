@@ -1,0 +1,7 @@
+{
+    "sketch": "AGRISENSE_IoT/esp32_firmware/agrisense_esp32.ino",
+    "configuration": "PSRAM=disabled,PartitionScheme=default,CPUFreq=240,FlashMode=qio,FlashFreq=80,FlashSize=4M,UploadSpeed=921600,DebugLevel=none",
+    "board": "esp32:esp32:esp32",
+    "port": "",
+    "programmer": ""
+}

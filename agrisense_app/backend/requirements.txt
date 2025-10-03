@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+httpx
+python-dotenv
+
+# Optional ML / VLM/NLM dependencies. Install locally if you plan to run VLM or NLM features.
+# These are optional and CI runs use AGRISENSE_DISABLE_ML=1 to avoid heavy ML installs.
+torchvision
+sentence-transformers

@@ -1,0 +1,15 @@
+{
+  "classes": [
+    "No Weed",
+    "Barnyard Grass",
+    "Nut Sedge",
+    "Water Hyacinth",
+    "Parthenium"
+  ],
+  "metadata": {
+    "model_version": "enhanced_1.0",
+    "trained_on": "2025-10-02",
+    "num_classes": 5,
+    "description": "Enhanced weed detection model for Indian agriculture"
+  }
+}

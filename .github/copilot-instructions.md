@@ -1,20 +1,87 @@
-## Quick orientation — what this repo is
+# 🤖 AgriSense - AI Agent Operation Manual
 
-AgriSense is a full-stack FastAPI + Vite app for smart irrigation, crop recommendation and plant disease tooling. This document is a practical, upgrade-focused guide for future automated agents and maintainers.
+**Last Updated**: October 2, 2025  
+**Project Status**: Production Ready with Multi-Language Support  
+**Target Audience**: Future AI Agents (Cascade, Copilot Workspace, etc.)
 
-Key runtime pieces:
+---
 
-- Backend app (FastAPI): `agrisense_app/backend/main.py` — the ASGI entrypoint. Run with `uvicorn agrisense_app.backend.main:app`.
-- Core logic: `agrisense_app/backend/engine.py` — `RecoEngine` performs rule-based calculations and optional ML blending for water/fertilizer recommendations.
-- Persistence: `agrisense_app/backend/data_store.py` — SQLite (`sensors.db`) helpers and schema accessors.
-- MQTT & Edge: `agrisense_app/backend/mqtt_bridge.py`, `mqtt_publish.py`, and `agrisense_pi_edge_minimal` for optional edge readers.
-- Frontend (React + Vite): `agrisense_app/frontend/farm-fortune-frontend-main`. Built assets are served under `/ui` by the backend when present.
+## 📋 Quick Orientation — What This Repo Is
 
-This repo also contains utility scripts, datasets, model artifacts and training/QA scaffolding useful during upgrades.
+AgriSense is a **full-stack smart agriculture platform** combining FastAPI backend with React + Vite frontend for:
+- 🌾 **Smart Irrigation**: ML-powered water management recommendations
+- 🌱 **Crop Recommendation**: Soil-based crop selection guidance  
+- 🦠 **Plant Disease Detection**: Vision model-based disease identification
+- 🌿 **Weed Management**: AI-powered weed detection and treatment recommendations
+- 💬 **Agricultural Chatbot**: Natural language farming advice
+- 🌍 **Multi-Language Support**: English, Hindi, Tamil, Telugu, Kannada (5 languages)
 
-## Purpose of this file (for future agents)
+### Critical Runtime Components
 
-This file should let an automated agent safely and predictably perform upgrades: run, test, and validate changes without accidentally breaking CI or production. Follow the "Small contract" below and the step-by-step upgrade checklist.
+| Component | Location | Purpose | Run Command |
+|-----------|----------|---------|-------------|
+| **Backend API** | `agrisense_app/backend/main.py` | FastAPI ASGI entrypoint | `uvicorn agrisense_app.backend.main:app --port 8004` |
+| **Core Engine** | `agrisense_app/backend/engine.py` | `RecoEngine` - rule-based + ML recommendations | Imported by main.py |
+| **Database** | `agrisense_app/backend/data_store.py` | SQLite helpers (`sensors.db`) | Auto-initialized |
+| **MQTT Bridge** | `agrisense_app/backend/mqtt_bridge.py` | IoT device communication | Optional |
+| **Edge Readers** | `agrisense_pi_edge_minimal/` | Raspberry Pi sensor readers | Optional |
+| **Frontend** | `agrisense_app/frontend/farm-fortune-frontend-main` | React + Vite SPA | `npm run dev` (port 8082) |
+
+### Project Structure Overview
+
+```
+AGRISENSE FULL-STACK/
+├── .github/
+│   └── copilot-instructions.md      # 👈 You are here
+├── AGRISENSEFULL-STACK/              # 🎯 Main workspace
+│   ├── agrisense_app/
+│   │   ├── backend/                 # FastAPI application
+│   │   │   ├── main.py              # API entrypoint
+│   │   │   ├── engine.py            # Recommendation engine
+│   │   │   ├── data_store.py        # Database layer
+│   │   │   ├── disease_model.py     # Disease detection
+│   │   │   ├── weed_management.py   # Weed analysis
+│   │   │   ├── chatbot_service.py   # NLP chatbot
+│   │   │   ├── requirements.txt     # Python dependencies
+│   │   │   └── ml_models/           # Model artifacts
+│   │   └── frontend/
+│   │       └── farm-fortune-frontend-main/
+│   │           ├── src/             # React components
+│   │           │   ├── locales/     # i18n translations (5 languages)
+│   │           │   ├── pages/       # Route components
+│   │           │   ├── components/  # Reusable UI
+│   │           │   ├── i18n.ts      # i18next config
+│   │           │   └── main.tsx     # React entrypoint
+│   │           ├── package.json     # Node dependencies
+│   │           └── vite.config.ts   # Vite configuration
+│   ├── scripts/                     # Utility scripts
+│   │   ├── test_backend_integration.py
+│   │   ├── chatbot_http_smoke.py
+│   │   └── train_timeseries.py
+│   ├── tests/                       # Test suites
+│   ├── documentation/               # Project docs
+│   ├── PROJECT_BLUEPRINT_UPDATED.md # Architecture blueprint
+│   ├── MULTILANGUAGE_IMPLEMENTATION_SUMMARY.md
+│   └── pytest.ini                   # Test configuration
+└── README.md                        # Top-level README
+```
+
+## 🎯 Purpose of This File (For Future AI Agents)
+
+This document enables automated agents to:
+1. ✅ **Run the project** from scratch in any environment
+2. 🐛 **Debug issues** systematically with known solutions
+3. 🚀 **Upgrade dependencies** safely without breaking changes
+4. 🔧 **Enhance features** while preserving backward compatibility
+5. 📚 **Understand architecture** to make informed decisions
+
+### Agent Capabilities Expected
+- File reading/writing
+- Terminal command execution (PowerShell on Windows)
+- Package manager operations (pip, npm)
+- Git operations (optional but helpful)
+- Error log interpretation
+- Web request testing (HTTP clients)
 
 ---
 
@@ -153,46 +220,399 @@ cd agrisense_app/backend && python -m uvicorn main:app --host 0.0.0.0 --port 800
 
 ---
 
-## Upgrade checklist (what an automated agent should do)
+---
 
-1) Pre-flight risk assessment
-  - Review `pytest.ini`, CI workflows, and this guide for constraints
-  - Run `pip-audit`, `npm audit`, and (if available) `safety check` for Python packages
-  - Scan for secrets using `detect-secrets scan` or `git secrets --scan`
-  - Verify Pydantic models provide strict validation on all new/modified endpoints
-  - Ensure `AGRISENSE_DISABLE_ML=1` is exported for any automated or CI test runs
+## 🚀 Quick Start: Running the Project (Step-by-Step)
 
-2) Environment preparation
-  - Create or refresh a Python 3.9+ virtual environment:
-    ```powershell
-    python -m venv .venv
-    .\.venv\Scripts\Activate.ps1
-    $env:AGRISENSE_DISABLE_ML='1'
-    pip install --upgrade pip wheel setuptools
-    pip install -r agrisense_app/backend/requirements.txt
-    pip install -r agrisense_app/backend/requirements-dev.txt
-    ```
-  - Install frontend dependencies: `cd agrisense_app/frontend/farm-fortune-frontend-main && npm install`
-  - Launch backend from repo root: `python -m uvicorn agrisense_app.backend.main:app --host 0.0.0.0 --port 8004 --reload`
-  - Start frontend dev server: `npm run dev`
+### Prerequisites Check
+```powershell
+# Verify installations
+python --version        # Should be 3.9+
+node --version          # Should be 18+
+npm --version           # Should be 9+
+git --version           # Optional but recommended
+```
 
-3) Automated verification
-  - Run backend tests with ML disabled: `$env:AGRISENSE_DISABLE_ML='1'; pytest -q scripts/test_backend_inprocess.py scripts/test_edge_endpoints.py`
-  - Execute smoke suites: `python scripts/test_backend_integration.py`, `python scripts/chatbot_http_smoke.py`
-  - Hit VLM endpoints and plant-health APIs with sample payloads (`http :8004/api/vlm/status`, `/api/disease/detect`, `/api/weed/analyze`)
-  - Re-run `pip-audit`/`npm audit` (or `npm audit --production`) to confirm zero regressions
+### Step 1: Clone and Navigate
+```powershell
+# If not already cloned
+git clone <repository-url>
+cd "AGRISENSE FULL-STACK/AGRISENSEFULL-STACK"
+```
 
-4) Resilience & performance checks
-  - Flip `AGRISENSE_DISABLE_ML` off/on to confirm graceful fallbacks remain functional
-  - Run targeted load smoke (e.g., `hey` or `locust`) against `/health`, `/api/disease/detect`, `/api/weed/analyze`
-  - Validate edge simulators via `python tools/development/scripts/test_edge_endpoints.py`
-  - Inspect backend logs for new warnings or exceptions
+### Step 2: Backend Setup
+```powershell
+# Create virtual environment
+python -m venv .venv
 
-5) Documentation & release readiness
-  - Update `CHANGELOG.md`, relevant files in `documentation/`, and `PROJECT_BLUEPRINT_UPDATED.md`
-  - Add migration notes for any DB/API schema changes
-  - Summarize dependency bumps and security outcomes in the PR description
-  - Follow PR checklist below
+# Activate (PowerShell)
+.\.venv\Scripts\Activate.ps1
+
+# Install backend dependencies
+pip install --upgrade pip wheel setuptools
+cd agrisense_app/backend
+pip install -r requirements.txt
+cd ../..
+
+# Optional: Install dev dependencies for testing
+# pip install -r agrisense_app/backend/requirements-dev.txt
+```
+
+### Step 3: Start Backend Server
+```powershell
+# From AGRISENSEFULL-STACK directory
+# With ML enabled (requires TensorFlow, PyTorch)
+$env:AGRISENSE_DISABLE_ML='0'
+python -m uvicorn agrisense_app.backend.main:app --host 0.0.0.0 --port 8004 --reload
+
+# Without ML (faster startup, rule-based only)
+$env:AGRISENSE_DISABLE_ML='1'
+python -m uvicorn agrisense_app.backend.main:app --host 0.0.0.0 --port 8004 --reload
+```
+
+**✅ Backend Ready**: `http://localhost:8004/health` should return `{"status": "healthy"}`
+
+### Step 4: Frontend Setup
+```powershell
+# Open new terminal
+cd "AGRISENSE FULL-STACK/AGRISENSEFULL-STACK/agrisense_app/frontend/farm-fortune-frontend-main"
+
+# Install dependencies
+npm install
+
+# Start dev server
+npm run dev
+```
+
+**✅ Frontend Ready**: Vite will auto-select available port (usually 8082)  
+**⚠️ Note**: If ports 8080-8081 are occupied, Vite uses 8082+ automatically
+
+### Step 5: Verify Both Services
+```powershell
+# Backend health
+Invoke-WebRequest -Uri http://localhost:8004/health
+
+# Frontend (open in browser)
+Start-Process "http://localhost:8082"
+```
+
+### Common Startup Issues & Solutions
+
+| Issue | Symptom | Solution |
+|-------|---------|----------|
+| **Port conflict** | `Address already in use` | Change port: `--port 8005` or kill process using port |
+| **Module not found** | `ModuleNotFoundError: No module named 'fastapi'` | Activate venv: `.\.venv\Scripts\Activate.ps1` |
+| **npm install fails** | `ENOENT: no such file` | Verify path: `cd agrisense_app/frontend/farm-fortune-frontend-main` |
+| **Blank white page** | Frontend loads then goes white | Hard refresh: `Ctrl+Shift+R` or clear browser cache |
+| **ML model errors** | `TensorFlow not found` | Set `$env:AGRISENSE_DISABLE_ML='1'` |
+| **Database locked** | `database is locked` | Stop all backend processes, delete `sensors.db.lock` if exists |
+
+---
+
+## 🐛 Debugging Guide: Systematic Troubleshooting
+
+### Debug Level 1: Quick Health Checks
+```powershell
+# Check if backend is responding
+curl http://localhost:8004/health
+
+# Check if frontend is responding  
+curl http://localhost:8082
+
+# Check backend logs
+# Look for errors in the terminal running uvicorn
+
+# Check frontend logs
+# Look for errors in the terminal running npm run dev
+
+# Check browser console
+# Open DevTools (F12) and look for JavaScript errors
+```
+
+### Debug Level 2: Detailed Diagnostics
+```powershell
+# Backend diagnostics
+$env:AGRISENSE_DISABLE_ML='1'
+python -m pytest scripts/test_backend_integration.py -v
+
+# Frontend type checking
+cd agrisense_app/frontend/farm-fortune-frontend-main
+npm run typecheck
+
+# Frontend linting
+npm run lint
+```
+
+### Debug Level 3: Common Error Patterns
+
+#### Backend Errors
+
+**1. Import Errors**
+```python
+# Error: ModuleNotFoundError: No module named 'torch'
+# Solution: Either install PyTorch or disable ML
+$env:AGRISENSE_DISABLE_ML='1'
+
+# Error: Cannot import name 'RecoEngine' from 'engine'
+# Solution: Check PYTHONPATH or run from correct directory
+cd AGRISENSEFULL-STACK
+python -m uvicorn agrisense_app.backend.main:app
+```
+
+**2. Database Errors**
+```python
+# Error: sqlite3.OperationalError: database is locked
+# Solution: Close all backend instances, delete lock file
+Stop-Process -Name python -Force
+Remove-Item agrisense_app/backend/sensors.db-journal -ErrorAction SilentlyContinue
+```
+
+**3. CORS Errors**
+```python
+# Error: CORS policy blocked
+# Solution: Verify CORS configuration in main.py
+# Should allow: http://localhost:8082, http://localhost:8080
+```
+
+#### Frontend Errors
+
+**1. Blank White Page**
+```javascript
+// Error: White page, no console errors
+// Solution 1: Hard refresh browser (Ctrl+Shift+R)
+// Solution 2: Clear browser cache
+// Solution 3: Check for i18n initialization race condition
+
+// Error: "The requested module does not provide an export named 'useI18n'"
+// Solution: Use 'useTranslation' from 'react-i18next' instead
+import { useTranslation } from 'react-i18next';
+const { t } = useTranslation();
+```
+
+**2. TypeScript Errors**
+```typescript
+// Error: Type 'number' is not assignable to type 'ReactNode'
+// Solution: Convert to string explicitly
+<div>{String(sensorData.temperature)}°C</div>
+
+// Error: Property 'width' does not exist on type CloudProps
+// Solution: Remove invalid props from Cloud component
+<Cloud opacity={0.5} /> // Remove width, depth props
+```
+
+**3. Translation Errors**
+```javascript
+// Error: i18n not initialized before render
+// Solution: Wait for i18nPromise in main.tsx
+import { i18nPromise } from './i18n';
+i18nPromise.then(() => { root.render(<App />) });
+
+// Error: Translation key not found
+// Solution: Check if key exists in all locale files
+// Files: src/locales/{en,hi,ta,te,kn}.json
+```
+
+### Debug Level 4: Advanced Diagnostics
+
+**Backend Memory Profiling**
+```powershell
+# Install memory profiler
+pip install memory-profiler
+
+# Profile a specific endpoint
+python -m memory_profiler scripts/profile_endpoint.py
+```
+
+**Frontend Performance Analysis**
+```powershell
+# Build and analyze bundle size
+npm run build
+npm run analyze  # If available in package.json
+```
+
+**Network Traffic Analysis**
+```powershell
+# Use browser DevTools Network tab
+# Filter by: XHR, Fetch
+# Look for: Failed requests (red), slow requests (>1s)
+```
+
+---
+
+## 🔧 Upgrade Checklist (Automated Agent Workflow)
+
+### Phase 1: Pre-Flight Risk Assessment (5 mins)
+```powershell
+# Navigate to project root
+cd "AGRISENSE FULL-STACK/AGRISENSEFULL-STACK"
+
+# 1. Review constraints
+Get-Content pytest.ini
+Get-Content .github/copilot-instructions.md
+
+# 2. Security audit - Backend
+cd agrisense_app/backend
+pip-audit
+# Or: pip install safety && safety check
+
+# 3. Security audit - Frontend
+cd ../../agrisense_app/frontend/farm-fortune-frontend-main
+npm audit --production
+
+# 4. Secret scanning (if tools available)
+# detect-secrets scan --baseline .secrets.baseline
+# git secrets --scan
+
+# 5. Check current test status
+cd ../../../
+$env:AGRISENSE_DISABLE_ML='1'
+pytest --collect-only  # See what tests exist
+```
+
+**🚨 STOP CONDITIONS**: If any of these are true, escalate to human:
+- Critical vulnerabilities with no patch available
+- Hardcoded secrets found (API keys, passwords)
+- Major breaking changes in dependencies (semver major version bump)
+- Test failures in main branch (indicates existing issues)
+
+### Phase 2: Environment Preparation (10 mins)
+```powershell
+# 1. Create fresh virtual environment
+python -m venv .venv-upgrade
+.\.venv-upgrade\Scripts\Activate.ps1
+
+# 2. Set environment variables
+$env:AGRISENSE_DISABLE_ML='1'  # Start without ML for faster iteration
+$env:PYTHONPATH="$PWD"
+
+# 3. Install backend dependencies
+cd agrisense_app/backend
+pip install --upgrade pip wheel setuptools
+pip install -r requirements.txt
+pip install -r requirements-dev.txt  # Includes pytest, etc.
+
+# 4. Install frontend dependencies
+cd ../../agrisense_app/frontend/farm-fortune-frontend-main
+npm ci  # Use ci for reproducible builds
+
+# 5. Verify installations
+python -c "import fastapi; print(f'FastAPI: {fastapi.__version__}')"
+node -e "console.log('Node:', process.version)"
+```
+
+### Phase 3: Launch Services (2 mins)
+```powershell
+# Terminal 1: Backend
+cd "AGRISENSE FULL-STACK/AGRISENSEFULL-STACK"
+.\.venv-upgrade\Scripts\Activate.ps1
+$env:AGRISENSE_DISABLE_ML='1'
+python -m uvicorn agrisense_app.backend.main:app --host 0.0.0.0 --port 8004 --reload
+
+# Terminal 2: Frontend
+cd "AGRISENSE FULL-STACK/AGRISENSEFULL-STACK/agrisense_app/frontend/farm-fortune-frontend-main"
+npm run dev
+
+# Verify both are running
+Start-Sleep -Seconds 5
+curl http://localhost:8004/health
+curl http://localhost:8082
+```
+
+### Phase 4: Automated Verification (15 mins)
+```powershell
+# 1. Backend unit tests
+cd "AGRISENSE FULL-STACK/AGRISENSEFULL-STACK"
+$env:AGRISENSE_DISABLE_ML='1'
+pytest scripts/test_backend_inprocess.py -v
+pytest scripts/test_edge_endpoints.py -v
+
+# 2. Backend integration tests
+python scripts/test_backend_integration.py
+
+# 3. Chatbot smoke test
+python scripts/chatbot_http_smoke.py
+
+# 4. API endpoint tests (manual curl or automated)
+# Disease detection
+curl -X POST http://localhost:8004/api/disease/detect `
+  -H "Content-Type: application/json" `
+  -d '{"image_base64": "..."}'
+
+# Weed analysis
+curl -X POST http://localhost:8004/api/weed/analyze `
+  -H "Content-Type: application/json" `
+  -d '{"image_base64": "..."}'
+
+# VLM status
+curl http://localhost:8004/api/vlm/status
+
+# 5. Frontend build test
+cd agrisense_app/frontend/farm-fortune-frontend-main
+npm run build  # Should complete without errors
+
+# 6. TypeScript validation
+npm run typecheck  # Should show 0 errors
+
+# 7. Linting
+npm run lint  # Should pass with 0 errors
+
+# 8. Re-run security audits
+pip-audit  # Backend
+npm audit --production  # Frontend
+```
+
+**✅ SUCCESS CRITERIA**:
+- All tests pass (100% green)
+- No TypeScript errors
+- No linting errors
+- Security audits show no new vulnerabilities
+- Both services start without errors
+
+### Phase 5: Resilience & Performance Checks (10 mins)
+```powershell
+# 1. Test ML fallback mechanism
+# Stop backend, restart with ML enabled
+$env:AGRISENSE_DISABLE_ML='0'
+python -m uvicorn agrisense_app.backend.main:app --host 0.0.0.0 --port 8004
+
+# If ML loads: Verify predictions work
+# If ML fails: Verify fallback to rule-based system
+
+# 2. Load testing (if locust installed)
+# locust -f locustfile.py --host=http://localhost:8004
+
+# 3. Edge simulator validation
+python tools/development/scripts/test_edge_endpoints.py
+
+# 4. Check logs for warnings
+# Look for: deprecation warnings, performance warnings, uncaught exceptions
+Get-Content uvicorn.log | Select-String -Pattern "WARNING|ERROR" -Context 2
+```
+
+### Phase 6: Documentation & Release (5 mins)
+```powershell
+# 1. Update CHANGELOG.md
+# Add new section with version number, date, and changes
+
+# 2. Update PROJECT_BLUEPRINT_UPDATED.md
+# Document any architectural changes
+
+# 3. Update requirements.txt versions
+pip freeze > requirements-snapshot.txt
+# Manually review and update requirements.txt with new versions
+
+# 4. Create upgrade notes
+# In documentation/upgrades/<date>-upgrade-notes.md
+
+# 5. Commit changes
+git add .
+git commit -m "chore: upgrade dependencies - <summary of changes>"
+git push origin <branch-name>
+```
+
+---
+
+## 📋 PR Checklist (Must Pass Before Merge)
 
 ---
 
@@ -208,15 +628,543 @@ cd agrisense_app/backend && python -m uvicorn main:app --host 0.0.0.0 --port 800
 
 ---
 
-## Agentic AI Access Points
+---
 
-Key entry points for Cascade:
-- `agrisense_app/backend/main.py` - API endpoints
-- `agrisense_app/backend/engine.py` - Core logic
-- `agrisense_app/backend/data_store.py` - Database
-- `agrisense_app/backend/weed_management.py` - ML integration
-- `agrisense_app/frontend/farm-fortune-frontend-main/src/` - UI components
+## 🎨 Enhancement Guidelines: Adding New Features
+
+### Feature Development Workflow
+
+**1. Planning Phase**
+```markdown
+# Create feature spec in documentation/features/<feature-name>.md
+- Problem statement
+- Proposed solution
+- Technical approach
+- API changes (if any)
+- UI mockups (if applicable)
+- Testing strategy
+- Rollout plan
+```
+
+**2. Backend Feature Implementation**
+```python
+# Location: agrisense_app/backend/<feature_name>.py
+
+# Pattern 1: New ML Model Feature
+class NewMLFeature:
+    def __init__(self, model_path: str):
+        self.model = self._load_model(model_path)
+    
+    def _load_model(self, path: str):
+        """Lazy load with fallback"""
+        if os.getenv("AGRISENSE_DISABLE_ML") == "1":
+            return None
+        try:
+            return load_model(path)
+        except Exception as e:
+            logger.warning(f"ML model load failed: {e}")
+            return None
+    
+    def predict(self, input_data: Dict) -> Dict:
+        """Always provide fallback"""
+        if self.model:
+            return self._ml_predict(input_data)
+        return self._rule_based_fallback(input_data)
+
+# Pattern 2: New API Endpoint
+@app.post("/api/new-feature", response_model=FeatureResponse)
+async def new_feature_endpoint(
+    request: FeatureRequest,  # Pydantic model for validation
+    current_user: User = Depends(get_current_user)  # Auth if needed
+):
+    """
+    New feature endpoint.
+    
+    Args:
+        request: Validated request with required fields
+        
+    Returns:
+        FeatureResponse: Structured response
+        
+    Raises:
+        HTTPException: 400 for invalid input, 500 for server errors
+    """
+    try:
+        result = feature_logic(request.dict())
+        return FeatureResponse(**result)
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Feature error: {e}")
+        raise HTTPException(status_code=500, detail="Internal error")
+```
+
+**3. Frontend Feature Implementation**
+```typescript
+// Location: agrisense_app/frontend/farm-fortune-frontend-main/src/pages/NewFeature.tsx
+
+import { useTranslation } from 'react-i18next';
+import { useQuery, useMutation } from '@tanstack/react-query';
+
+export default function NewFeaturePage() {
+  const { t } = useTranslation();  // Always use translations
+  
+  // Pattern 1: Data fetching
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['newFeature'],
+    queryFn: async () => {
+      const response = await fetch('http://localhost:8004/api/new-feature');
+      if (!response.ok) throw new Error('Network error');
+      return response.json();
+    },
+    staleTime: 30000,  // 30s
+  });
+  
+  // Pattern 2: Data mutation
+  const mutation = useMutation({
+    mutationFn: async (formData: FormData) => {
+      const response = await fetch('http://localhost:8004/api/new-feature', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      // Invalidate and refetch
+      queryClient.invalidateQueries({ queryKey: ['newFeature'] });
+    },
+  });
+  
+  return (
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold">{t('new_feature_title')}</h1>
+      {/* Component implementation */}
+    </div>
+  );
+}
+```
+
+**4. Translation Updates**
+```json
+// Add to ALL locale files: src/locales/{en,hi,ta,te,kn}.json
+{
+  "translation": {
+    "new_feature_title": "New Feature Title",
+    "new_feature_description": "Description of the feature",
+    "new_feature_button": "Action Button",
+    "new_feature_success": "Operation successful",
+    "new_feature_error": "Operation failed"
+  }
+}
+```
+
+**5. Testing**
+```python
+# Backend test: tests/test_new_feature.py
+import pytest
+from fastapi.testclient import TestClient
+from agrisense_app.backend.main import app
+
+client = TestClient(app)
+
+def test_new_feature_endpoint():
+    """Test new feature endpoint"""
+    response = client.post("/api/new-feature", json={
+        "input_field": "test_value"
+    })
+    assert response.status_code == 200
+    assert "result" in response.json()
+
+def test_new_feature_validation():
+    """Test input validation"""
+    response = client.post("/api/new-feature", json={
+        "invalid_field": "test"
+    })
+    assert response.status_code == 400
+    assert "detail" in response.json()
+
+def test_new_feature_ml_fallback():
+    """Test ML fallback behavior"""
+    import os
+    os.environ["AGRISENSE_DISABLE_ML"] = "1"
+    response = client.post("/api/new-feature", json={
+        "input_field": "test_value"
+    })
+    assert response.status_code == 200
+    # Should still work with rule-based fallback
+```
+
+```typescript
+// Frontend test: src/pages/NewFeature.test.tsx
+import { render, screen, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import NewFeaturePage from './NewFeature';
+
+const queryClient = new QueryClient();
+
+test('renders new feature page', async () => {
+  render(
+    <QueryClientProvider client={queryClient}>
+      <NewFeaturePage />
+    </QueryClientProvider>
+  );
+  
+  await waitFor(() => {
+    expect(screen.getByText(/new feature title/i)).toBeInTheDocument();
+  });
+});
+```
+
+### Feature Integration Checklist
+- [ ] Backend endpoint implemented with Pydantic validation
+- [ ] Frontend page/component implemented with translations
+- [ ] Translations added to all 5 language files
+- [ ] Unit tests written for backend (pytest)
+- [ ] Integration tests for API endpoints
+- [ ] Frontend tests if complex logic (optional)
+- [ ] Error handling for all edge cases
+- [ ] ML fallback implemented (if ML-dependent)
+- [ ] Documentation updated (feature spec, API docs)
+- [ ] Manually tested in browser (all languages)
+- [ ] Performance impact assessed
+- [ ] Security review completed
 
 ---
 
-If anything above is unclear or you want additional automation (example CI workflows, focused upgrade scripts, or test scaffolding), tell me which area to expand and I will implement it.
+## 📚 Knowledge Base: Common Scenarios
+
+### Scenario 1: Adding a New Language
+```typescript
+// 1. Create translation file
+// src/locales/bn.json (Bengali example)
+{
+  "translation": {
+    "app_title": "AgriSense",
+    "app_tagline": "স্থায়িত্বশীল কৃষির জন্য একটি স্মার্ট কৃষি সমাধান",
+    // ... 150+ keys
+  }
+}
+
+// 2. Update i18n config
+// src/i18n.ts
+import bn from './locales/bn.json';
+
+export const languages = [
+  // ... existing languages
+  { code: 'bn', name: 'Bengali', nativeName: 'বাংলা', flag: '🇧🇩' },
+];
+
+i18n.init({
+  resources: {
+    // ... existing
+    bn: { translation: bn.translation },
+  },
+});
+
+// 3. Test all pages with new language
+// 4. Add to documentation
+```
+
+### Scenario 2: Upgrading a Major Dependency
+
+**Backend Example: FastAPI 0.x → 1.x**
+```powershell
+# 1. Check changelog
+# Read: https://github.com/tiangolo/fastapi/releases
+
+# 2. Create upgrade branch
+git checkout -b upgrade/fastapi-1.x
+
+# 3. Update requirements.txt
+# fastapi>=0.115.6 → fastapi>=1.0.0
+
+# 4. Install and test
+pip install -r requirements.txt
+pytest -v
+
+# 5. Fix breaking changes
+# - Check for deprecated imports
+# - Update middleware syntax if changed
+# - Test all endpoints
+
+# 6. Update documentation
+# Note breaking changes in CHANGELOG.md
+```
+
+**Frontend Example: React 18 → 19**
+```powershell
+# 1. Check upgrade guide
+# Read: https://react.dev/blog/2024/04/25/react-19
+
+# 2. Update package.json
+# "react": "^18.3.1" → "react": "^19.0.0"
+# "react-dom": "^18.3.1" → "react-dom": "^19.0.0"
+
+# 3. Install and test
+npm install
+npm run build
+npm run typecheck
+
+# 4. Fix breaking changes
+# - Update deprecated lifecycle methods
+# - Fix SSR if applicable
+# - Test all routes
+
+# 5. Update documentation
+```
+
+### Scenario 3: Debugging a Production Issue
+
+**Backend Debug Process**
+```powershell
+# 1. Check logs
+Get-Content uvicorn.log -Tail 100
+
+# 2. Enable debug logging
+# In main.py, temporarily:
+import logging
+logging.basicConfig(level=logging.DEBUG)
+
+# 3. Reproduce locally
+curl -X POST http://localhost:8004/api/problematic-endpoint `
+  -H "Content-Type: application/json" `
+  -d @test_payload.json
+
+# 4. Add detailed logging
+logger.debug(f"Input: {input_data}")
+logger.debug(f"Intermediate: {intermediate_result}")
+logger.debug(f"Output: {output}")
+
+# 5. Use Python debugger
+import pdb; pdb.set_trace()  # Add at problem point
+# Then: python -m uvicorn ... (will drop to debugger)
+```
+
+**Frontend Debug Process**
+```javascript
+// 1. Check browser console (F12)
+// Look for: errors, warnings, failed network requests
+
+// 2. Enable verbose logging
+// In component:
+console.log('[NewFeature] Props:', props);
+console.log('[NewFeature] State:', state);
+console.log('[NewFeature] API response:', data);
+
+// 3. Use React DevTools
+// Install: React Developer Tools extension
+// Inspect: Component props, state, hooks
+
+// 4. Check network tab
+// Look for: failed requests, slow requests, wrong payloads
+
+// 5. Use debugger
+debugger;  // Will pause execution in DevTools
+```
+
+### Scenario 4: Performance Optimization
+
+**Backend Performance**
+```python
+# 1. Profile endpoints
+from fastapi import Request
+import time
+
+@app.middleware("http")
+async def add_process_time_header(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = time.time() - start_time
+    response.headers["X-Process-Time"] = str(process_time)
+    logger.info(f"{request.url.path}: {process_time:.3f}s")
+    return response
+
+# 2. Identify slow queries
+# Use SQLite EXPLAIN QUERY PLAN
+
+# 3. Add caching
+from functools import lru_cache
+
+@lru_cache(maxsize=128)
+def expensive_computation(param: str) -> Dict:
+    # Cached for repeated calls
+    pass
+
+# 4. Use async where possible
+async def fetch_external_api():
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url)
+        return response.json()
+```
+
+**Frontend Performance**
+```typescript
+// 1. Use React.memo for expensive components
+const ExpensiveComponent = React.memo(({ data }) => {
+  // Only re-renders if data changes
+  return <div>{/* ... */}</div>;
+});
+
+// 2. Lazy load routes
+const DashboardPage = lazy(() => import('./pages/Dashboard'));
+
+// 3. Optimize images
+// Use WebP format, lazy loading
+<img src="image.webp" loading="lazy" alt="..." />
+
+// 4. Reduce bundle size
+npm run build -- --analyze  # See what's large
+// Then: Consider code splitting, tree shaking
+
+// 5. Use virtualization for large lists
+import { useVirtualizer } from '@tanstack/react-virtual';
+```
+
+### Scenario 5: Security Incident Response
+
+**Vulnerability Detected**
+```powershell
+# 1. Assess severity
+npm audit  # Or: pip-audit
+# Read: CVE details, CVSS score, exploit availability
+
+# 2. Check if exploitable in your context
+# - Is the vulnerable code path used?
+# - Are there mitigating factors?
+# - Is there a workaround?
+
+# 3. Immediate mitigation (if critical)
+# - Disable affected feature
+# - Add input filtering
+# - Rate limit endpoint
+
+# 4. Apply patch
+npm update <package>  # Or: pip install --upgrade <package>
+
+# 5. Verify fix
+npm audit  # Should show vulnerability resolved
+
+# 6. Deploy urgently
+# Follow expedited deployment process
+
+# 7. Post-incident
+# - Document in security log
+# - Update dependency policy
+# - Consider automated scanning
+```
+
+---
+
+## 🤝 Agentic AI Access Points
+
+### Key Entry Points for AI Agents
+
+**Backend Core**
+| File | Purpose | When to Modify |
+|------|---------|----------------|
+| `agrisense_app/backend/main.py` | API endpoints, middleware, CORS | Adding new routes, changing API structure |
+| `agrisense_app/backend/engine.py` | Business logic, RecoEngine | Changing recommendation algorithms |
+| `agrisense_app/backend/data_store.py` | Database operations | Adding tables, changing schema |
+| `agrisense_app/backend/disease_model.py` | Disease detection ML | Updating disease model |
+| `agrisense_app/backend/weed_management.py` | Weed detection ML | Updating weed model |
+| `agrisense_app/backend/chatbot_service.py` | NLP chatbot | Improving chatbot responses |
+
+**Frontend Core**
+| File | Purpose | When to Modify |
+|------|---------|----------------|
+| `src/main.tsx` | App entrypoint, i18n init | Changing app initialization |
+| `src/App.tsx` | Routing, layout | Adding new routes |
+| `src/i18n.ts` | i18n configuration | Adding languages |
+| `src/components/Navigation.tsx` | Top nav bar | Changing navigation |
+| `src/pages/*.tsx` | Page components | Adding features to pages |
+| `src/locales/*.json` | Translations | Adding/updating text |
+
+**Configuration & Infrastructure**
+| File | Purpose | When to Modify |
+|------|---------|----------------|
+| `requirements.txt` | Python dependencies | Upgrading backend packages |
+| `package.json` | Node dependencies | Upgrading frontend packages |
+| `pytest.ini` | Test configuration | Changing test behavior |
+| `vite.config.ts` | Build configuration | Changing build process |
+| `.github/copilot-instructions.md` | This file! | Updating agent guidelines |
+
+### Agent Collaboration Protocol
+
+**When to Ask for Human Review**
+- 🚨 **Critical security vulnerabilities** with no clear patch
+- 🚨 **Breaking API changes** that affect external integrations
+- 🚨 **Database migrations** that could cause data loss
+- ⚠️ **Major architectural changes** (e.g., switching databases)
+- ⚠️ **Performance degradation** >20% in benchmarks
+- ⚠️ **Test failures** that aren't understood after debugging
+
+**When to Proceed Autonomously**
+- ✅ **Dependency patches** within same major version
+- ✅ **Adding translations** to existing keys
+- ✅ **Bug fixes** with existing tests
+- ✅ **Documentation updates**
+- ✅ **Code formatting** and linting
+- ✅ **Adding unit tests**
+
+---
+
+## 📞 Support & Resources
+
+### Internal Documentation
+- **Architecture**: `PROJECT_BLUEPRINT_UPDATED.md`
+- **Multi-Language**: `MULTILANGUAGE_IMPLEMENTATION_SUMMARY.md`
+- **Deployment**: `DEPLOYMENT_GUIDE.md`
+- **Testing**: `TESTING_README.md`
+- **VLM Features**: `VLM_INTEGRATION_SUMMARY.md`
+
+### External Resources
+- **FastAPI**: https://fastapi.tiangolo.com/
+- **React**: https://react.dev/
+- **Vite**: https://vitejs.dev/
+- **react-i18next**: https://react.i18next.com/
+- **TanStack Query**: https://tanstack.com/query/latest
+- **Tailwind CSS**: https://tailwindcss.com/
+
+### Quick Commands Reference
+```powershell
+# Backend
+uvicorn agrisense_app.backend.main:app --reload  # Dev mode
+pytest -v  # Run tests
+pip-audit  # Security scan
+
+# Frontend
+npm run dev  # Dev server
+npm run build  # Production build
+npm run typecheck  # Type checking
+npm audit  # Security scan
+
+# Monitoring
+curl http://localhost:8004/health  # Backend health
+curl http://localhost:8004/api/vlm/status  # VLM status
+```
+
+---
+
+## ✅ Final Checklist: Agent Self-Assessment
+
+Before completing any task, verify:
+- [ ] All tests pass (0 failures)
+- [ ] No TypeScript errors (0 errors)
+- [ ] No security regressions (npm/pip audit clean)
+- [ ] Documentation updated (if applicable)
+- [ ] Backward compatibility preserved
+- [ ] ML fallbacks work (test with AGRISENSE_DISABLE_ML=1)
+- [ ] All 5 languages work (test language switcher)
+- [ ] Browser console clean (no errors)
+- [ ] Services start without errors
+- [ ] Manual testing completed (if UI changes)
+
+---
+
+**Document Version**: 2.0  
+**Last Updated**: October 2, 2025  
+**Maintained By**: AI Agents + Human Maintainers  
+**Status**: Production Ready ✅
+
+If you need clarification on any section or want to add specific automation workflows, provide feedback and this document will be updated accordingly.

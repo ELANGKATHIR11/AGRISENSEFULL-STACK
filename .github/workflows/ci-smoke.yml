@@ -1,0 +1,32 @@
+name: CI — Quick smoke
+
+on:
+  pull_request:
+    paths:
+      - '**/agrisense_app/**'
+      - '.github/**'
+
+jobs:
+  smoke:
+    name: Fast smoke tests (no ML)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies (dev)
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r agrisense_app/backend/requirements-dev.txt
+
+      - name: Run smoke runner
+        env:
+          AGRISENSE_DISABLE_ML: '1'
+          PYTHONPATH: ${{ github.workspace }}/AGRISENSEFULL-STACK
+        run: |
+          python agrisense_app/scripts/run_smoke_recommend.py

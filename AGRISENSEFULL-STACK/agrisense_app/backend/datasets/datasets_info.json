@@ -1,0 +1,23 @@
+{
+  "disease_detection": {
+    "source": "huggingface",
+    "dataset_id": "keremberke/plantdoc-classification",
+    "description": "Plant disease classification dataset",
+    "samples": 2598,
+    "classes": 14
+  },
+  "weed_management": {
+    "source": "kaggle",
+    "dataset_id": "ravirajsinh45/crop-and-weed-detection-data-with-bounding-boxes",
+    "description": "Crop and weed detection dataset with bounding boxes",
+    "samples": 1300,
+    "classes": 3
+  },
+  "plant_qa": {
+    "source": "huggingface",
+    "dataset_id": "agriculture-qa-dataset",
+    "description": "Agriculture question-answering dataset",
+    "samples": 5000,
+    "domain": "plant_health"
+  }
+}

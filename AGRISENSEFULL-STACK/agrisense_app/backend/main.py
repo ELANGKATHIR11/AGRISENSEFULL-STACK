@@ -163,6 +163,14 @@ try:
 except ImportError:
     VLM_AVAILABLE = False
 
+# Import conversational chatbot enhancement
+try:
+    from .chatbot_conversational import enhance_chatbot_response, get_greeting_message
+    CONVERSATIONAL_ENHANCEMENT_AVAILABLE = True
+except ImportError:
+    CONVERSATIONAL_ENHANCEMENT_AVAILABLE = False
+    logger.warning("Conversational chatbot enhancement not available")
+
 # Support running as a package (uvicorn backend.main:app) or as a module from backend folder (uvicorn main:app)
 try:
     # Prefer relative imports when running as a package
@@ -473,6 +481,35 @@ app.add_middleware(
 # Enable gzip compression for larger responses
 app.add_middleware(GZipMiddleware, minimum_size=500)
 
+# Add security headers middleware
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):  # type: ignore
+    """Add security headers to all responses"""
+    response = await call_next(request)
+    # Content Security Policy - Restrict sources
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
+        "style-src 'self' 'unsafe-inline'; "
+        "img-src 'self' data: blob: https:; "
+        "font-src 'self' data:; "
+        "connect-src 'self' http://localhost:* ws://localhost:*; "
+        "frame-ancestors 'none';"
+    )
+    # HTTP Strict Transport Security - Force HTTPS
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    # X-Frame-Options - Prevent clickjacking
+    response.headers["X-Frame-Options"] = "DENY"
+    # X-Content-Type-Options - Prevent MIME sniffing
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    # X-XSS-Protection - Enable XSS filter
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    # Referrer-Policy - Control referrer information
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    # Permissions-Policy - Control browser features
+    response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+    return response
+
 # Add metrics middleware (only if FastAPI and Prometheus are available)
 if ENHANCED_BACKEND_AVAILABLE and "MetricsMiddleware" in locals():
     try:
@@ -552,6 +589,20 @@ try:
 except ImportError as e:
     logger.warning(f"⚠️ Real-time Sensor API not available: {e}")
     # sensor_api optional - continue without it
+    pass
+
+# Include VLM (Vision Language Model) API router for disease & weed management
+try:
+    if __package__:
+        from .routes.vlm_routes import router as vlm_router
+    else:
+        from routes.vlm_routes import router as vlm_router  # type: ignore
+    
+    app.include_router(vlm_router)
+    logger.info("✅ VLM API router included successfully - Disease & Weed Management available at /api/vlm")
+except ImportError as e:
+    logger.warning(f"⚠️ VLM API not available: {e}")
+    # VLM API optional - continue without it
     pass
 
 # Optionally mount Flask-based storage server under /storage via WSGI
@@ -3604,6 +3655,8 @@ def _load_chatbot_artifacts() -> bool:
 class ChatbotQuery(BaseModel):
     question: str = Field(..., min_length=1)
     top_k: int = Field(default=DEFAULT_TOPK, ge=1, le=100)
+    session_id: Optional[str] = Field(default=None, description="Session ID for conversation tracking")
+    language: Optional[str] = Field(default="en", description="Language code (en, hi, ta, te, kn)")
 
 
 class ChatbotTune(BaseModel):
@@ -4207,13 +4260,76 @@ def chatbot_ask(q: ChatbotQuery) -> Dict[str, Any]:
     _chatbot_cache[key] = results
     if len(_chatbot_cache) > _CHATBOT_CACHE_MAX:
         _chatbot_cache.popitem(last=False)
+    
+    # Enhance responses with conversational style (makes chatbot more human-like)
+    try:
+        if CONVERSATIONAL_ENHANCEMENT_AVAILABLE and results:
+            language = q.language or "en"
+            session_id = q.session_id
+            
+            # Enhance each answer to be more conversational and farmer-friendly
+            for result in results:
+                original_answer = result.get("answer", "")
+                if original_answer:
+                    enhanced_answer = enhance_chatbot_response(
+                        question=qtext,
+                        base_answer=original_answer,
+                        session_id=session_id,
+                        language=language
+                    )
+                    result["answer"] = enhanced_answer
+                    # Keep original for comparison if needed
+                    result["original_answer"] = original_answer
+    except Exception as e:
+        logger.warning(f"Failed to enhance chatbot response: {e}")
+        # Continue with non-enhanced responses
+    
     return {"question": qtext, "results": results}
 
 
 @app.get("/chatbot/ask")
-def chatbot_ask_get(question: str, top_k: int = DEFAULT_TOPK) -> Dict[str, Any]:
+def chatbot_ask_get(
+    question: str, 
+    top_k: int = DEFAULT_TOPK,
+    session_id: Optional[str] = None,
+    language: str = "en"
+) -> Dict[str, Any]:
     """GET alias for chatbot ask to simplify smoke testing via browser/tools."""
-    return chatbot_ask(ChatbotQuery(question=question, top_k=top_k))
+    return chatbot_ask(ChatbotQuery(
+        question=question, 
+        top_k=top_k,
+        session_id=session_id,
+        language=language
+    ))
+
+
+@app.get("/chatbot/greeting")
+def chatbot_greeting(language: str = "en") -> Dict[str, str]:
+    """
+    Get a friendly greeting message in the specified language.
+    Useful for initializing chat sessions with a warm welcome.
+    """
+    try:
+        if CONVERSATIONAL_ENHANCEMENT_AVAILABLE:
+            greeting = get_greeting_message(language)
+            return {
+                "language": language,
+                "greeting": greeting,
+                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
+            }
+        else:
+            return {
+                "language": language,
+                "greeting": "Hello! How can I help you with your farming questions today?",
+                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
+            }
+    except Exception as e:
+        logger.error(f"Error generating greeting: {e}")
+        return {
+            "language": language,
+            "greeting": "Hello! How can I help you today?",
+            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
+        }
 
 
 @app.get("/chatbot/metrics")

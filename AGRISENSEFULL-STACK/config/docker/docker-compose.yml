@@ -1,0 +1,267 @@
+version: '3.8'
+
+services:
+  # TensorFlow Serving for ML model inference
+  tensorflow-serving:
+    image: tensorflow/serving:latest
+    container_name: agrisense-tf-serving
+    ports:
+      - "8501:8501"  # REST API
+      - "8500:8500"  # gRPC API
+    volumes:
+      - ./models:/models
+      - ./tf-serving-config:/config
+    environment:
+      - MODEL_CONFIG_FILE=/config/model_config.json
+      - MODEL_CONFIG_FILE_POLL_WAIT_SECONDS=60
+      - TF_CPP_MIN_LOG_LEVEL=2
+    command:
+      - --model_config_file=/config/model_config.json
+      - --model_config_file_poll_wait_seconds=60
+      - --allow_version_labels_for_unavailable_models=true
+      - --enable_batching=true
+      - --batching_parameters_file=/config/batching_config.txt
+      - --rest_api_timeout_in_ms=30000
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/v1/models"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - agrisense-network
+
+  # PostgreSQL database
+  postgres:
+    image: postgres:15-alpine
+    container_name: agrisense-postgres
+    environment:
+      - POSTGRES_DB=agrisense
+      - POSTGRES_USER=agrisense
+      - POSTGRES_PASSWORD=agrisense_password
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db-init:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agrisense -d agrisense"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - agrisense-network
+
+  # Redis for caching and rate limiting
+  redis:
+    image: redis:7-alpine
+    container_name: agrisense-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - ./redis.conf:/etc/redis/redis.conf
+    command: redis-server /etc/redis/redis.conf
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - agrisense-network
+
+  # MQTT Broker for IoT communication
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    container_name: agrisense-mqtt
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_logs:/mosquitto/log
+    restart: unless-stopped
+    networks:
+      - agrisense-network
+
+  # AgriSense Backend API
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: agrisense-backend
+    ports:
+      - "8004:8004"
+    environment:
+      - AGRISENSE_DATABASE_URL=postgresql+asyncpg://agrisense:agrisense_password@postgres:5432/agrisense
+      - AGRISENSE_REDIS_URL=redis://redis:6379/0
+      - TENSORFLOW_SERVING_URL=http://tensorflow-serving:8501
+      - AGRISENSE_USE_TENSORFLOW_SERVING=1
+      - MQTT_BROKER=mosquitto
+      - MQTT_PORT=1883
+      - AGRISENSE_DISABLE_ML=0
+    volumes:
+      - ./models:/app/models
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      tensorflow-serving:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8004/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - agrisense-network
+
+  # Frontend (optional for full-stack deployment)
+  frontend:
+    build:
+      context: ./agrisense_app/frontend/farm-fortune-frontend-main
+      dockerfile: Dockerfile
+    container_name: agrisense-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8004
+      - REACT_APP_WS_URL=ws://localhost:8004
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - agrisense-network
+
+  # Monitoring Stack
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    container_name: agrisense-prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--storage.tsdb.retention.size=10GB'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./monitoring/prometheus/rules:/etc/prometheus/rules
+      - prometheus_data:/prometheus
+    networks:
+      - agrisense-network
+    restart: unless-stopped
+    depends_on:
+      - backend
+
+  grafana:
+    image: grafana/grafana:10.0.0
+    container_name: agrisense-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SECURITY_DISABLE_GRAVATAR=true
+      - GF_ANALYTICS_REPORTING_ENABLED=false
+      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      - agrisense-network
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+
+  alertmanager:
+    image: prom/alertmanager:v0.25.0
+    container_name: agrisense-alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://localhost:9093'
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - alertmanager_data:/alertmanager
+    networks:
+      - agrisense-network
+    restart: unless-stopped
+
+  node-exporter:
+    image: prom/node-exporter:v1.6.0
+    container_name: agrisense-node-exporter
+    command:
+      - '--path.rootfs=/host'
+    ports:
+      - "9100:9100"
+    volumes:
+      - '/:/host:ro,rslave'
+    networks:
+      - agrisense-network
+    restart: unless-stopped
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.13.2
+    container_name: agrisense-postgres-exporter
+    environment:
+      DATA_SOURCE_NAME: "postgresql://agrisense:agrisense_password@postgres:5432/agrisense_db?sslmode=disable"
+    ports:
+      - "9187:9187"
+    networks:
+      - agrisense-network
+    restart: unless-stopped
+    depends_on:
+      - postgres
+
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.52.0
+    container_name: agrisense-redis-exporter
+    environment:
+      REDIS_ADDR: "redis://redis:6379"
+    ports:
+      - "9121:9121"
+    networks:
+      - agrisense-network
+    restart: unless-stopped
+    depends_on:
+      - redis
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  mosquitto_data:
+    driver: local
+  mosquitto_logs:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  alertmanager_data:
+    driver: local
+
+networks:
+  agrisense-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

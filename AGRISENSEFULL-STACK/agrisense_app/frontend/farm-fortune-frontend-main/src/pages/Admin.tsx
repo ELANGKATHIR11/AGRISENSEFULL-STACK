@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { useToast } from "../hooks/use-toast";
 import { api } from "../lib/api";
-import { useI18n } from "../i18n";
+import { useTranslation } from "react-i18next";
 
 interface SystemMetric {
   label: string;
@@ -37,7 +37,7 @@ interface ModelWeight {
 const Admin = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
-  const { t } = useI18n();
+  const { t } = useTranslation();
 
   // Mock system metrics
   const systemMetrics: SystemMetric[] = [

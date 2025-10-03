@@ -1,0 +1,57 @@
+[
+  {
+    "filename": "pest_control_cucumber_1.jpg",
+    "category": "general",
+    "subcategory": "pest_control",
+    "crop": "cucumber",
+    "source": "synthetic_generator",
+    "width": 400,
+    "height": 300,
+    "file_size": 4086,
+    "created_timestamp": "2025-09-14T14:16:00Z"
+  },
+  {
+    "filename": "fertilization_corn_2.jpg",
+    "category": "general",
+    "subcategory": "fertilization",
+    "crop": "corn",
+    "source": "synthetic_generator",
+    "width": 400,
+    "height": 300,
+    "file_size": 3809,
+    "created_timestamp": "2025-09-14T14:16:00Z"
+  },
+  {
+    "filename": "fertilization_citrus_3.jpg",
+    "category": "general",
+    "subcategory": "fertilization",
+    "crop": "citrus",
+    "source": "synthetic_generator",
+    "width": 400,
+    "height": 300,
+    "file_size": 3946,
+    "created_timestamp": "2025-09-14T14:16:00Z"
+  },
+  {
+    "filename": "irrigation_apple_4.jpg",
+    "category": "general",
+    "subcategory": "irrigation",
+    "crop": "apple",
+    "source": "synthetic_generator",
+    "width": 400,
+    "height": 300,
+    "file_size": 3803,
+    "created_timestamp": "2025-09-14T14:16:00Z"
+  },
+  {
+    "filename": "pest_control_rose_5.jpg",
+    "category": "general",
+    "subcategory": "pest_control",
+    "crop": "rose",
+    "source": "synthetic_generator",
+    "width": 400,
+    "height": 300,
+    "file_size": 3797,
+    "created_timestamp": "2025-09-14T14:16:00Z"
+  }
+]

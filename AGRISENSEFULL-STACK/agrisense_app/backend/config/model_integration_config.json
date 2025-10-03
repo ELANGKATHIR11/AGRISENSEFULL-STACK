@@ -1,0 +1,21 @@
+{
+  "models": {
+    "disease": {
+      "model_file": "disease_model_enhanced.joblib",
+      "encoder_file": "disease_encoder_enhanced.joblib",
+      "metadata_file": "disease_model_metadata.json",
+      "classes_file": "disease_classes_enhanced.json"
+    },
+    "weed": {
+      "model_file": "weed_model_enhanced.joblib",
+      "encoder_file": "weed_encoder_enhanced.joblib",
+      "metadata_file": "weed_model_metadata.json",
+      "classes_file": "weed_classes_enhanced.json"
+    }
+  },
+  "integration": {
+    "backend_ready": true,
+    "fallback_enabled": true,
+    "created_date": "2025-09-14T13:37:14.729947"
+  }
+}

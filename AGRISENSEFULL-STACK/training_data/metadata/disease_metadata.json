@@ -1,0 +1,226 @@
+{
+  "tomato_early_blight": {
+    "scientific_name": "Sample tomato_early_blight",
+    "symptoms": [
+      "leaf spots",
+      "wilting",
+      "discoloration"
+    ],
+    "treatments": [
+      "fungicide",
+      "cultural_controls"
+    ],
+    "severity_levels": [
+      "mild",
+      "moderate",
+      "severe"
+    ],
+    "affected_crops": [
+      "tomato",
+      "corn",
+      "wheat",
+      "potato"
+    ],
+    "environmental_factors": [
+      "humidity",
+      "temperature",
+      "moisture"
+    ]
+  },
+  "tomato_late_blight": {
+    "scientific_name": "Sample tomato_late_blight",
+    "symptoms": [
+      "leaf spots",
+      "wilting",
+      "discoloration"
+    ],
+    "treatments": [
+      "fungicide",
+      "cultural_controls"
+    ],
+    "severity_levels": [
+      "mild",
+      "moderate",
+      "severe"
+    ],
+    "affected_crops": [
+      "tomato",
+      "corn",
+      "wheat",
+      "potato"
+    ],
+    "environmental_factors": [
+      "humidity",
+      "temperature",
+      "moisture"
+    ]
+  },
+  "corn_rust": {
+    "scientific_name": "Sample corn_rust",
+    "symptoms": [
+      "leaf spots",
+      "wilting",
+      "discoloration"
+    ],
+    "treatments": [
+      "fungicide",
+      "cultural_controls"
+    ],
+    "severity_levels": [
+      "mild",
+      "moderate",
+      "severe"
+    ],
+    "affected_crops": [
+      "tomato",
+      "corn",
+      "wheat",
+      "potato"
+    ],
+    "environmental_factors": [
+      "humidity",
+      "temperature",
+      "moisture"
+    ]
+  },
+  "wheat_rust": {
+    "scientific_name": "Sample wheat_rust",
+    "symptoms": [
+      "leaf spots",
+      "wilting",
+      "discoloration"
+    ],
+    "treatments": [
+      "fungicide",
+      "cultural_controls"
+    ],
+    "severity_levels": [
+      "mild",
+      "moderate",
+      "severe"
+    ],
+    "affected_crops": [
+      "tomato",
+      "corn",
+      "wheat",
+      "potato"
+    ],
+    "environmental_factors": [
+      "humidity",
+      "temperature",
+      "moisture"
+    ]
+  },
+  "potato_blight": {
+    "scientific_name": "Sample potato_blight",
+    "symptoms": [
+      "leaf spots",
+      "wilting",
+      "discoloration"
+    ],
+    "treatments": [
+      "fungicide",
+      "cultural_controls"
+    ],
+    "severity_levels": [
+      "mild",
+      "moderate",
+      "severe"
+    ],
+    "affected_crops": [
+      "tomato",
+      "corn",
+      "wheat",
+      "potato"
+    ],
+    "environmental_factors": [
+      "humidity",
+      "temperature",
+      "moisture"
+    ]
+  },
+  "apple_scab": {
+    "scientific_name": "Sample apple_scab",
+    "symptoms": [
+      "leaf spots",
+      "wilting",
+      "discoloration"
+    ],
+    "treatments": [
+      "fungicide",
+      "cultural_controls"
+    ],
+    "severity_levels": [
+      "mild",
+      "moderate",
+      "severe"
+    ],
+    "affected_crops": [
+      "tomato",
+      "corn",
+      "wheat",
+      "potato"
+    ],
+    "environmental_factors": [
+      "humidity",
+      "temperature",
+      "moisture"
+    ]
+  },
+  "grape_downy_mildew": {
+    "scientific_name": "Sample grape_downy_mildew",
+    "symptoms": [
+      "leaf spots",
+      "wilting",
+      "discoloration"
+    ],
+    "treatments": [
+      "fungicide",
+      "cultural_controls"
+    ],
+    "severity_levels": [
+      "mild",
+      "moderate",
+      "severe"
+    ],
+    "affected_crops": [
+      "tomato",
+      "corn",
+      "wheat",
+      "potato"
+    ],
+    "environmental_factors": [
+      "humidity",
+      "temperature",
+      "moisture"
+    ]
+  },
+  "rice_blast": {
+    "scientific_name": "Sample rice_blast",
+    "symptoms": [
+      "leaf spots",
+      "wilting",
+      "discoloration"
+    ],
+    "treatments": [
+      "fungicide",
+      "cultural_controls"
+    ],
+    "severity_levels": [
+      "mild",
+      "moderate",
+      "severe"
+    ],
+    "affected_crops": [
+      "tomato",
+      "corn",
+      "wheat",
+      "potato"
+    ],
+    "environmental_factors": [
+      "humidity",
+      "temperature",
+      "moisture"
+    ]
+  }
+}

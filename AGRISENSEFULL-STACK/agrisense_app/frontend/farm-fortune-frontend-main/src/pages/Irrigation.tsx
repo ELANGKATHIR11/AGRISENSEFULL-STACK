@@ -6,10 +6,10 @@ import { Progress } from "../components/ui/progress";
 import { Skeleton } from "../components/ui/skeleton";
 import { ToastAction } from "../components/ui/toast";
 import { useToast } from "../hooks/use-toast";
-import { useI18n } from "../i18n";
+import { useTranslation } from "react-i18next";
 
 export default function Irrigation() {
-  const { t } = useI18n();
+  const { t } = useTranslation();
   const [tank, setTank] = useState<TankStatus | null>(null);
   const [loading, setLoading] = useState(false);
   const [zone, setZone] = useState("Z1");

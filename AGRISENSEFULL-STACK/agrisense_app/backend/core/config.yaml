@@ -1,0 +1,22 @@
+plants:
+  generic:
+    kc: 1.0
+    ph_min: 5.5
+    ph_max: 8.5
+    water_factor: 1.0
+
+defaults:
+  area_m2: 100
+  moisture_pct: 40
+  temperature_c: 25
+  ec_dS_m: 1.0
+
+targets_ppm:
+  N: 40
+  P: 20
+  K: 150
+
+rs_per_1000l: 5.0
+kwh_per_1000l: 0.9
+grid_kgco2_per_kwh: 0.82
+pump_lpm: 20.0

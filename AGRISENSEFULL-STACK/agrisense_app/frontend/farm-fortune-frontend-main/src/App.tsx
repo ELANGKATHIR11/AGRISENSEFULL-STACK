@@ -5,7 +5,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navigation from "./components/Navigation";
-import { I18nProvider } from "./i18n";
 
 // Route-based code splitting (lazy load pages)
 const Home = lazy(() => import("./pages/Home"));
@@ -47,11 +46,10 @@ const routerBasename = import.meta.env.PROD ? "/ui" : "/";
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <I18nProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter basename={routerBasename}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter basename={routerBasename}>
           <div className="min-h-screen bg-gray-50">
             <Navigation />
             <Suspense fallback={<div className="p-6 text-sm text-gray-600 text-center">Loading...</div>}>
@@ -78,7 +76,6 @@ const App = () => (
           </div>
         </BrowserRouter>
       </TooltipProvider>
-    </I18nProvider>
   </QueryClientProvider>
 );
 

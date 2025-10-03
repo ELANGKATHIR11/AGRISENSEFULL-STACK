@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useI18n } from "@/i18n";
+import { useTranslation } from "react-i18next";
 
 // Simple mini chart using inline SVG to avoid extra deps.
 function Sparkline({ points, color = "#16a34a" }: { points: number[]; color?: string }) {
@@ -45,7 +45,7 @@ type RecentItem = {
 };
 
 export default function LiveStats() {
-  const { t } = useI18n();
+  const { t } = useTranslation();
   const [zone, setZone] = useState("Z1");
   const [rows, setRows] = useState<RecentItem[]>([]);
   const [loading, setLoading] = useState(true);

@@ -1,0 +1,88 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environments
+.venv/
+.venv-*/
+venv/
+ENV/
+env/
+
+# Testing
+.pytest_cache/
+.coverage
+.tox/
+htmlcov/
+*.log
+pytest-*.txt
+*_test_results_*.json
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Frontend
+node_modules/
+dist/
+.next/
+out/
+build/
+
+# Database
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Temporary files
+tmp_*
+temp_*
+*.tmp
+*.bak
+
+# Logs
+*.log
+logs/
+
+# ML Models (large files)
+*.h5
+*.pkl
+*.joblib
+*.pt
+*.pth
+*.onnx
+
+# Keep model metadata
+!ml_models/**/metadata.json
+!ml_models/**/config.json
