@@ -1,0 +1,80 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+
+version: '3.8'
+
+services:
+  # PostgreSQL Database (Development)
+  postgres:
+    image: postgres:15-alpine
+    container_name: agrisense-postgres-dev
+    environment:
+      POSTGRES_USER: agrisense
+      POSTGRES_PASSWORD: dev_password
+      POSTGRES_DB: agrisense_dev
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"  # Different port to avoid conflicts
+    networks:
+      - agrisense-dev-network
+
+  # Redis Cache (Development)
+  redis:
+    image: redis:7-alpine
+    container_name: agrisense-redis-dev
+    ports:
+      - "6380:6379"  # Different port to avoid conflicts
+    networks:
+      - agrisense-dev-network
+
+  # Backend API (Development - with hot reload)
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder  # Use builder stage for dev dependencies
+    container_name: agrisense-backend-dev
+    environment:
+      - AGRISENSE_ENV=development
+      - DATABASE_URL=postgresql://agrisense:dev_password@postgres:5432/agrisense_dev
+      - REDIS_URL=redis://redis:6379
+      - AGRISENSE_DISABLE_ML=1  # Disable ML for faster dev startup
+    volumes:
+      - ./agrisense_app/backend:/app/backend:rw  # Mount source for hot reload
+      - ./agrisense_app/backend/ml_models:/app/backend/ml_models:ro
+    ports:
+      - "8005:8004"  # Different port to avoid conflicts
+    depends_on:
+      - postgres
+      - redis
+    command: uvicorn backend.main:app --host 0.0.0.0 --port 8004 --reload
+    networks:
+      - agrisense-dev-network
+
+  # Frontend (Development - with hot reload)
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      target: builder  # Use builder stage for dev mode
+    container_name: agrisense-frontend-dev
+    volumes:
+      - ./agrisense_app/frontend/farm-fortune-frontend-main:/app:rw
+      - /app/node_modules  # Use container's node_modules
+    ports:
+      - "8082:8080"  # Vite dev server
+    environment:
+      - VITE_API_URL=http://localhost:8005
+    command: npm run dev -- --host 0.0.0.0 --port 8080
+    depends_on:
+      - backend
+    networks:
+      - agrisense-dev-network
+
+networks:
+  agrisense-dev-network:
+    driver: bridge
+
+volumes:
+  postgres_dev_data:
+    driver: local

@@ -1,0 +1,74 @@
+# ===== GenAI Requirements for AgriSense =====
+# Additional dependencies for RAG Chatbot and Vision-Language Model features
+# Install with: pip install -r requirements-ai.txt
+
+# ===== LangChain Ecosystem =====
+langchain>=0.1.0
+langchain-community>=0.0.20
+langchain-core>=0.1.23
+
+# ===== Vector Database =====
+chromadb>=0.4.22
+# ChromaDB dependencies
+hnswlib>=0.8.0
+chroma-hnswlib>=0.7.3
+
+# ===== Local LLM Support =====
+# Choose ONE of the following based on your setup:
+
+# Option 1: Ollama (Recommended for CPU/GPU - easiest setup)
+# Install Ollama separately: https://ollama.ai
+# Then: ollama pull mistral or ollama pull llama2
+ollama>=0.1.0
+
+# Option 2: LlamaCpp (For GGUF models)
+llama-cpp-python>=0.2.40
+
+# ===== Embeddings =====
+# For semantic search in RAG
+sentence-transformers>=2.3.1
+
+# ===== Vision-Language Model Dependencies =====
+# Already in main requirements.txt but listing for completeness:
+# torch>=2.0.0
+# torchvision>=0.15.0
+# transformers>=4.30.0
+# Pillow>=10.0.0
+
+# ===== Model Optimization =====
+# For 4-bit quantization to fit VLM in memory
+bitsandbytes>=0.41.0
+accelerate>=0.25.0
+
+# ===== Document Loaders =====
+# For ingesting PDF crop guides
+pypdf>=4.0.0
+pdfplumber>=0.10.0
+
+# ===== Text Processing =====
+# For better text splitting and chunking
+langchain-text-splitters>=0.0.1
+tiktoken>=0.5.0
+
+# ===== API Support =====
+# Already in main requirements.txt:
+# python-multipart>=0.0.9
+# pydantic>=2.9.0
+
+# ===== Optional: Advanced Features =====
+# Reranking for better retrieval
+rank-bm25>=0.2.2  # Already in main requirements
+
+# Document intelligence
+python-docx>=1.1.0
+
+# ===== Development & Testing =====
+# For testing AI endpoints
+pytest-asyncio>=0.23.0
+httpx>=0.26.0
+
+# ===== Notes =====
+# - For GPU support, ensure CUDA is properly installed
+# - For CPU-only mode, set environment variable: AGRISENSE_AI_DEVICE=cpu
+# - Recommended VRAM for VLM: 8GB+ (with 4-bit quantization)
+# - For production, consider using Ollama for easier model management

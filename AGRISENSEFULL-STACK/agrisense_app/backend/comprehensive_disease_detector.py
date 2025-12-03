@@ -260,15 +260,30 @@ class ComprehensiveDiseaseDetector:
                 crop_type
             )
             
+            # Provide multiple compatible key names so callers and tests can rely on
+            # either legacy or canonical fields (primary_disease, disease_type, disease)
+            primary = disease_detection['primary_disease']
+            confidence = disease_detection['confidence']
+            severity = disease_detection['severity']
+
             return {
                 "timestamp": datetime.now().isoformat(),
                 "crop_type": crop_type,
-                "disease_type": disease_detection['primary_disease'],
-                "confidence": disease_detection['confidence'],
-                "severity": disease_detection['severity'],
+                # canonical key
+                "primary_disease": primary,
+                # historical/alternate keys for compatibility
+                "disease_type": primary,
+                "disease": primary,
+
+                "confidence": confidence,
+                "severity": severity,
                 "risk_level": disease_detection['risk_level'],
                 "all_predictions": disease_detection['all_predictions'],
+
+                # Keep both names for treatment / recommended_treatments
                 "treatment": treatment_recommendations,
+                "recommended_treatments": treatment_recommendations,
+
                 "prevention": prevention_recommendations,
                 "model_info": {
                     "type": "Comprehensive Disease Detector",
@@ -278,8 +293,8 @@ class ComprehensiveDiseaseDetector:
                 },
                 "environmental_factors": self._assess_environmental_factors(environmental_data or {}),
                 "management_priority": self._assess_management_priority(
-                    disease_detection['severity'], 
-                    disease_detection['confidence']
+                    severity,
+                    confidence
                 )
             }
             

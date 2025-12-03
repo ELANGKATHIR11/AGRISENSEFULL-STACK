@@ -12,19 +12,19 @@
     "scope": "/",
     "icons": [
         {
-            "src": "../src/assets/branding/favicon.svg",
+            "src": "/logo-agrisense-mark-v2.svg",
             "type": "image/svg+xml",
             "sizes": "any",
             "purpose": "any"
         },
         {
-            "src": "../src/assets/branding/agrisense_logo_icon.svg",
-            "type": "image/svg+xml",
+            "src": "/icons/icon-128.png",
+            "type": "image/png",
             "sizes": "128x128",
             "purpose": "maskable"
         },
         {
-            "src": "icons/icon-32.png",
+            "src": "/icons/icon-32.png",
             "type": "image/png",
             "sizes": "32x32"
         },
@@ -71,28 +71,28 @@
             "short_name": "Dashboard",
             "description": "View farm metrics and system status",
             "url": "/",
-            "icons": [{"src": "../src/assets/branding/favicon.svg", "sizes": "64x64"}]
+            "icons": [{"src": "/icons/icon-64.png", "sizes": "64x64"}]
         },
         {
             "name": "Irrigation Control",
             "short_name": "Water",
             "description": "Manage irrigation and water systems",
             "url": "/irrigation",
-            "icons": [{"src": "../src/assets/branding/favicon.svg", "sizes": "64x64"}]
+            "icons": [{"src": "/icons/icon-64.png", "sizes": "64x64"}]
         },
         {
             "name": "Crop Database",
             "short_name": "Crops",
             "description": "Browse crop information and recommendations",
             "url": "/crops",
-            "icons": [{"src": "../src/assets/branding/favicon.svg", "sizes": "64x64"}]
+            "icons": [{"src": "/icons/icon-64.png", "sizes": "64x64"}]
         },
         {
             "name": "AI Chat",
             "short_name": "Chat",
             "description": "Ask farming questions to AI assistant",
             "url": "/chat",
-            "icons": [{"src": "../src/assets/branding/favicon.svg", "sizes": "64x64"}]
+            "icons": [{"src": "/icons/icon-64.png", "sizes": "64x64"}]
         }
     ],
     "prefer_related_applications": false

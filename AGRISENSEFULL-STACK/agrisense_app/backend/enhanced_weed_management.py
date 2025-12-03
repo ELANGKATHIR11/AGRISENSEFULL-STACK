@@ -180,15 +180,53 @@ class WeedSegmentationModel:
         """Load pretrained model as fallback"""
         try:
             if getattr(transformers, 'AutoImageProcessor', None) and getattr(transformers, 'AutoModelForSemanticSegmentation', None):
-                # Use Hugging Face segmentation model
-                model_name = "facebook/detr-resnet-50-panoptic"
-                self.processor = transformers.AutoImageProcessor.from_pretrained(model_name)
-                self.model = transformers.AutoModelForSemanticSegmentation.from_pretrained(model_name)
-                self.model.to(self.device)
-                self.model.eval()
-                logger.info("Loaded Hugging Face segmentation model")
+                # Use only compatible segmentation models (SegFormer, UPerNet, DPT, etc.)
+                # Skip DETR and other incompatible architectures.
+                # Try models that are explicitly supported by AutoModelForSemanticSegmentation
+                possible_models = [
+                    "nvidia/segformer-b0-ade20k",    # SegFormer - lightweight and robust
+                    "openmmlab/upernet-convnext-tiny",  # UPerNet with ConvNeXt - accurate
+                    "Intel/dpt-tiny-ade20k",  # DPT - good for edge detection
+                ]
+                selected = None
+                selected_error = None
+                
+                for model_name in possible_models:
+                    try:
+                        config = transformers.AutoConfig.from_pretrained(model_name)
+                        cfg_class = config.__class__.__name__.lower()
+                        
+                        # Skip DETR and incompatible configs
+                        if 'detr' in cfg_class or 'detrconfig' in cfg_class:
+                            logger.warning(f"Skipping DETR-incompatible model: {model_name} (config: {cfg_class})")
+                            continue
+                        
+                        # Try to load and validate
+                        logger.info(f"Attempting to load segmentation model: {model_name}")
+                        processor = transformers.AutoImageProcessor.from_pretrained(model_name)
+                        model = transformers.AutoModelForSemanticSegmentation.from_pretrained(model_name)
+                        
+                        # If we get here, model loaded successfully
+                        self.processor = processor
+                        self.model = model
+                        self.model.to(self.device)
+                        self.model.eval()
+                        selected = model_name
+                        logger.info(f"Successfully loaded Hugging Face segmentation model: {selected}")
+                        break
+                    except Exception as e:
+                        logger.warning(f"Failed to load {model_name}: {e}")
+                        selected_error = str(e)
+                        continue
+
+                if selected is None:
+                    # No compatible segmentation HF model found, fall back to torchvision DeepLabV3
+                    logger.warning(f"No compatible HF semantic segmentation model loaded (last error: {selected_error}); falling back to PyTorch DeepLabV3")
+                    raise RuntimeError("No compatible HF semantic segmentation model found")
+
             else:
-                # Use PyTorch pretrained model
+                # Use PyTorch pretrained model (fallback when transformers not available)
+                logger.info("Using PyTorch pretrained DeepLabV3-ResNet50 for segmentation")
                 self.model = segmentation.deeplabv3_resnet50(  # type: ignore
                     pretrained=True,
                     num_classes=21  # COCO classes
@@ -201,6 +239,10 @@ class WeedSegmentationModel:
             
         except Exception as e:
             logger.error(f"Failed to load pretrained model: {e}")
+            # Ensure we don't leave model_loaded in a partial state
+            self.model = None
+            self.model_loaded = False
+            # As a last-resort fallback we keep the classification model available and allow segmentation to be skipped
     
     def segment_weeds(self, image: np.ndarray) -> Dict[str, Any]:
         """Segment weeds in the image"""

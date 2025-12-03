@@ -40,16 +40,22 @@ const queryClient = new QueryClient({
 });
 
 // In production, FastAPI serves the app under /ui/, so use that as basename.
-// In Vite dev (http://localhost:8080), use root basename so local dev remains simple.
+// In Vite dev (http://localhost:8080), skip the basename to avoid generating protocol-relative // links.
 // Use import.meta.env.PROD (Vite) to detect production build.
-const routerBasename = import.meta.env.PROD ? "/ui" : "/";
+const routerBasename = import.meta.env.PROD ? "/ui" : "";
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter basename={routerBasename}>
+      <BrowserRouter 
+        basename={routerBasename}
+        future={{
+          v7_startTransition: true,
+          v7_relativeSplatPath: true,
+        }}
+      >
           <div className="min-h-screen bg-gray-50">
             <Navigation />
             <Suspense fallback={<div className="p-6 text-sm text-gray-600 text-center">Loading...</div>}>

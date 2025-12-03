@@ -6,12 +6,6 @@
     }
   ],
   "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@/*": [
-        "./src/*"
-      ]
-    },
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "noImplicitAny": false,

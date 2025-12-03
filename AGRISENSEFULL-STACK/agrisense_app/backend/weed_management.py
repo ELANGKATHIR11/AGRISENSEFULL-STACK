@@ -113,7 +113,7 @@ class WeedManagementEngine:
         """Load configuration from JSON file"""
         try:
             if CONFIG_FILE.exists():
-                with open(CONFIG_FILE, "r") as f:
+                with open(CONFIG_FILE, "r", encoding="utf-8") as f:
                     self.config = json.load(f)
                 logger.info("✅ Loaded configuration from %s", CONFIG_FILE)
             else:
@@ -137,7 +137,7 @@ class WeedManagementEngine:
         """Load weed classes and control methods"""
         try:
             if WEED_CLASSES_FILE.exists():
-                with open(WEED_CLASSES_FILE, "r") as f:
+                with open(WEED_CLASSES_FILE, "r", encoding="utf-8") as f:
                     weed_data = json.load(f)
                     self.weed_classes = weed_data.get("classes", {})
                     self.control_methods = weed_data.get("control_methods", {})
@@ -578,6 +578,25 @@ class WeedManagementEngine:
             logger.error(f"❌ Density analysis failed: {e}")
             return {}
 
+    def analyze_weed_image(
+        self,
+        image_data: Union[str, bytes, Image.Image],
+        crop_type: str = "unknown",
+        environmental_data: Optional[Dict] = None,
+    ) -> Dict[str, Any]:
+        """
+        Analyze weed image - public API method (alias for detect_weeds)
+
+        Args:
+            image_data: Image to analyze
+            crop_type: Type of crop being analyzed
+            environmental_data: Optional environmental sensor data
+
+        Returns:
+            Weed detection results with management recommendations
+        """
+        return self.detect_weeds(image_data, crop_type, environmental_data)
+
     def detect_weeds(
         self,
         image_data: Union[str, bytes, Image.Image],
@@ -686,8 +705,60 @@ class WeedManagementEngine:
                     "cultural_controls": rec_data.get("cultural_controls", []),
                     "timing": rec_data.get("timing_recommendations", [])
                 }
-            
-            return formatted_result
+
+            # Normalize to match the expected schema used by the rest of the module
+            normalized = {
+                "timestamp": formatted_result.get("timestamp") or self._get_timestamp(),
+                "weed_coverage_percentage": None,
+                "weed_regions": [],
+                "density_analysis": {},
+                "management_recommendations": formatted_result.get("management_recommendations", {}),
+                "treatment_map": {},
+                "economic_impact": {},
+                "monitoring_schedule": {},
+                "model_used": formatted_result.get("model_used"),
+                "detection_confidence": formatted_result.get("detection_confidence", 0.0),
+            }
+
+            # Map segmentation results if present
+            if "segmentation" in enhanced_result and enhanced_result["segmentation"].get("success"):
+                seg = enhanced_result["segmentation"]
+                normalized["weed_coverage_percentage"] = seg.get("weed_coverage")
+                # segments -> weed_regions
+                regions = []
+                for segment in seg.get("segments", []):
+                    regions.append({
+                        "region_id": segment.get("id") or segment.get("segment_id"),
+                        "area_pixels": int(segment.get("area", 0)),
+                        "bounding_box": segment.get("bbox", {}),
+                        "center": segment.get("center", {}),
+                        "density": segment.get("density", 0),
+                        "type": segment.get("class_name")
+                    })
+                normalized["weed_regions"] = regions
+
+            # Map classification results
+            if "classification" in enhanced_result and enhanced_result["classification"].get("success"):
+                cls = enhanced_result["classification"]
+                if cls.get("top_prediction"):
+                    top = cls["top_prediction"]
+                    normalized["primary_weed_type"] = top.get("class_name")
+                    normalized["primary_confidence"] = top.get("confidence")
+
+            # Build treatment_map and economic impact if recommendations include cost or zones
+            if "recommendations" in enhanced_result:
+                rec = enhanced_result["recommendations"]
+                # simple mapping to treatment_map
+                normalized["treatment_map"] = {
+                    "treatment_zones": [],
+                    "total_zones": 0,
+                    "high_priority_zones": 0,
+                    "application_sequence": [],
+                }
+                # economic impact mapping
+                normalized["economic_impact"] = rec.get("economic_impact", {}) if isinstance(rec, dict) else {}
+
+            return normalized
             
         except Exception as e:
             logger.error(f"Failed to format enhanced result: {e}")

@@ -149,7 +149,7 @@ class TestWeedDetector:
         
         # assert "total_images" in summary  # Not in current implementation
         # assert "overall_infestation" in summary  # Not in current implementation
-        # assert "common_weeds" in summary  # Not in current implementation
+        # # assert "common_weeds" in summary  # Not in current implementation  # Not in current implementation
         # assert summary["total_images"] == 3  # total_images not in current implementation
     
     def test_invalid_crop(self, detector, sample_clean_field):

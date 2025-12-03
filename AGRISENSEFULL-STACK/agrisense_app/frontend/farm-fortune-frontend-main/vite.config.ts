@@ -29,39 +29,98 @@ export default defineConfig((ctx: { mode: string }) => ({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          ui: [
-            '@radix-ui/react-accordion',
-            '@radix-ui/react-alert-dialog',
-            '@radix-ui/react-aspect-ratio',
-            '@radix-ui/react-avatar',
-            '@radix-ui/react-button',
-            '@radix-ui/react-card',
-            '@radix-ui/react-dialog',
-            '@radix-ui/react-dropdown-menu',
-            '@radix-ui/react-input',
-            '@radix-ui/react-label',
-            '@radix-ui/react-select',
-            '@radix-ui/react-tabs',
-            '@radix-ui/react-toast',
-            '@radix-ui/react-tooltip'
-          ],
-          charts: ['recharts'],
-          maps: ['leaflet', 'react-leaflet'],
-          icons: ['lucide-react'],
-          utils: ['clsx', 'tailwind-merge', 'class-variance-authority'],
-          router: ['react-router-dom'],
-          forms: ['react-hook-form', '@hookform/resolvers', 'zod'],
-          query: ['@tanstack/react-query'],
-          animation: ['framer-motion']
-        }
-      }
+        manualChunks: (id) => {
+          // Core vendor chunk (critical path)
+          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
+            return 'vendor';
+          }
+          
+          // UI components (lazy load)
+          if (id.includes('@radix-ui')) {
+            return 'ui';
+          }
+          
+          // Charts library (heavy, separate chunk)
+          if (id.includes('recharts')) {
+            return 'charts';
+          }
+          
+          // Maps library (heavy, separate chunk)
+          if (id.includes('leaflet') || id.includes('react-leaflet')) {
+            return 'maps';
+          }
+          
+          // Icons (separate for better caching)
+          if (id.includes('lucide-react')) {
+            return 'icons';
+          }
+          
+          // i18n translations (separate for lazy loading)
+          if (id.includes('react-i18next') || id.includes('i18next')) {
+            return 'i18n';
+          }
+          
+          // Utility libraries
+          if (id.includes('clsx') || id.includes('tailwind-merge') || id.includes('class-variance-authority')) {
+            return 'utils';
+          }
+          
+          // Router
+          if (id.includes('react-router-dom')) {
+            return 'router';
+          }
+          
+          // Form handling
+          if (id.includes('react-hook-form') || id.includes('@hookform') || id.includes('zod')) {
+            return 'forms';
+          }
+          
+          // Data fetching
+          if (id.includes('@tanstack/react-query')) {
+            return 'query';
+          }
+          
+          // Animation
+          if (id.includes('framer-motion')) {
+            return 'animation';
+          }
+          
+          // All other node_modules as common vendor chunk
+          if (id.includes('node_modules')) {
+            return 'vendor-common';
+          }
+        },
+        // Asset file naming for better caching
+        assetFileNames: (assetInfo) => {
+          // Handle undefined name
+          if (!assetInfo.name) {
+            return `assets/[name]-[hash][extname]`;
+          }
+          
+          const info = assetInfo.name.split('.');
+          const ext = info[info.length - 1];
+          if (/\.(png|jpe?g|svg|gif|webp|avif)$/.test(assetInfo.name)) {
+            return `assets/images/[name]-[hash][extname]`;
+          }
+          if (/\.(woff|woff2|eot|ttf|otf)$/.test(assetInfo.name)) {
+            return `assets/fonts/[name]-[hash][extname]`;
+          }
+          return `assets/[name]-[hash][extname]`;
+        },
+        chunkFileNames: 'js/[name]-[hash].js',
+        entryFileNames: 'js/[name]-[hash].js',
+      },
     },
     chunkSizeWarningLimit: 1000,
     sourcemap: ctx.mode === 'development',
     minify: ctx.mode === 'production' ? 'esbuild' : false,
-    target: 'esnext'
+    target: 'esnext',
+    // Enable CSS code splitting
+    cssCodeSplit: true,
+    // Optimize asset inline limit (10kb)
+    assetsInlineLimit: 10240,
+    // Report compressed size
+    reportCompressedSize: true,
   },
   optimizeDeps: {
     include: [

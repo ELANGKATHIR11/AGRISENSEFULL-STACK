@@ -1,0 +1,191 @@
+[
+  {"question": "Tell me about carrot", "answer": "carrot"},
+  {"question": "What is carrot", "answer": "carrot"},
+  {"question": "Information on carrot", "answer": "carrot"},
+  {"question": "Describe carrot", "answer": "carrot"},
+  
+  {"question": "Tell me about tomato", "answer": "tomato"},
+  {"question": "What is tomato", "answer": "tomato"},
+  {"question": "How to grow tomatoes", "answer": "tomato"},
+  {"question": "Information on tomato", "answer": "tomato"},
+  
+  {"question": "Tell me about potato", "answer": "potato"},
+  {"question": "What is potato", "answer": "potato"},
+  {"question": "Information on potato", "answer": "potato"},
+  
+  {"question": "Tell me about onion", "answer": "onion"},
+  {"question": "What is onion", "answer": "onion"},
+  {"question": "Information on onion", "answer": "onion"},
+  
+  {"question": "Tell me about wheat", "answer": "wheat"},
+  {"question": "What is wheat", "answer": "wheat"},
+  {"question": "Information on wheat", "answer": "wheat"},
+  {"question": "How to grow wheat", "answer": "wheat"},
+  
+  {"question": "Tell me about rice", "answer": "rice"},
+  {"question": "What is rice", "answer": "rice"},
+  {"question": "Information on rice", "answer": "rice"},
+  {"question": "How to plant rice", "answer": "rice"},
+  
+  {"question": "Tell me about corn", "answer": "corn"},
+  {"question": "What is corn", "answer": "corn"},
+  {"question": "Information on corn", "answer": "corn"},
+  {"question": "How to grow corn", "answer": "corn"},
+  
+  {"question": "Tell me about soybean", "answer": "soybean"},
+  {"question": "What is soybean", "answer": "soybean"},
+  {"question": "Information on soybean", "answer": "soybean"},
+  
+  {"question": "Tell me about beans", "answer": "beans"},
+  {"question": "What is beans", "answer": "beans"},
+  {"question": "Information on beans", "answer": "beans"},
+  
+  {"question": "Tell me about peas", "answer": "peas"},
+  {"question": "What is peas", "answer": "peas"},
+  {"question": "Information on peas", "answer": "peas"},
+  
+  {"question": "Tell me about lentils", "answer": "lentils"},
+  {"question": "What is lentils", "answer": "lentils"},
+  {"question": "Information on lentils", "answer": "lentils"},
+  
+  {"question": "Tell me about chickpeas", "answer": "chickpeas"},
+  {"question": "What is chickpeas", "answer": "chickpeas"},
+  {"question": "Information on chickpeas", "answer": "chickpeas"},
+  
+  {"question": "Tell me about barley", "answer": "barley"},
+  {"question": "What is barley", "answer": "barley"},
+  {"question": "Information on barley", "answer": "barley"},
+  
+  {"question": "Tell me about oats", "answer": "oats"},
+  {"question": "What is oats", "answer": "oats"},
+  {"question": "Information on oats", "answer": "oats"},
+  
+  {"question": "Tell me about millet", "answer": "millet"},
+  {"question": "What is millet", "answer": "millet"},
+  {"question": "Information on millet", "answer": "millet"},
+  
+  {"question": "Tell me about sorghum", "answer": "sorghum"},
+  {"question": "What is sorghum", "answer": "sorghum"},
+  {"question": "Information on sorghum", "answer": "sorghum"},
+  
+  {"question": "Tell me about cotton", "answer": "cotton"},
+  {"question": "What is cotton", "answer": "cotton"},
+  {"question": "Information on cotton", "answer": "cotton"},
+  {"question": "How to control pests on cotton", "answer": "cotton"},
+  
+  {"question": "Tell me about sugarcane", "answer": "sugarcane"},
+  {"question": "What is sugarcane", "answer": "sugarcane"},
+  {"question": "Information on sugarcane", "answer": "sugarcane"},
+  
+  {"question": "Tell me about cabbage", "answer": "cabbage"},
+  {"question": "What is cabbage", "answer": "cabbage"},
+  {"question": "Information on cabbage", "answer": "cabbage"},
+  
+  {"question": "Tell me about cauliflower", "answer": "cauliflower"},
+  {"question": "What is cauliflower", "answer": "cauliflower"},
+  {"question": "Information on cauliflower", "answer": "cauliflower"},
+  
+  {"question": "Tell me about broccoli", "answer": "broccoli"},
+  {"question": "What is broccoli", "answer": "broccoli"},
+  {"question": "Information on broccoli", "answer": "broccoli"},
+  
+  {"question": "Tell me about spinach", "answer": "spinach"},
+  {"question": "What is spinach", "answer": "spinach"},
+  {"question": "Information on spinach", "answer": "spinach"},
+  
+  {"question": "Tell me about lettuce", "answer": "lettuce"},
+  {"question": "What is lettuce", "answer": "lettuce"},
+  {"question": "Information on lettuce", "answer": "lettuce"},
+  
+  {"question": "Tell me about cucumber", "answer": "cucumber"},
+  {"question": "What is cucumber", "answer": "cucumber"},
+  {"question": "Information on cucumber", "answer": "cucumber"},
+  
+  {"question": "Tell me about pumpkin", "answer": "pumpkin"},
+  {"question": "What is pumpkin", "answer": "pumpkin"},
+  {"question": "Information on pumpkin", "answer": "pumpkin"},
+  
+  {"question": "Tell me about watermelon", "answer": "watermelon"},
+  {"question": "What is watermelon", "answer": "watermelon"},
+  {"question": "Information on watermelon", "answer": "watermelon"},
+  
+  {"question": "Tell me about eggplant", "answer": "eggplant"},
+  {"question": "What is eggplant", "answer": "eggplant"},
+  {"question": "Information on eggplant", "answer": "eggplant"},
+  
+  {"question": "Tell me about pepper", "answer": "pepper"},
+  {"question": "What is pepper", "answer": "pepper"},
+  {"question": "Information on pepper", "answer": "pepper"},
+  
+  {"question": "Tell me about chili", "answer": "chili"},
+  {"question": "What is chili", "answer": "chili"},
+  {"question": "Information on chili", "answer": "chili"},
+  
+  {"question": "Tell me about garlic", "answer": "garlic"},
+  {"question": "What is garlic", "answer": "garlic"},
+  {"question": "Information on garlic", "answer": "garlic"},
+  
+  {"question": "Tell me about ginger", "answer": "ginger"},
+  {"question": "What is ginger", "answer": "ginger"},
+  {"question": "Information on ginger", "answer": "ginger"},
+  
+  {"question": "Tell me about turmeric", "answer": "turmeric"},
+  {"question": "What is turmeric", "answer": "turmeric"},
+  {"question": "Information on turmeric", "answer": "turmeric"},
+  
+  {"question": "Tell me about groundnut", "answer": "groundnut"},
+  {"question": "What is groundnut", "answer": "groundnut"},
+  {"question": "Information on groundnut", "answer": "groundnut"},
+  
+  {"question": "Tell me about sunflower", "answer": "sunflower"},
+  {"question": "What is sunflower", "answer": "sunflower"},
+  {"question": "Information on sunflower", "answer": "sunflower"},
+  
+  {"question": "Tell me about mustard", "answer": "mustard"},
+  {"question": "What is mustard", "answer": "mustard"},
+  {"question": "Information on mustard", "answer": "mustard"},
+  
+  {"question": "Tell me about rapeseed", "answer": "rapeseed"},
+  {"question": "What is rapeseed", "answer": "rapeseed"},
+  {"question": "Information on rapeseed", "answer": "rapeseed"},
+  
+  {"question": "Tell me about sesame", "answer": "sesame"},
+  {"question": "What is sesame", "answer": "sesame"},
+  {"question": "Information on sesame", "answer": "sesame"},
+  
+  {"question": "Tell me about strawberry", "answer": "strawberry"},
+  {"question": "What is strawberry", "answer": "strawberry"},
+  {"question": "Information on strawberry", "answer": "strawberry"},
+  
+  {"question": "Tell me about banana", "answer": "banana"},
+  {"question": "What is banana", "answer": "banana"},
+  {"question": "Information on banana", "answer": "banana"},
+  
+  {"question": "Tell me about mango", "answer": "mango"},
+  {"question": "What is mango", "answer": "mango"},
+  {"question": "Information on mango", "answer": "mango"},
+  
+  {"question": "Tell me about apple", "answer": "apple"},
+  {"question": "What is apple", "answer": "apple"},
+  {"question": "Information on apple", "answer": "apple"},
+  
+  {"question": "Tell me about orange", "answer": "orange"},
+  {"question": "What is orange", "answer": "orange"},
+  {"question": "Information on orange", "answer": "orange"},
+  
+  {"question": "Tell me about grapes", "answer": "grapes"},
+  {"question": "What is grapes", "answer": "grapes"},
+  {"question": "Information on grapes", "answer": "grapes"},
+  
+  {"question": "Tell me about papaya", "answer": "papaya"},
+  {"question": "What is papaya", "answer": "papaya"},
+  {"question": "Information on papaya", "answer": "papaya"},
+  
+  {"question": "Tell me about guava", "answer": "guava"},
+  {"question": "What is guava", "answer": "guava"},
+  {"question": "Information on guava", "answer": "guava"},
+  
+  {"question": "Tell me about pomegranate", "answer": "pomegranate"},
+  {"question": "What is pomegranate", "answer": "pomegranate"},
+  {"question": "Information on pomegranate", "answer": "pomegranate"}
+]

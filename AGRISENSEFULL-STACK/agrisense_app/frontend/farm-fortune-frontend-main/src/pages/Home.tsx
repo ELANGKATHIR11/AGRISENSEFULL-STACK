@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Thermometer, Droplets, Sun, Wind, TrendingUp, AlertTriangle, CheckCircle2, Leaf, Users, BarChart3 } from "lucide-react";
 import { Link } from "react-router-dom";
 import Farm3DContainer from "@/components/three/Farm3DContainer";
+import ComparisonCharts3D from "@/components/3d/ComparisonCharts3D";
 
 const Home = () => {
   // Mock data for demonstration
@@ -69,6 +70,52 @@ const Home = () => {
         <div className="mb-8">
           <Farm3DContainer />
         </div>
+
+        {/* 3D Comparison Charts - NEW! */}
+        <div className="mb-12">
+          <div className="text-center mb-8">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              Why Choose <span className="text-green-600">AgriSense</span>?
+            </h2>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              Experience dramatic improvements in resource efficiency. Our smart agriculture platform 
+              reduces water usage by <span className="font-bold text-blue-600">65%</span>, 
+              cuts operating costs by <span className="font-bold text-red-600">58%</span>, 
+              and minimizes fertilizer consumption by <span className="font-bold text-yellow-600">52%</span>.
+            </p>
+          </div>
+          
+          <ComparisonCharts3D />
+          
+          {/* Key Metrics Below Chart */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+            <Card className="text-center border-2 border-blue-200 bg-blue-50/50 hover:shadow-lg transition-all">
+              <CardContent className="pt-6 pb-6">
+                <div className="text-5xl mb-3">💧</div>
+                <div className="text-5xl font-bold text-blue-600 mb-2">65%</div>
+                <div className="text-sm font-semibold text-gray-700 mb-1">Water Savings</div>
+                <div className="text-xs text-gray-600">Smart irrigation optimization</div>
+              </CardContent>
+            </Card>
+            <Card className="text-center border-2 border-red-200 bg-red-50/50 hover:shadow-lg transition-all">
+              <CardContent className="pt-6 pb-6">
+                <div className="text-5xl mb-3">💰</div>
+                <div className="text-5xl font-bold text-red-600 mb-2">58%</div>
+                <div className="text-sm font-semibold text-gray-700 mb-1">Cost Reduction</div>
+                <div className="text-xs text-gray-600">Automated resource management</div>
+              </CardContent>
+            </Card>
+            <Card className="text-center border-2 border-yellow-200 bg-yellow-50/50 hover:shadow-lg transition-all">
+              <CardContent className="pt-6 pb-6">
+                <div className="text-5xl mb-3">🌿</div>
+                <div className="text-5xl font-bold text-yellow-600 mb-2">52%</div>
+                <div className="text-sm font-semibold text-gray-700 mb-1">Fertilizer Efficiency</div>
+                <div className="text-xs text-gray-600">Precision nutrient delivery</div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
         {/* Dashboard Grid - Cleaner Design */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
           {/* Sensor Readings */}

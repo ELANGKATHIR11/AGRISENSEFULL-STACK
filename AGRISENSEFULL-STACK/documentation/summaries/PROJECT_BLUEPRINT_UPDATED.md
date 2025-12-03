@@ -10,6 +10,13 @@ AgriSense is a comprehensive smart farming solution that combines IoT sensors, m
 - ✅ **Docker Deployment**: Multi-stage builds with security scanning
 - ✅ **TypeScript Configuration**: Optimized for E2E tests with proper type checking
 - ✅ **Documentation**: Comprehensive deployment guides and error resolution docs
+- ✅ **Chatbot Enhancement**: Three-layer architecture (RAG + Conversational + AI Advisor)
+  - RAG retrieval with BM25 + Dense embeddings
+  - Conversational enhancement for human-like responses
+  - Context-aware AI advisor (Dr. Priya Kumar persona)
+  - Multi-language support (5 languages: en, hi, ta, te, kn)
+  - Session management and follow-up suggestions
+  - Complete integration documentation
 
 ## 🏗️ Clean Architecture Structure (✅ Optimized September 2025)
 
@@ -40,7 +47,11 @@ agrisense_app/
 │   ├── requirements.txt            # 📦 Python dependencies
 │   ├── requirements-dev.txt        # � Development dependencies
 │   ├── sensors.db                  # 💾 SQLite sensor database
-│   ├── chatbot_qa_pairs.json       # 💬 Chatbot knowledge base
+│   ├── chatbot_qa_pairs.json       # 💬 Chatbot knowledge base (48 crops + FAQ)
+│   ├── chatbot_index.npz           # 🧠 Dense embeddings for semantic search
+│   ├── chatbot_index.json          # 📋 Chatbot metadata and config
+│   ├── chatbot_service.py          # 🤖 Chatbot RAG retrieval service
+│   ├── chatbot_conversational.py   # 💬 Conversational enhancement layer
 │   └── datasets/                   # 📊 Training datasets
 ├── frontend/                       # React/Vite frontend
 │   └── farm-fortune-frontend-main/ # 🖥️ Main UI application
@@ -229,9 +240,63 @@ config/                          # ⚙️ Configuration files (ORGANIZED)
 - `POST /plant-health/analyze` - Comprehensive plant analysis
 - `GET /plant-health/status` - Plant health monitoring
 
-### Chatbot
-- `POST /chatbot/ask` - Ask agricultural questions
-- `GET /chatbot/crops` - List supported crops
+### Chatbot (✅ Enhanced December 2025)
+**Three-Layer Architecture**: RAG Retrieval → Conversational Enhancement → Context-Aware AI Advisor
+
+#### Core Endpoints
+- `POST /chatbot/ask` - Main Q&A endpoint with conversational enhancement
+  - **Features**: RAG retrieval (BM25 + Dense embeddings), human-like responses, follow-up suggestions
+  - **Parameters**: question, top_k, session_id, language (en/hi/ta/te/kn)
+  - **Returns**: Enhanced answer with original_answer toggle, follow-up questions
+- `GET /chatbot/greeting?language=<code>` - Multi-language greetings
+  - **Supported**: English, Hindi, Tamil, Telugu, Kannada
+- `POST /chatbot/advice` - Context-aware AI agronomist (NEW)
+  - **Features**: Dr. Priya Kumar persona, diagnosis context awareness, empathetic responses
+  - **Parameters**: query, diagnosis_context (optional), conversation_history (optional)
+  - **Use Cases**: Disease follow-ups, treatment questions, cost estimates
+- `POST /chatbot/reload` - Reload knowledge base artifacts (Admin)
+- `POST /chatbot/tune` - Tune retrieval parameters (Admin)
+- `GET /chatbot/crops` - List supported crops (48 crops)
+
+#### Architecture Layers
+1. **RAG Retrieval Layer** (`main.py`)
+   - Hybrid search: BM25 (lexical) + Dense embeddings (semantic)
+   - Knowledge base: 48 crop cultivation guides + agricultural FAQ
+   - Configurable alpha (dense/lexical blend) and min_cos (similarity threshold)
+
+2. **Conversational Enhancement Layer** (`chatbot_conversational.py`)
+   - **ConversationalEnhancer class**: Makes responses human-like and farmer-friendly
+   - Features: Empathetic greetings, context-aware follow-ups, regional farming tips
+   - Multi-language support with localized greetings and phrases
+   - Session management: Tracks 100 sessions, 10 messages each
+
+3. **Context-Aware AI Advisor** (`core/chatbot_engine.py`)
+   - **AgriAdvisorBot**: Google Gemini-powered agricultural expert
+   - **Persona**: Dr. Priya Kumar (Senior Agronomist, 15+ years experience)
+   - Features: Disease diagnosis follow-ups, treatment recommendations, cost estimates
+   - Context integration: Links to disease detection results
+
+#### Knowledge Base
+- **File**: `chatbot_qa_pairs.json` (48 crops + FAQ)
+- **Embeddings**: `chatbot_index.npz` (L2-normalized dense vectors)
+- **Artifacts**: `chatbot_index.json` (metadata)
+- **Crops**: Rice, Wheat, Tomato, Potato, Cotton, Sugarcane, etc. (48 total)
+
+#### Multi-Language Support
+- **Languages**: English (en), Hindi (hi), Tamil (ta), Telugu (te), Kannada (kn)
+- **Frontend**: react-i18next with complete translations
+- **Backend**: Language-aware greeting and follow-up generation
+- **UI**: Language switcher in navigation bar
+
+#### Testing
+- `chatbot_http_smoke.py` - HTTP smoke tests for all endpoints
+- `reload_chatbot.py` - Artifact reload testing
+- `build_chatbot_artifacts.py` - Knowledge base processing
+
+#### Documentation
+- `CHATBOT_INTEGRATION_COMPLETE.md` - Comprehensive integration guide (500+ lines)
+- `CHATBOT_QUICK_REFERENCE.md` - Developer quick reference card
+- API examples, testing procedures, troubleshooting guides
 
 ## 🧪 Testing Strategy (✅ Enhanced December 2025)
 

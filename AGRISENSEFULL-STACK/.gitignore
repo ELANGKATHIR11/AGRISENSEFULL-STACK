@@ -34,7 +34,12 @@ env/
 htmlcov/
 *.log
 pytest-*.txt
-*_test_results_*.json
+*test_results*.json
+*test_report*.json
+test_*.json
+e2e_test_results.txt
+treatment_validation_results*.json
+disease_detection_test_results*.json
 
 # IDEs
 .vscode/

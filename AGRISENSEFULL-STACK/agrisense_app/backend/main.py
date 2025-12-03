@@ -1,5 +1,6 @@
 import asyncio
 import csv
+import hashlib
 import json
 import logging
 import os
@@ -10,10 +11,12 @@ import time
 import uuid
 from collections import OrderedDict
 from contextlib import asynccontextmanager
+from datetime import datetime
+from functools import lru_cache, wraps
 from importlib import import_module
 from math import isfinite
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Protocol, Set, Union, cast, runtime_checkable
+from typing import Any, Callable, Dict, List, Optional, Protocol, Set, Tuple, Union, cast, runtime_checkable
 
 import joblib
 import numpy as np
@@ -408,6 +411,146 @@ _metrics: Dict[str, Any] = {
 }
 
 
+# ===== Performance Optimization: Caching Layer =====
+
+# Cache configuration
+STATIC_CACHE_TTL = 3600  # 1 hour for static data like plants, crops
+ML_CACHE_TTL = 300  # 5 minutes for ML predictions
+ML_CACHE_MAX_SIZE = 100  # Maximum cached ML predictions
+
+
+class TTLCache:
+    """Simple TTL-based cache decorator for functions"""
+    def __init__(self, ttl: int):
+        self.ttl = ttl
+        self.cache: Dict[str, Tuple[Any, float]] = {}
+        self.lock = threading.Lock()
+    
+    def __call__(self, func: Callable) -> Callable:
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            # Create cache key from function name and serializable args
+            try:
+                key_parts = [func.__name__]
+                key_parts.extend([str(arg) for arg in args])
+                key_parts.extend([f"{k}={v}" for k, v in sorted(kwargs.items())])
+                cache_key = ":".join(key_parts)
+            except Exception:
+                # If key creation fails, don't cache
+                return func(*args, **kwargs)
+            
+            now = time.time()
+            
+            with self.lock:
+                if cache_key in self.cache:
+                    result, timestamp = self.cache[cache_key]
+                    if now - timestamp < self.ttl:
+                        logger.debug(f"Cache hit for {func.__name__}")
+                        return result
+                    else:
+                        # Remove expired entry
+                        del self.cache[cache_key]
+            
+            # Cache miss or expired - compute result
+            result = func(*args, **kwargs)
+            
+            with self.lock:
+                self.cache[cache_key] = (result, now)
+                # Optional: Limit cache size
+                if len(self.cache) > 1000:
+                    # Remove oldest 10% of entries
+                    sorted_items = sorted(self.cache.items(), key=lambda x: x[1][1])
+                    for old_key, _ in sorted_items[:100]:
+                        del self.cache[old_key]
+            
+            return result
+        return wrapper
+
+
+# ML prediction cache with image-based keys
+_ml_prediction_cache: Dict[str, Tuple[Dict[str, Any], float]] = {}
+_ml_cache_lock = threading.Lock()
+
+
+def create_ml_cache_key(image_data: Union[str, bytes], crop_type: str, analysis_type: str) -> str:
+    """Create consistent cache key for ML predictions based on image content"""
+    try:
+        # Hash image data to create key
+        hasher = hashlib.sha256()
+        
+        if isinstance(image_data, str):
+            # Assume base64 string
+            hasher.update(image_data.encode())
+        elif isinstance(image_data, bytes):
+            hasher.update(image_data)
+        else:
+            hasher.update(str(image_data).encode())
+        
+        hasher.update(crop_type.encode())
+        hasher.update(analysis_type.encode())
+        return hasher.hexdigest()
+    except Exception as e:
+        logger.warning(f"Failed to create ML cache key: {e}")
+        return f"{analysis_type}:{crop_type}:{time.time()}"  # Unique fallback
+
+
+def get_cached_ml_prediction(cache_key: str) -> Optional[Dict[str, Any]]:
+    """Get cached ML prediction if available and not expired"""
+    with _ml_cache_lock:
+        if cache_key in _ml_prediction_cache:
+            result, timestamp = _ml_prediction_cache[cache_key]
+            if time.time() - timestamp < ML_CACHE_TTL:
+                logger.debug(f"ML cache hit for key: {cache_key[:16]}...")
+                return result
+            else:
+                # Remove expired entry
+                del _ml_prediction_cache[cache_key]
+    return None
+
+
+def cache_ml_prediction(cache_key: str, result: Dict[str, Any]):
+    """Cache ML prediction with TTL and size limits"""
+    with _ml_cache_lock:
+        # Limit cache size (FIFO eviction)
+        if len(_ml_prediction_cache) >= ML_CACHE_MAX_SIZE:
+            # Remove oldest entry
+            oldest_key = min(_ml_prediction_cache.items(), key=lambda x: x[1][1])[0]
+            del _ml_prediction_cache[oldest_key]
+            logger.debug(f"Evicted oldest ML cache entry: {oldest_key[:16]}...")
+        
+        _ml_prediction_cache[cache_key] = (result, time.time())
+        logger.debug(f"Cached ML prediction for key: {cache_key[:16]}...")
+
+
+@app.get("/diagnostics/cache")
+def cache_diagnostics() -> Dict[str, Any]:
+    """Get cache statistics for performance monitoring"""
+    with _ml_cache_lock:
+        ml_cache_size = len(_ml_prediction_cache)
+        ml_cache_oldest = None
+        ml_cache_newest = None
+        
+        if _ml_prediction_cache:
+            timestamps = [ts for _, ts in _ml_prediction_cache.values()]
+            ml_cache_oldest = datetime.fromtimestamp(min(timestamps)).isoformat()
+            ml_cache_newest = datetime.fromtimestamp(max(timestamps)).isoformat()
+    
+    return {
+        "ml_prediction_cache": {
+            "size": ml_cache_size,
+            "max_size": ML_CACHE_MAX_SIZE,
+            "ttl_seconds": ML_CACHE_TTL,
+            "oldest_entry": ml_cache_oldest,
+            "newest_entry": ml_cache_newest
+        },
+        "static_cache_ttl_seconds": STATIC_CACHE_TTL,
+        "timestamp": datetime.now().isoformat()
+    }
+
+
+# ===== End Caching Layer =====
+
+
 # Request ID + timing + counters middleware
 @app.middleware("http")
 async def log_requests(request: Request, call_next):  # type: ignore[no-redef]
@@ -462,6 +605,25 @@ async def unhandled_exception_handler(request: Request, exc: Exception):  # type
         content={
             "status": 500,
             "error": "Internal Server Error",
+            "path": request.url.path,
+        },
+    )
+
+
+# Add validation error handler to return 422 instead of 404
+from fastapi.exceptions import RequestValidationError
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):  # type: ignore[no-redef]
+    """Handle Pydantic validation errors with proper 422 status"""
+    logger.warning(f"Validation error on {request.method} {request.url.path}: {exc.errors()}")
+    return JSONResponse(
+        status_code=422,
+        content={
+            "status": 422,
+            "error": "Validation Error",
+            "detail": exc.errors(),
+            "body": str(exc.body) if exc.body else None,
             "path": request.url.path,
         },
     )
@@ -605,6 +767,27 @@ except ImportError as e:
     # VLM API optional - continue without it
     pass
 
+# Include GenAI (RAG Chatbot + VLM Vision) API router
+# Why separate router: Clean separation of GenAI features from core sensors/IoT
+# Endpoints: /ai/chat (RAG), /ai/analyze (VLM), /ai/ingest (knowledge base), /ai/stats
+try:
+    if __package__:
+        from .api.ai_routes import router as ai_router
+    else:
+        from api.ai_routes import router as ai_router  # type: ignore
+    
+    app.include_router(ai_router)
+    logger.info("✅ GenAI API router included successfully - RAG Chatbot & VLM available at /ai/*")
+    logger.info("   - POST /ai/chat - RAG-based farmer Q&A")
+    logger.info("   - POST /ai/analyze - VLM crop image analysis")
+    logger.info("   - POST /ai/ingest - Trigger knowledge base ingestion")
+    logger.info("   - GET /ai/stats - AI system statistics")
+except ImportError as e:
+    logger.warning(f"⚠️ GenAI API not available: {e}")
+    logger.warning("   To enable: pip install -r requirements-ai.txt")
+    # GenAI API optional - continue without it
+    pass
+
 # Optionally mount Flask-based storage server under /storage via WSGI
 try:
     from starlette.middleware.wsgi import WSGIMiddleware  # type: ignore
@@ -638,12 +821,15 @@ class AdminGuard:
 
 
 require_admin = AdminGuard()
-
 # Initialize RecoEngine with fallback
 try:
-    engine = RecoEngine()
-except NameError:
+    if RecoEngine is not None:
+        engine = RecoEngine()
+    else:
+        engine = None
+except (NameError, TypeError):
     logger.warning("RecoEngine not available, using fallback")
+    engine = None
     engine = None
 
 # Helper function to safely use engine
@@ -653,11 +839,14 @@ def safe_engine_recommend(data: dict) -> dict:
         return {
             "water_liters": 20.0,
             "fertilizer_kg": 0.1,
-            "status": "fallback_recommendation"
+            "fert_n_g": 10.0,
+            "fert_p_g": 5.0,
+            "fert_k_g": 8.0,
+            "tips": ["Engine unavailable - using default values"],
         }
     return engine.recommend(data)
 
-def safe_engine_attr(attr: str, default=None):
+def safe_engine_attr(attr: str, default: Any = None) -> Any:
     """Safely get engine attribute with fallback"""
     if engine is None:
         if attr == "defaults":
@@ -749,6 +938,141 @@ def ready() -> Dict[str, Any]:
         "water_model": safe_engine_attr("water_model") is not None,
         "fert_model": safe_engine_attr("fert_model") is not None,
     }
+
+
+# Diagnostics endpoints for system components
+@app.get("/diagnostics/disease-model")
+def disease_model_diagnostics() -> Dict[str, Any]:
+    """Get comprehensive disease detection model status and diagnostics"""
+    try:
+        if DiseaseDetectionEngine is None:
+            return {
+                "status": "unavailable",
+                "error": "DiseaseDetectionEngine module not imported",
+                "fallback_mode": True,
+                "timestamp": datetime.now().isoformat()
+            }
+        
+        engine = DiseaseDetectionEngine()
+        model_info = engine.get_model_info()
+        
+        # Check for comprehensive detector
+        comprehensive_available = False
+        try:
+            from .comprehensive_disease_detector import comprehensive_detector
+            comprehensive_available = True
+        except Exception:
+            pass
+        
+        return {
+            "status": "healthy" if model_info["loaded"] else "degraded",
+            "model_loaded": model_info["loaded"],
+            "model_name": model_info["model_name"],
+            "processor_loaded": model_info["processor_loaded"],
+            "model_accuracy": model_info.get("model_accuracy"),
+            "comprehensive_detector_available": comprehensive_available,
+            "vlm_available": VLM_AVAILABLE,
+            "fallback_mode": not model_info["loaded"],
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Disease model diagnostics failed: {e}")
+        return {
+            "status": "error",
+            "error": str(e),
+            "fallback_mode": True,
+            "timestamp": datetime.now().isoformat()
+        }
+
+
+@app.get("/diagnostics/weed-management")
+def weed_management_diagnostics() -> Dict[str, Any]:
+    """Get weed management system status"""
+    try:
+        if WeedManagementEngine is None:
+            return {
+                "status": "unavailable",
+                "error": "WeedManagementEngine module not imported",
+                "fallback_mode": True,
+                "timestamp": datetime.now().isoformat()
+            }
+        
+        engine = WeedManagementEngine()
+        model_info = engine.get_model_info()
+        
+        # Check if enhanced weed management is available
+        enhanced_available = False
+        try:
+            from .enhanced_weed_management import weed_engine
+            enhanced_available = True
+        except Exception:
+            pass
+        
+        return {
+            "status": "healthy" if model_info.get("status") == "loaded" else "degraded",
+            "enhanced_system_available": enhanced_available,
+            "model_loaded": model_info.get("status") == "loaded",
+            "model_name": model_info.get("model_name"),
+            "model_type": model_info.get("model_type"),
+            "fallback_mode": not enhanced_available and model_info.get("status") != "loaded",
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Weed management diagnostics failed: {e}")
+        return {
+            "status": "error",
+            "error": str(e),
+            "fallback_mode": True,
+            "timestamp": datetime.now().isoformat()
+        }
+
+
+@app.get("/diagnostics/system")
+def system_diagnostics() -> Dict[str, Any]:
+    """Get comprehensive system diagnostics"""
+    try:
+        # Get disease model status
+        disease_status = disease_model_diagnostics()
+        
+        # Get weed management status
+        weed_status = weed_management_diagnostics()
+        
+        # Get recommendation engine status
+        engine_status = {
+            "loaded": engine is not None,
+            "water_model": safe_engine_attr("water_model") is not None,
+            "fert_model": safe_engine_attr("fert_model") is not None,
+        }
+        
+        # Overall system health
+        all_healthy = (
+            disease_status.get("status") in ["healthy", "degraded"] and
+            weed_status.get("status") in ["healthy", "degraded"] and
+            engine_status.get("loaded")
+        )
+        
+        return {
+            "status": "healthy" if all_healthy else "degraded",
+            "components": {
+                "disease_detection": disease_status,
+                "weed_management": weed_status,
+                "recommendation_engine": engine_status,
+                "plant_health_monitor": {
+                    "loaded": plant_health_monitor is not None,
+                    "status": "healthy" if plant_health_monitor else "unavailable"
+                }
+            },
+            "ml_disabled": DISABLE_ML,
+            "enhanced_backend_available": ENHANCED_BACKEND_AVAILABLE,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"System diagnostics failed: {e}")
+        return {
+            "status": "error",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
 
 
 # Enhanced health endpoints
@@ -1356,7 +1680,14 @@ except Exception:
 def irrigation_start(cmd: IrrigationCommand) -> IrrigationAck:
     # Compute water need for zone and enforce tank constraint unless forced
     # Approximate: use last reading for zone if any; else default reading
-    need: float = 20.0 * safe_engine_attr("defaults", {}).get("area_m2", 100)  # fallback
+    defaults = safe_engine_attr("defaults", {})
+    area_m2_raw = defaults.get("area_m2", 100) if isinstance(defaults, dict) else 100
+    # Safely convert area_m2 to float, handling dict or unknown types
+    try:
+        area_m2 = float(area_m2_raw) if isinstance(area_m2_raw, (int, float)) else 100.0
+    except (TypeError, ValueError):
+        area_m2 = 100.0
+    need: float = 20.0 * area_m2  # fallback
     try:
         last = recent(cmd.zone_id, 1)
         if last:
@@ -1372,7 +1703,9 @@ def irrigation_start(cmd: IrrigationCommand) -> IrrigationAck:
             pass
         log_valve_event(cmd.zone_id, "start", float(cmd.duration_s or 0), status="blocked")
         return IrrigationAck(ok=False, status="blocked", note="Insufficient water in tank")
-    duration = int(cmd.duration_s or max(1, int(need / max(1e-6, safe_engine_attr("pump_flow_lpm", 10.0))) * 60))
+    pump_flow = safe_engine_attr("pump_flow_lpm", 10.0)
+    pump_flow_val = float(pump_flow) if isinstance(pump_flow, (int, float)) else 10.0
+    duration = int(cmd.duration_s or max(1, int(need / max(1e-6, pump_flow_val)) * 60))
     ok = publish_command(cmd.zone_id, {"action": "start", "duration_s": duration})
     log_valve_event(cmd.zone_id, "start", float(duration), status="sent" if ok else "queued")
     try:
@@ -1770,6 +2103,157 @@ def _find_crop_in_text(text: str) -> Optional[CropCard]:
     return best
 
 
+def _is_simple_crop_name_query(q: str) -> bool:
+    """Check if query is just a crop name (1-3 words) or simple info request."""
+    ql = q.strip().lower()
+    
+    # First check if the normalized query matches a known crop name directly
+    # This must be checked BEFORE disallow patterns to handle crops like "watermelon"
+    normalized = _normalize_crop_name(q)
+    is_known_crop = normalized in SUPPORTED_CROPS if normalized else False
+    if is_known_crop:
+        return True
+    
+    # Disallow action-oriented or specific how-to questions
+    disallow = [
+        "how to",
+        "how do",
+        "how can",
+        "how much",
+        "when to",
+        "when do",
+        "why ",
+        "where ",
+        "should i",
+        "can i",
+        "control",
+        "pest control",
+        "disease control",
+        "rotate",
+        "rotation",
+        "apply",
+        "rate",
+        "best time",
+        "spacing",
+        "fertilizer",
+        "irrigation",
+        "water",
+        "disease",
+        "pest",
+    ]
+    if any(w in ql for w in disallow):
+        return False
+    
+    # Allow simple info requests
+    allow_prefix = (
+        ql.startswith("tell me about ")
+        or ql.startswith("info about ")
+        or ql.startswith("information about ")
+        or ql.startswith("what is ")
+        or ql.startswith("details about ")
+        or ql.startswith("about ")
+        or ql.startswith("describe ")
+    )
+    
+    # Allow if query is just the crop name (1-3 tokens, possibly with common words)
+    toks = [t for t in _normalize_simple(q).split() if t and t not in ["crop", "crops", "cultivation", "growing", "guide", "farming", "the", "a", "an"]]
+    only_crop_name = len(toks) <= 2
+    
+    return bool(allow_prefix or only_crop_name)
+
+
+def _get_crop_cultivation_guide(crop_name: str) -> Optional[str]:
+    """Retrieve detailed cultivation guide for a specific crop from loaded chatbot answers."""
+    try:
+        # Use already-loaded chatbot answers (in memory)
+        if _chatbot_answers is None or len(_chatbot_answers) == 0:
+            logger.warning("Chatbot answers not loaded yet")
+            return None
+        
+        logger.info(f"Searching for cultivation guide for crop: {crop_name}, Total answers: {len(_chatbot_answers)}")
+        
+        # Normalize crop name for matching
+        crop_normalized = crop_name.lower().strip()
+        
+        # Debug: Count how many answers contain "cultivation guide"
+        cultivation_guides = [a for a in _chatbot_answers if "cultivation guide" in a.lower()]
+        logger.info(f"Found {len(cultivation_guides)} total cultivation guides in loaded answers")
+        
+        # Search for cultivation guide in loaded answers
+        # Pattern: Look for answers that contain "cultivation guide" and the crop name
+        for idx, answer in enumerate(_chatbot_answers):
+            answer_lower = str(answer).lower()
+            
+            # Check if this answer is a cultivation guide for the crop
+            if "cultivation guide" in answer_lower and crop_normalized in answer_lower:
+                # Found the detailed guide
+                logger.info(f"✅ Found cultivation guide for crop '{crop_name}' at index {idx}, length: {len(answer)} chars")
+                return str(answer)
+        
+        # If no match found, log and return None
+        logger.warning(f"❌ No cultivation guide found for crop: {crop_name}")
+        return None
+        
+    except Exception as e:
+        logger.error(f"Error retrieving crop cultivation guide: {e}", exc_info=True)
+        return None
+
+
+# List of all 48 supported crops
+SUPPORTED_CROPS = [
+    'apple', 'banana', 'barley', 'beans', 'beetroot', 'broccoli', 'cabbage', 'carrot',
+    'cauliflower', 'chickpeas', 'chili', 'corn', 'cotton', 'cucumber', 'eggplant', 'garlic',
+    'ginger', 'grapes', 'groundnut', 'guava', 'lentils', 'lettuce', 'mango', 'millet',
+    'mustard', 'oats', 'onion', 'orange', 'papaya', 'peas', 'pepper', 'pomegranate',
+    'potato', 'pumpkin', 'radish', 'rapeseed', 'rice', 'sesame', 'sorghum', 'soybean',
+    'spinach', 'strawberry', 'sugarcane', 'sunflower', 'tomato', 'turmeric', 'watermelon', 'wheat'
+]
+
+
+def _normalize_crop_name(text: str) -> Optional[str]:
+    """Normalize and validate crop name from user input."""
+    # Remove common prefixes/suffixes
+    text_lower = text.lower().strip()
+    
+    # Remove common words
+    for word in ['tell me about', 'info about', 'information about', 'what is', 'details about', 'about', 'the', 'crop', 'crops']:
+        text_lower = text_lower.replace(word, '').strip()
+    
+    # Check direct match
+    if text_lower in SUPPORTED_CROPS:
+        return text_lower
+    
+    # Check if any supported crop is in the text
+    for crop in SUPPORTED_CROPS:
+        if crop in text_lower or text_lower in crop:
+            return crop
+    
+    # Check for plural forms
+    if text_lower.endswith('s') and text_lower[:-1] in SUPPORTED_CROPS:
+        return text_lower[:-1]
+    
+    # Check for common aliases
+    aliases = {
+        'maize': 'corn',
+        'paddy': 'rice',
+        'brinjal': 'eggplant',
+        'aubergine': 'eggplant',
+        'capsicum': 'pepper',
+        'bell pepper': 'pepper',
+        'green chili': 'chili',
+        'red chili': 'chili',
+        'groundnuts': 'groundnut',
+        'peanut': 'groundnut',
+        'peanuts': 'groundnut',
+    }
+    
+    for alias, crop in aliases.items():
+        if alias in text_lower:
+            return crop
+    
+    return None
+
+
 def _is_general_crop_query(q: str) -> bool:
     ql = q.strip().lower()
     # Disallow crop facts for action-oriented or specific questions
@@ -1857,31 +2341,37 @@ def chat_ask(req: ChatRequest) -> ChatResponse:
     ql = q.lower()
     sources: List[str] = []
 
-    # 1) If question mentions a crop, return its quick facts (robust phrase match with plural support)
+    # 1) PRIORITY: Check if user typed just a crop name (for all 48 crops)
+    normalized_crop = _normalize_crop_name(q)
+    if normalized_crop and _is_simple_crop_name_query(q):
+        # First, try to get detailed cultivation guide
+        detailed_guide = _get_crop_cultivation_guide(normalized_crop)
+        if detailed_guide:
+            sources.append(f"chatbot_qa_pairs.json - {normalized_crop} cultivation guide")
+            return ChatResponse(answer=detailed_guide, sources=sources)
+        else:
+            # For crops without detailed guides, return the normalized crop name
+            # This allows the frontend to recognize it as a crop and provide appropriate UI
+            sources.append("48 crops database")
+            return ChatResponse(answer=normalized_crop, sources=sources)
+    
+    # 2) Alternative: Check if question mentions a crop from the dataset
     crop_hit: Optional[CropCard] = _find_crop_in_text(q)
-    if crop_hit is not None:
-        ans = [
-            f"Crop: {crop_hit.name}",
-        ]
-        if crop_hit.category:
-            ans.append(f"Category: {crop_hit.category}")
-        if crop_hit.season:
-            ans.append(f"Season: {crop_hit.season}")
-        if crop_hit.waterRequirement:
-            ans.append(f"Water need: {crop_hit.waterRequirement}")
-        if crop_hit.tempRange:
-            ans.append(f"Temperature: {crop_hit.tempRange}")
-        if crop_hit.phRange:
-            ans.append(f"Soil pH: {crop_hit.phRange}")
-        if crop_hit.growthPeriod:
-            ans.append(f"Growth period: {crop_hit.growthPeriod}")
-        if crop_hit.tips:
-            ans.append("Tips: " + "; ".join(crop_hit.tips[:3]))
-        sources.append("india_crop_dataset.csv (+ Sikkim additions if present)")
-        return ChatResponse(answer="\n".join(ans), sources=sources)
+    if crop_hit is not None and _is_simple_crop_name_query(q):
+        # Try to get detailed cultivation guide
+        detailed_guide = _get_crop_cultivation_guide(crop_hit.name.lower())
+        if detailed_guide:
+            sources.append(f"chatbot_qa_pairs.json - {crop_hit.name} cultivation guide")
+            return ChatResponse(answer=detailed_guide, sources=sources)
+        else:
+            # Return normalized crop name
+            crop_name_normalized = crop_hit.name.lower().replace(' ', '_')
+            sources.append("crop database")
+            return ChatResponse(answer=crop_name_normalized, sources=sources)
 
-    # 2) Irrigation / fertiliser intent -> use last reading and engine
-    if any(k in ql for k in ["irrigat", "water", "moisture", "fert", "urea", "dap", "mop", "npk"]):
+    # 3) Irrigation / fertiliser intent -> use last reading and engine
+    # Exclude if it's a crop name query (e.g., "watermelon")
+    if any(k in ql for k in ["irrigat", "moisture", "fert", "urea", "dap", "mop", "npk"]) or ("water" in ql and not normalized_crop):
         last = recent(req.zone_id, 1)
         base = last[0] if last else safe_engine_attr("defaults", {})
         rec = safe_engine_recommend(dict(base))
@@ -1895,7 +2385,7 @@ def chat_ask(req: ChatRequest) -> ChatResponse:
         sources.extend(["latest reading", "engine.recommend"])
         return ChatResponse(answer=txt, sources=sources)
 
-    # 3) Tank status intent
+    # 4) Tank status intent
     if any(k in ql for k in ["tank", "storage", "reservoir", "cistern"]):
         row = latest_tank_level("T1") or {}
         pct = row.get("level_pct")
@@ -1908,7 +2398,7 @@ def chat_ask(req: ChatRequest) -> ChatResponse:
         sources.append("tank_levels")
         return ChatResponse(answer=ans, sources=sources)
 
-    # 4) Soil pH / EC generic guidance
+    # 5) Soil pH / EC generic guidance
     if "ph" in ql or "acidity" in ql:
         return ChatResponse(
             answer=(
@@ -1922,7 +2412,7 @@ def chat_ask(req: ChatRequest) -> ChatResponse:
             )
         )
 
-    # 5) Crop suggestion by soil type
+    # 6) Crop suggestion by soil type
     if "best crop" in ql or ("crop" in ql and "soil" in ql):
         # Try to detect simple soil words
         soil = next(
@@ -2034,37 +2524,46 @@ def detect_plant_disease(body: ImageUpload) -> Dict[str, Any]:
         Disease detection results with treatment recommendations
     """
     try:
-        # Use the comprehensive disease detector
+        # Use the comprehensive disease detector with proper import
         try:
-            from comprehensive_disease_detector import ComprehensiveDiseaseDetector
+            from .comprehensive_disease_detector import ComprehensiveDiseaseDetector
             detector = ComprehensiveDiseaseDetector()
-        except ImportError:
-            # Fallback to basic disease detection
-            return {
-                "primary_disease": "Disease detected (basic analysis)",
-                "confidence": 0.6,
-                "severity": "medium",
-                "affected_area_percentage": 10.0,
-                "recommended_treatments": [
-                    {
-                        "treatment_type": "general",
-                        "product_name": "General fungicide",
-                        "application_rate": "As per label",
-                        "frequency": "Weekly",
-                        "cost_per_acre": 25.0
+            logger.info("✅ Disease detector loaded successfully")
+        except ImportError as e:
+            logger.error(f"❌ Failed to import ComprehensiveDiseaseDetector (relative): {e}")
+            try:
+                # Fallback to direct import
+                import comprehensive_disease_detector
+                detector = comprehensive_disease_detector.ComprehensiveDiseaseDetector()
+                logger.info("✅ Disease detector loaded via fallback import")
+            except Exception as e2:
+                logger.error(f"❌ All disease detector imports failed: {e2}")
+                # Fallback to basic disease detection
+                return {
+                    "primary_disease": "Disease detected (basic analysis)",
+                    "confidence": 0.6,
+                    "severity": "medium",
+                    "affected_area_percentage": 10.0,
+                    "recommended_treatments": [
+                        {
+                            "treatment_type": "general",
+                            "product_name": "General fungicide",
+                            "application_rate": "As per label",
+                            "frequency": "Weekly",
+                            "cost_per_acre": 25.0
+                        }
+                    ],
+                    "prevention_tips": [
+                        "Ensure proper air circulation",
+                        "Avoid overhead watering",
+                        "Remove infected plant material"
+                    ],
+                    "economic_impact": {
+                        "potential_yield_loss": 15.0,
+                        "treatment_cost_estimate": 40.0,
+                        "cost_benefit_ratio": 3.5
                     }
-                ],
-                "prevention_tips": [
-                    "Ensure proper air circulation",
-                    "Avoid overhead watering",
-                    "Remove infected plant material"
-                ],
-                "economic_impact": {
-                    "potential_yield_loss": 15.0,
-                    "treatment_cost_estimate": 40.0,
-                    "cost_benefit_ratio": 3.5
                 }
-            }
         
         # Run disease detection with crop type and environmental data
         result = detector.analyze_disease_image(
@@ -2772,15 +3271,39 @@ def get_health_system_status() -> Dict[str, Any]:
             # Check individual component status
             if DiseaseDetectionEngine is not None:
                 disease_engine = DiseaseDetectionEngine()
-                disease_info = disease_engine.get_model_info()
-                status["capabilities"]["disease_detection"] = disease_info["status"] == "loaded"
+                disease_info = disease_engine.get_model_info() or {}
+                # Support multiple model_info shapes: some detectors return {'status': 'loaded'}
+                # while others return {'loaded': True}. Handle both safely.
+                try:
+                    if isinstance(disease_info, dict):
+                        if "status" in disease_info:
+                            status["capabilities"]["disease_detection"] = str(disease_info.get("status")).lower() == "loaded"
+                        elif "loaded" in disease_info:
+                            status["capabilities"]["disease_detection"] = bool(disease_info.get("loaded"))
+                        else:
+                            status["capabilities"]["disease_detection"] = False
+                    else:
+                        status["capabilities"]["disease_detection"] = False
+                except Exception:
+                    status["capabilities"]["disease_detection"] = False
             else:
                 disease_info = {"status": "not_available"}
 
             if WeedManagementEngine is not None:
                 weed_engine = WeedManagementEngine()
-                weed_info = weed_engine.get_model_info()
-                status["capabilities"]["weed_management"] = weed_info["status"] == "loaded"
+                weed_info = weed_engine.get_model_info() or {}
+                try:
+                    if isinstance(weed_info, dict):
+                        if "status" in weed_info:
+                            status["capabilities"]["weed_management"] = str(weed_info.get("status")).lower() == "loaded"
+                        elif "loaded" in weed_info:
+                            status["capabilities"]["weed_management"] = bool(weed_info.get("loaded"))
+                        else:
+                            status["capabilities"]["weed_management"] = False
+                    else:
+                        status["capabilities"]["weed_management"] = False
+                except Exception:
+                    status["capabilities"]["weed_management"] = False
             else:
                 weed_info = {"status": "not_available"}
 
@@ -2857,7 +3380,6 @@ def iot_recommend_latest(zone_id: str = "Z1") -> Dict[str, Any]:
     }
 
 
-# --- ESP32 Edge ingest (HTTP) ---
 @app.post("/edge/ingest")
 def edge_ingest(payload: Dict[str, Any]) -> Dict[str, bool]:
     """Accept sensor payloads from ESP32 and normalize to SensorReading.
@@ -2897,11 +3419,13 @@ def edge_ingest(payload: Dict[str, Any]) -> Dict[str, bool]:
             ec = ec_val
         except Exception:
             ec = 1.0
+    defaults = safe_engine_attr("defaults", {})
+    default_area = defaults.get("area_m2", 100.0) if isinstance(defaults, dict) else 100.0
     reading = SensorReading(
         zone_id=zone,
         plant=str(payload.get("plant", "generic")),
         soil_type=str(payload.get("soil_type", "loam")),
-        area_m2=float(payload.get("area_m2", safe_engine_attr("defaults", {}).get("area_m2", 100.0))),
+        area_m2=float(payload.get("area_m2", default_area)),
         ph=float(payload.get("ph", 6.5)),
         moisture_pct=float(moisture),
         temperature_c=float(temp),
@@ -3129,11 +3653,8 @@ def serve_spa(path: str):
     raise HTTPException(status_code=404, detail="UI not found")
 
 
-# Accept '/api/*' paths by redirecting to the same path without the '/api' prefix
-@app.api_route("/api/{path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"])  # type: ignore[list-item]
-def api_prefix_redirect(path: str) -> RedirectResponse:
-    # Preserve path and querystring; FastAPI/Starlette keeps query intact on redirect
-    return RedirectResponse(url=f"/{path}", status_code=307)
+# NOTE: Removed /api/{path:path} catch-all redirect to allow proper validation errors
+# Specific /api/ endpoints are defined above (e.g., /api/disease/detect, /api/weed/analyze)
 
 
 # AdminGuard is defined near the top
@@ -3664,16 +4185,267 @@ class ChatbotTune(BaseModel):
     min_cos: Optional[float] = None
 
 
+def _normalize_user_question(question: str) -> tuple[str, bool]:
+    """
+    Normalize user questions to handle small/improper questions better.
+    Returns: (normalized_question, needs_expansion)
+    """
+    qtext = question.strip().lower()
+    
+    # Common typo corrections
+    typo_map = {
+        "wat": "what", "wt": "what", "hw": "how", "wen": "when", "whn": "when",
+        "whr": "where", "wich": "which", "shud": "should", "cud": "could",
+        "wud": "would", "r": "are", "u": "you", "ur": "your", "y": "why",
+        "bst": "best", "gud": "good", "gd": "good", "nw": "now",
+        "cro": "crop", "crps": "crops", "wtr": "water", "irri": "irrigation",
+        "fert": "fertilizer", "fertlizer": "fertilizer", "pest": "pest",
+        "diseas": "disease", "desease": "disease", "soi": "soil", "sol": "soil",
+        "seed": "seed", "plnt": "plant", "grw": "grow", "harvst": "harvest",
+        "2": "to", "4": "for", "8": "ate"
+    }
+    
+    words = qtext.split()
+    normalized_words = []
+    for word in words:
+        normalized_words.append(typo_map.get(word, word))
+    
+    normalized = " ".join(normalized_words)
+    
+    # Detect if question needs expansion (too small/vague)
+    needs_expansion = len(words) <= 2 or len(qtext) < 10
+    
+    # Common crop names - when user just types crop name, expand to information query
+    crop_names = {
+        # Cereals/Grains
+        "rice": "tell me about rice crop cultivation requirements and best practices",
+        "paddy": "tell me about rice paddy cultivation requirements and best practices",
+        "wheat": "tell me about wheat crop cultivation requirements and best practices",
+        "corn": "tell me about corn crop cultivation requirements and best practices",
+        "maize": "tell me about maize crop cultivation requirements and best practices",
+        "barley": "tell me about barley crop cultivation requirements and best practices",
+        "millet": "tell me about millet crop cultivation requirements and best practices",
+        "sorghum": "tell me about sorghum crop cultivation requirements and best practices",
+        "oats": "tell me about oats crop cultivation requirements and best practices",
+        
+        # Vegetables
+        "tomato": "tell me about tomato crop cultivation requirements and best practices",
+        "tomatoes": "tell me about tomato crop cultivation requirements and best practices",
+        "potato": "tell me about potato crop cultivation requirements and best practices",
+        "potatoes": "tell me about potato crop cultivation requirements and best practices",
+        "onion": "tell me about onion crop cultivation requirements and best practices",
+        "onions": "tell me about onion crop cultivation requirements and best practices",
+        "cabbage": "tell me about cabbage crop cultivation requirements and best practices",
+        "carrot": "tell me about carrot crop cultivation requirements and best practices",
+        "carrots": "tell me about carrot crop cultivation requirements and best practices",
+        "brinjal": "tell me about brinjal crop cultivation requirements and best practices",
+        "eggplant": "tell me about brinjal eggplant cultivation requirements and best practices",
+        "cauliflower": "tell me about cauliflower crop cultivation requirements and best practices",
+        "spinach": "tell me about spinach crop cultivation requirements and best practices",
+        "lettuce": "tell me about lettuce crop cultivation requirements and best practices",
+        "cucumber": "tell me about cucumber crop cultivation requirements and best practices",
+        "pumpkin": "tell me about pumpkin crop cultivation requirements and best practices",
+        "squash": "tell me about squash crop cultivation requirements and best practices",
+        "pepper": "tell me about pepper crop cultivation requirements and best practices",
+        "peppers": "tell me about pepper crop cultivation requirements and best practices",
+        "chili": "tell me about chili pepper cultivation requirements and best practices",
+        "chilli": "tell me about chili pepper cultivation requirements and best practices",
+        
+        # Legumes/Pulses
+        "bean": "tell me about bean crop cultivation requirements and best practices",
+        "beans": "tell me about bean crop cultivation requirements and best practices",
+        "pea": "tell me about pea crop cultivation requirements and best practices",
+        "peas": "tell me about pea crop cultivation requirements and best practices",
+        "lentil": "tell me about lentil crop cultivation requirements and best practices",
+        "lentils": "tell me about lentil crop cultivation requirements and best practices",
+        "chickpea": "tell me about chickpea crop cultivation requirements and best practices",
+        "chickpeas": "tell me about chickpea crop cultivation requirements and best practices",
+        "soybean": "tell me about soybean crop cultivation requirements and best practices",
+        "soybeans": "tell me about soybean crop cultivation requirements and best practices",
+        "groundnut": "tell me about groundnut peanut cultivation requirements and best practices",
+        "peanut": "tell me about peanut groundnut cultivation requirements and best practices",
+        "peanuts": "tell me about peanut groundnut cultivation requirements and best practices",
+        
+        # Cash Crops
+        "cotton": "tell me about cotton crop cultivation requirements and best practices",
+        "sugarcane": "tell me about sugarcane crop cultivation requirements and best practices",
+        "tobacco": "tell me about tobacco crop cultivation requirements and best practices",
+        "tea": "tell me about tea crop cultivation requirements and best practices",
+        "coffee": "tell me about coffee crop cultivation requirements and best practices",
+        "rubber": "tell me about rubber crop cultivation requirements and best practices",
+        "jute": "tell me about jute crop cultivation requirements and best practices",
+        
+        # Fruits
+        "mango": "tell me about mango crop cultivation requirements and best practices",
+        "banana": "tell me about banana crop cultivation requirements and best practices",
+        "bananas": "tell me about banana crop cultivation requirements and best practices",
+        "apple": "tell me about apple crop cultivation requirements and best practices",
+        "apples": "tell me about apple crop cultivation requirements and best practices",
+        "orange": "tell me about orange crop cultivation requirements and best practices",
+        "oranges": "tell me about orange crop cultivation requirements and best practices",
+        "grape": "tell me about grape crop cultivation requirements and best practices",
+        "grapes": "tell me about grape crop cultivation requirements and best practices",
+        "watermelon": "tell me about watermelon crop cultivation requirements and best practices",
+        "papaya": "tell me about papaya crop cultivation requirements and best practices",
+        "guava": "tell me about guava crop cultivation requirements and best practices",
+        "pomegranate": "tell me about pomegranate crop cultivation requirements and best practices",
+        "strawberry": "tell me about strawberry crop cultivation requirements and best practices",
+        "strawberries": "tell me about strawberry crop cultivation requirements and best practices",
+        
+        # Spices/Herbs
+        "turmeric": "tell me about turmeric crop cultivation requirements and best practices",
+        "ginger": "tell me about ginger crop cultivation requirements and best practices",
+        "garlic": "tell me about garlic crop cultivation requirements and best practices",
+        "coriander": "tell me about coriander crop cultivation requirements and best practices",
+        "cumin": "tell me about cumin crop cultivation requirements and best practices",
+        "cardamom": "tell me about cardamom crop cultivation requirements and best practices",
+        "pepper": "tell me about pepper crop cultivation requirements and best practices",
+        "mint": "tell me about mint crop cultivation requirements and best practices",
+        "basil": "tell me about basil crop cultivation requirements and best practices",
+    }
+    
+    # Check if user just typed a crop name
+    if normalized in crop_names:
+        return crop_names[normalized], True
+    
+    # Expand common single-word/vague questions
+    expansion_map = {
+        "water": "how to water crops properly",
+        "watering": "how to water crops properly",
+        "irrigation": "what is the best irrigation method",
+        "fertilizer": "what fertilizer should I use",
+        "fertilizers": "what fertilizer should I use",
+        "crop": "what crop should I plant",
+        "crops": "what crops are best to grow",
+        "pest": "how to control pests",
+        "pests": "how to control pests",
+        "disease": "how to prevent crop disease",
+        "diseases": "how to prevent crop disease",
+        "soil": "how to improve soil quality",
+        "seed": "how to select good seeds",
+        "seeds": "how to select good seeds",
+        "help": "what agricultural advice do you provide",
+        "start": "how to start farming",
+        "begin": "how to start farming",
+        "plant": "how to plant crops",
+        "grow": "how to grow crops successfully",
+        "harvest": "when to harvest crops",
+        "farm": "how to manage a farm",
+        "farming": "best farming practices",
+    }
+    
+    if needs_expansion and normalized in expansion_map:
+        return expansion_map[normalized], True
+    
+    # Multi-word expansion for common patterns
+    if needs_expansion:
+        if "what" in normalized or "wt" in qtext:
+            if "crop" in normalized:
+                return "what crops are best to grow", True
+            if "fert" in normalized or "fertilizer" in normalized:
+                return "what fertilizer should I use", True
+        if "how" in normalized or "hw" in qtext:
+            if "water" in normalized or "irri" in normalized:
+                return "how to water crops properly", True
+            if "plant" in normalized or "grow" in normalized:
+                return "how to grow crops successfully", True
+    
+    return normalized, needs_expansion
+
+
+def _generate_fallback_response(question: str, language: str = "en") -> str:
+    """
+    Generate helpful fallback response when no good answers found
+    """
+    fallback_templates = {
+        "en": {
+            "water": "🌊 **About Watering & Irrigation:**\nI'd love to help with watering! Here are some common topics:\n• Irrigation methods (drip, sprinkler, flood)\n• Watering schedules for different crops\n• Signs of over/under-watering\n\nCould you ask a more specific question? For example: 'What is the best irrigation method for tomatoes?' or 'How often should I water wheat crops?'",
+            "fertilizer": "🌱 **About Fertilizers:**\nI can help with fertilizer questions! Topics I know about:\n• Organic vs chemical fertilizers\n• NPK ratios for different crops\n• When and how to apply fertilizer\n• Soil testing\n\nTry asking: 'What fertilizer ratio is best for rice?' or 'When should I apply fertilizer to corn?'",
+            "crop": "🌾 **About Crops:**\nI can help you choose the right crops! I know about:\n• Best crops for different soil types\n• Seasonal planting recommendations\n• Crop rotation benefits\n• High-yield varieties\n\nAsk me: 'What crops grow well in clay soil?' or 'What should I plant in monsoon season?'",
+            "pest": "🐛 **About Pest Control:**\nI can advise on pest management! Topics include:\n• Identifying common pests\n• Natural pest control methods\n• Chemical pesticide recommendations\n• Preventive measures\n\nTry: 'How to control aphids on vegetables?' or 'What are natural pest control methods?'",
+            "disease": "🦠 **About Plant Diseases:**\nI can help with disease management! I cover:\n• Common crop diseases\n• Disease prevention\n• Organic treatments\n• Fungicide recommendations\n\nAsk: 'How to prevent tomato blight?' or 'What causes yellowing leaves?'",
+            "soil": "🌍 **About Soil Management:**\nI can help improve your soil! Topics:\n• Soil testing and pH levels\n• Improving soil fertility\n• Composting methods\n• Soil types and amendments\n\nTry: 'How to improve sandy soil?' or 'What pH level is best for vegetables?'",
+            "general": "👋 **I'm here to help with farming questions!**\n\nI can assist with:\n• 🌊 Irrigation and watering\n• 🌱 Fertilizers and nutrients\n• 🌾 Crop selection and planting\n• 🐛 Pest control\n• 🦠 Disease management\n• 🌍 Soil improvement\n\nPlease ask a specific question like:\n• 'What is the best irrigation method for rice?'\n• 'How often should I fertilize wheat?'\n• 'What crops grow well in monsoon season?'\n• 'How to control pests naturally?'",
+        },
+        "hi": {
+            "general": "👋 **मैं खेती के सवालों में मदद के लिए यहाँ हूँ!**\n\nमैं इन विषयों में सहायता कर सकता हूँ:\n• 🌊 सिंचाई और पानी\n• 🌱 उर्वरक और पोषक तत्व\n• 🌾 फसल चयन और रोपण\n• 🐛 कीट नियंत्रण\n• 🦠 रोग प्रबंधन\n• 🌍 मिट्टी सुधार\n\nकृपया एक विशिष्ट प्रश्न पूछें जैसे:\n• 'धान के लिए सबसे अच्छी सिंचाई विधि क्या है?'\n• 'गेहूं को कितनी बार उर्वरक देना चाहिए?'\n• 'मानसून के मौसम में कौन सी फसलें अच्छी होती हैं?'",
+        }
+    }
+    
+    # Detect question topic
+    question_lower = question.lower()
+    topic = "general"
+    
+    for keyword in ["water", "irrigation", "irri", "sinkhai", "watering"]:
+        if keyword in question_lower:
+            topic = "water"
+            break
+    
+    if topic == "general":
+        for keyword in ["fertilizer", "fert", "urvarak", "nutrient", "npk"]:
+            if keyword in question_lower:
+                topic = "fertilizer"
+                break
+    
+    if topic == "general":
+        for keyword in ["crop", "plant", "fasal", "seed"]:
+            if keyword in question_lower:
+                topic = "crop"
+                break
+    
+    if topic == "general":
+        for keyword in ["pest", "insect", "keet", "bug"]:
+            if keyword in question_lower:
+                topic = "pest"
+                break
+    
+    if topic == "general":
+        for keyword in ["disease", "blight", "fungus", "rog"]:
+            if keyword in question_lower:
+                topic = "disease"
+                break
+    
+    if topic == "general":
+        for keyword in ["soil", "mitti", "mati", "earth"]:
+            if keyword in question_lower:
+                topic = "soil"
+                break
+    
+    templates = fallback_templates.get(language, fallback_templates["en"])
+    return templates.get(topic, templates["general"])
+
+
 @app.post("/chatbot/ask")
 def chatbot_ask(q: ChatbotQuery) -> Dict[str, Any]:
     ok = _load_chatbot_artifacts()
     # Require at minimum the answers list; allow missing encoder/embeddings for lexical-only mode
     if (not ok) or (_chatbot_answers is None) or (len(_chatbot_answers) == 0):
         raise HTTPException(status_code=503, detail="Chatbot not trained or artifacts missing")
-    # Normalize and validate input
-    qtext = q.question.strip()
-    if not qtext:
+    
+    # Normalize and validate input - enhanced for small/improper questions
+    original_question = q.question.strip()
+    if not original_question:
         raise HTTPException(status_code=400, detail="question must not be empty")
+    
+    # PRIORITY 1: Check if this is a simple crop name query (before any expansion)
+    # This handles queries like "carrot", "watermelon", "rice" etc.
+    normalized_crop = _normalize_crop_name(original_question)
+    if normalized_crop and normalized_crop in SUPPORTED_CROPS:
+        if _is_simple_crop_name_query(original_question):
+            # Try to get detailed cultivation guide
+            guide = _get_crop_cultivation_guide(normalized_crop)
+            if guide:
+                return {"question": original_question, "results": [{"rank": 1, "score": 1.0, "answer": guide}]}
+            else:
+                # Return just the crop name as fallback
+                return {"question": original_question, "results": [{"rank": 1, "score": 1.0, "answer": normalized_crop}]}
+    
+    # Normalize question to handle typos and expand small/vague questions
+    qtext, was_expanded = _normalize_user_question(original_question)
+    
+    # Log if we expanded the question for debugging
+    if was_expanded:
+        logger.info(f"Expanded question from '{original_question}' to '{qtext}'")
     # Allow env-based cap to quickly tune recall vs payload size
     try:
         TOPK_MAX = int(os.getenv("CHATBOT_TOPK_MAX") or os.getenv("AGRISENSE_CHATBOT_TOPK_MAX") or 20)
@@ -4231,8 +5003,10 @@ def chatbot_ask(q: ChatbotQuery) -> Dict[str, Any]:
                     top_cos = float(scores[idx[0]]) if idx else 0.0
                 except Exception:
                     top_cos = 0.0
-                # require a higher bar (>= max(min_cos, 0.40)) to avoid overriding good QA
-                if top_cos < max(0.40, _chatbot_min_cos):
+                # require a higher bar (>= 0.25) to avoid overriding good QA
+                # Lowered from 0.40 to 0.25 to allow TF-IDF comprehensive guides to be retrieved
+                # Use fixed 0.25 instead of max(0.25, _chatbot_min_cos) to ensure threshold is not increased
+                if top_cos < 0.25:
                     need_facts = True
             if need_facts:
                 crop_hit: Optional[CropCard] = _find_crop_in_text(qtext)
@@ -4256,6 +5030,24 @@ def chatbot_ask(q: ChatbotQuery) -> Dict[str, Any]:
                     results = [{"rank": 1, "score": 1.0, "answer": ans_txt}]
     except Exception:
         pass
+    # Check if results are too weak - provide helpful fallback for small/improper questions
+    if not results or (results and results[0].get("score", 0) < 0.25):
+        language = q.language or "en"
+        fallback_answer = _generate_fallback_response(original_question, language)
+        
+        # If we expanded the question, try to provide better context
+        if was_expanded and results:
+            # Keep the retrieved result but add helpful context
+            results[0]["answer"] = f"I noticed you asked a short question. Let me help!\n\n{results[0].get('answer', '')}\n\n---\n\n{fallback_answer}"
+        else:
+            # No good results, provide pure fallback
+            results = [{
+                "rank": 1,
+                "score": 0.5,
+                "answer": fallback_answer,
+                "is_fallback": True
+            }]
+    
     # Update LRU cache
     _chatbot_cache[key] = results
     if len(_chatbot_cache) > _CHATBOT_CACHE_MAX:
@@ -4271,15 +5063,19 @@ def chatbot_ask(q: ChatbotQuery) -> Dict[str, Any]:
             for result in results:
                 original_answer = result.get("answer", "")
                 if original_answer:
-                    enhanced_answer = enhance_chatbot_response(
-                        question=qtext,
-                        base_answer=original_answer,
-                        session_id=session_id,
-                        language=language
-                    )
-                    result["answer"] = enhanced_answer
-                    # Keep original for comparison if needed
-                    result["original_answer"] = original_answer
+                    # Don't enhance fallback responses (they're already conversational)
+                    if result.get("is_fallback", False):
+                        result["answer"] = original_answer
+                    else:
+                        enhanced_answer = enhance_chatbot_response(
+                            question=qtext,
+                            base_answer=original_answer,
+                            session_id=session_id,
+                            language=language
+                        )
+                        result["answer"] = enhanced_answer
+                        # Keep original for comparison if needed
+                        result["original_answer"] = original_answer
     except Exception as e:
         logger.warning(f"Failed to enhance chatbot response: {e}")
         # Continue with non-enhanced responses
@@ -4330,6 +5126,73 @@ def chatbot_greeting(language: str = "en") -> Dict[str, str]:
             "greeting": "Hello! How can I help you today?",
             "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
         }
+
+
+class ChatbotAdviceQuery(BaseModel):
+    """Request model for context-aware agronomist advice"""
+    query: str = Field(..., description="Farmer's question or concern")
+    diagnosis_context: Optional[Dict[str, Any]] = Field(None, description="Optional disease diagnosis context")
+    conversation_history: Optional[List[Dict[str, str]]] = Field(None, description="Previous conversation messages")
+
+
+@app.post("/chatbot/advice")
+def chatbot_get_advice(req: ChatbotAdviceQuery) -> Dict[str, Any]:
+    """
+    Get context-aware agricultural advice from the AgriAdvisorBot (Senior Agronomist persona).
+    
+    This endpoint provides empathetic, professional advice that references specific details
+    from disease diagnosis context (if provided) and maintains conversation continuity.
+    
+    Args:
+        req: ChatbotAdviceQuery with user query, optional diagnosis context, and conversation history
+        
+    Returns:
+        Dict with advice text, timestamp, and metadata
+    """
+    try:
+        # Import and initialize the chatbot engine
+        try:
+            from .core.chatbot_engine import get_chatbot_engine
+            chatbot = get_chatbot_engine()
+        except ImportError:
+            try:
+                from core.chatbot_engine import get_chatbot_engine  # type: ignore
+                chatbot = get_chatbot_engine()
+            except ImportError as e:
+                logger.warning(f"AgriAdvisorBot not available: {e}")
+                raise HTTPException(
+                    status_code=503, 
+                    detail="Context-aware chatbot not available. Install required dependencies (google-generativeai)."
+                )
+        
+        # Get advice based on whether we have conversation history
+        if req.conversation_history:
+            advice = chatbot.get_multi_turn_advice(
+                conversation_history=req.conversation_history,
+                diagnosis_context=req.diagnosis_context
+            )
+        else:
+            advice = chatbot.get_advice(
+                user_query=req.query,
+                diagnosis_context=req.diagnosis_context
+            )
+        
+        return {
+            "query": req.query,
+            "advice": advice,
+            "has_diagnosis_context": req.diagnosis_context is not None,
+            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "advisor": "Dr. Priya Kumar (Senior Agronomist)"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to generate advice: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to generate agricultural advice: {str(e)}"
+        )
 
 
 @app.get("/chatbot/metrics")

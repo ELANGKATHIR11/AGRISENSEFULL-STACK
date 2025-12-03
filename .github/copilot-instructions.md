@@ -1162,9 +1162,383 @@ Before completing any task, verify:
 
 ---
 
-**Document Version**: 2.0  
-**Last Updated**: October 2, 2025  
+---
+
+## 🎓 Critical Lessons Learned (Issue History)
+
+### October 12, 2025: Chatbot Cultivation Guide Fix
+
+**Problem**: Chatbot returned just crop name ("carrot" - 6 chars) instead of full cultivation guide (1,600+ chars).
+
+**Symptom**: 
+```powershell
+$body = @{ question = "carrot" } | ConvertTo-Json
+$response = Invoke-WebRequest -Uri "http://localhost:8004/chatbot/ask" -Method POST -Body $body -ContentType "application/json"
+# Expected: 1,609 character guide
+# Actual: 6 characters ("carrot")
+```
+
+**Root Cause**: `_get_crop_cultivation_guide()` function in `agrisense_app/backend/main.py` was **reloading** `chatbot_qa_pairs.json` from disk instead of using the in-memory `_chatbot_answers` array that gets populated during startup.
+
+**Investigation Steps Taken**:
+1. ✅ Verified JSON file contains all 48 cultivation guides (it did)
+2. ✅ Verified guides match pattern "cultivation guide" + crop name (they did)
+3. ✅ Tested backend endpoint directly (returned just crop name)
+4. ❌ Initial assumption: Guides weren't in the file (WRONG)
+5. ✅ Actual issue: Function was searching wrong data source
+
+**The Fix**:
+```python
+# ❌ WRONG APPROACH: Reloading from disk
+def _get_crop_cultivation_guide(crop_name: str) -> Optional[str]:
+    backend_dir = os.path.dirname(os.path.abspath(__file__))
+    qa_pairs_path = os.path.join(backend_dir, "chatbot_qa_pairs.json")
+    with open(qa_pairs_path, "r", encoding="utf-8") as f:
+        qa_data = json.load(f)  # Creates separate data source!
+    answers = qa_data.get("answers", [])
+    # Search in answers loaded from file...
+
+# ✅ CORRECT APPROACH: Using in-memory array
+def _get_crop_cultivation_guide(crop_name: str) -> Optional[str]:
+    """Retrieve detailed cultivation guide from loaded chatbot answers."""
+    global _chatbot_answers
+    
+    if _chatbot_answers is None or len(_chatbot_answers) == 0:
+        logger.warning("Chatbot answers not loaded yet")
+        return None
+    
+    crop_normalized = crop_name.lower().strip()
+    
+    # Search in already-loaded, processed answers
+    for answer in _chatbot_answers:
+        answer_lower = str(answer).lower()
+        if "cultivation guide" in answer_lower and crop_normalized in answer_lower:
+            logger.info(f"Found cultivation guide for crop: {crop_name}")
+            return str(answer)
+    
+    logger.info(f"No cultivation guide found for crop: {crop_name}")
+    return None
+```
+
+**Why This Matters**:
+- `_chatbot_answers` goes through `_clean_text()` normalization
+- `_chatbot_answers` is L2-normalized for embeddings
+- File reload bypasses the entire data pipeline
+- Multiple data sources = inconsistency bugs
+
+**Prevention Checklist**:
+- [ ] Always check if data is already loaded in memory before file I/O
+- [ ] Use global variables that are pre-loaded at startup
+- [ ] Add integration tests that verify answer length (not just presence)
+- [ ] Test chatbot endpoints after ANY modifications to main.py
+- [ ] Include debug logging to trace data source
+
+**Verification Test**:
+```powershell
+# Test multiple crops for proper guide length
+$testCrops = @("carrot", "watermelon", "strawberry", "tomato", "rice")
+foreach ($crop in $testCrops) {
+    $body = @{ question = $crop } | ConvertTo-Json
+    $response = Invoke-WebRequest -Uri "http://localhost:8004/chatbot/ask" -Method POST -Body $body -ContentType "application/json"
+    $jsonResp = $response.Content | ConvertFrom-Json
+    $answerLength = $jsonResp.results[0].answer.Length
+    if ($answerLength -lt 1000) {
+        Write-Host "❌ FAILED: $crop returned only $answerLength chars (expected 1500+)"
+    } else {
+        Write-Host "✅ PASSED: $crop returned $answerLength chars"
+    }
+}
+```
+
+**Key Takeaway**: When debugging, always verify **data flow** - where data comes from matters as much as what data exists.
+
+---
+
+### October 12, 2025: Vite Server Persistence Issue
+
+**Problem**: Vite dev server showed "ready" message but immediately exited, leaving port unresponsive.
+
+**Symptom**:
+```powershell
+npm run dev
+# Output: "VITE v7.1.7 ready in 2112 ms"
+# Then: Terminal returns to prompt (exit code 1)
+# Result: Port 8080 not listening
+```
+
+**Root Cause**: Using `run_in_terminal` with `isBackground=true` in PowerShell doesn't keep npm processes alive. The pipeline terminates when command completes initial output.
+
+**Failed Attempts**:
+1. ❌ Multiple `run_in_terminal` calls with different parameters
+2. ❌ Adding `Start-Sleep` after npm run dev
+3. ❌ Using `Tee-Object` to capture output
+4. ❌ Opening new PowerShell window with `Start-Process`
+
+**The Solution**: Use PowerShell `Start-Job`
+```powershell
+# ✅ CORRECT: Start-Job keeps process running
+cd "AGRISENSE FULL-STACK/AGRISENSEFULL-STACK/agrisense_app/frontend/farm-fortune-frontend-main"
+Start-Job -ScriptBlock { 
+    Set-Location "AGRISENSE FULL-STACK/AGRISENSEFULL-STACK/agrisense_app/frontend/farm-fortune-frontend-main"
+    npm run dev 
+} | Out-Null
+Start-Sleep -Seconds 8  # Wait for Vite startup
+
+# Verify it's running
+Invoke-WebRequest -Uri http://localhost:8080
+
+# Check job status
+Get-Job | Format-Table
+
+# View job output
+Get-Job | ForEach-Object { Receive-Job -Job $_ | Select-Object -Last 30 }
+```
+
+**Why This Works**:
+- `Start-Job` creates true background process
+- Process runs in isolated session
+- Doesn't terminate when output stops
+- Can be monitored with `Get-Job` and `Receive-Job`
+
+**Same Pattern for Backend**:
+```powershell
+Start-Job -ScriptBlock { 
+    Set-Location "AGRISENSE FULL-STACK/AGRISENSEFULL-STACK"
+    & .\.venv\Scripts\python.exe -m uvicorn agrisense_app.backend.main:app --host 0.0.0.0 --port 8004 
+} | Out-Null
+Start-Sleep -Seconds 12  # Backend needs longer startup
+```
+
+**Debugging Background Jobs**:
+```powershell
+# List all jobs
+Get-Job
+
+# Get output from specific job
+Receive-Job -Job $job
+
+# Stop all jobs
+Get-Job | Stop-Job
+Get-Job | Remove-Job
+
+# Kill processes if jobs fail
+Get-Process | Where-Object { $_.ProcessName -eq "python" } | Stop-Process -Force
+Get-Process | Where-Object { $_.ProcessName -like "*node*" } | Stop-Process -Force
+```
+
+**Key Takeaway**: For long-running dev servers in Windows PowerShell, always use `Start-Job` instead of direct terminal commands.
+
+---
+
+## 🔍 Advanced Debugging Patterns
+
+### Pattern 1: Data Source Mismatch
+**Symptom**: Function returns wrong/empty data despite file containing correct data.
+
+**Debug Steps**:
+1. Verify file contents: `Get-Content file.json | ConvertFrom-Json`
+2. Check if data loaded in memory: Search for global variable assignments
+3. Add logging to trace data source: `logger.debug(f"Using data from: {source}")`
+4. Compare file data vs. in-memory data
+5. Check for data transformation functions (e.g., `_clean_text()`)
+
+**Solution Pattern**: Always prefer in-memory data over file reloading.
+
+---
+
+### Pattern 2: Process Persistence in PowerShell
+**Symptom**: Background process shows "ready" but exits immediately.
+
+**Debug Steps**:
+1. Check if process still running: `Get-Process -Name python` or `Get-Process -Name node`
+2. Try direct terminal execution to see full output
+3. Check exit codes and error messages
+4. Test with `Start-Job` instead of direct command
+
+**Solution Pattern**: Use `Start-Job` for dev servers that need to stay running.
+
+---
+
+### Pattern 3: API Returns Wrong Format
+**Symptom**: API returns data but not in expected structure.
+
+**Debug Steps**:
+```powershell
+# 1. Test endpoint directly
+$body = @{ field = "value" } | ConvertTo-Json
+$response = Invoke-WebRequest -Uri "http://localhost:8004/endpoint" -Method POST -Body $body -ContentType "application/json"
+
+# 2. Examine full response
+$response.Content | ConvertFrom-Json | ConvertTo-Json -Depth 10
+
+# 3. Check response headers
+$response.Headers
+
+# 4. Verify Pydantic models in backend code
+# Look for: response_model=SomeModel in endpoint definition
+
+# 5. Add backend logging
+logger.debug(f"Response structure: {response.dict()}")
+```
+
+**Solution Pattern**: Validate Pydantic models match expected frontend structure.
+
+---
+
+## 🛡️ Security & Vulnerability Management
+
+### Known Issues to Monitor
+
+#### Backend Dependencies
+```powershell
+# Check for vulnerabilities
+pip-audit
+
+# Update specific package
+pip install --upgrade package-name
+
+# Verify no regressions
+pytest -v
+```
+
+**Critical Packages**:
+- `fastapi` - Keep ≥ 0.115.6
+- `starlette` - Keep ≥ 0.47.2 (GHSA-f96h-pmfr-66vw)
+- `scikit-learn` - Keep ≥ 1.5.0 (PYSEC-2024-110)
+- `python-jose` - Keep ≥ 3.4.0 (PYSEC-2024-232/233)
+
+#### Frontend Dependencies
+```powershell
+# Check for vulnerabilities
+npm audit
+
+# Update specific package
+npm update package-name
+
+# Verify build still works
+npm run build
+npm run typecheck
+```
+
+**Critical Packages**:
+- `vite` - Keep ≥ 7.1.7
+- `react` - Keep ≥ 18.3.1
+- `react-dom` - Keep ≥ 18.3.1
+
+### Hardcoded Secret Detection
+```powershell
+# Manual search for common patterns
+Select-String -Path .\**\*.py,.\**\*.ts,.\**\*.tsx -Pattern "api_key|password|secret|token" -Context 1
+
+# Check for .env files in git
+git ls-files | Select-String -Pattern "\.env$"
+
+# Verify .gitignore includes sensitive files
+Get-Content .gitignore | Select-String -Pattern "\.env|secrets|*.key"
+```
+
+---
+
+## 📊 Performance Optimization Guide
+
+### Backend Profiling
+```python
+# Add timing middleware
+import time
+from fastapi import Request
+
+@app.middleware("http")
+async def add_timing_header(request: Request, call_next):
+    start = time.time()
+    response = await call_next(request)
+    duration = time.time() - start
+    response.headers["X-Process-Time"] = str(duration)
+    logger.info(f"{request.method} {request.url.path}: {duration:.3f}s")
+    return response
+```
+
+### Frontend Bundle Analysis
+```powershell
+# Install analyzer
+npm install --save-dev rollup-plugin-visualizer
+
+# Update vite.config.ts
+import { visualizer } from 'rollup-plugin-visualizer';
+
+export default defineConfig({
+  plugins: [
+    react(),
+    visualizer({ open: true })
+  ]
+});
+
+# Build and analyze
+npm run build
+# Opens bundle visualization in browser
+```
+
+### Database Query Optimization
+```python
+# Enable SQLite query logging
+import sqlite3
+sqlite3.enable_callback_tracebacks(True)
+
+# Use EXPLAIN QUERY PLAN
+cursor.execute("EXPLAIN QUERY PLAN SELECT * FROM table WHERE ...")
+```
+
+---
+
+## 🔄 Continuous Integration Checklist
+
+### Pre-Commit Checks
+```powershell
+# 1. Format code
+black agrisense_app/backend/
+prettier --write "agrisense_app/frontend/**/*.{ts,tsx}"
+
+# 2. Run linters
+pylint agrisense_app/backend/
+cd agrisense_app/frontend/farm-fortune-frontend-main && npm run lint
+
+# 3. Type checking
+mypy agrisense_app/backend/
+cd agrisense_app/frontend/farm-fortune-frontend-main && npm run typecheck
+
+# 4. Run tests
+$env:AGRISENSE_DISABLE_ML='1'
+pytest -v
+
+# 5. Security scan
+pip-audit
+npm audit
+
+# 6. Test chatbot critical functionality
+# (See verification test in Lessons Learned section)
+```
+
+---
+
+**Document Version**: 3.0  
+**Last Updated**: October 12, 2025  
 **Maintained By**: AI Agents + Human Maintainers  
 **Status**: Production Ready ✅
+**Latest Fix**: Chatbot cultivation guide data source issue resolved
 
-If you need clarification on any section or want to add specific automation workflows, provide feedback and this document will be updated accordingly.
+### Recent Updates
+- ✅ Added comprehensive debugging patterns for data source mismatches
+- ✅ Documented PowerShell job management for persistent processes
+- ✅ Added security vulnerability tracking section
+- ✅ Included performance optimization guide
+- ✅ Added CI/CD pre-commit checklist
+- ✅ Documented October 12, 2025 critical fixes with full investigation details
+
+### Future AI Agent Guidelines
+When encountering new issues:
+1. Document symptom, root cause, and solution in this file
+2. Add verification test that catches the issue
+3. Update relevant checklists
+4. Add code patterns (both wrong and correct approaches)
+5. Include PowerShell commands used for debugging
+
+This document is a **living guide** - update it after every significant debugging session or architectural change.
