@@ -29,6 +29,11 @@ AgriSense is a comprehensive smart farming solution that combines IoT sensors, m
 - ✅ **Documentation**: 
   - PYTHON_312_OPTIMIZATION_REPORT.md (comprehensive upgrade documentation)
   - PYTHON_312_QUICK_REFERENCE.md (developer quick reference)
+- ✅ **Enhanced AI Agent Instructions**:
+  - `.github/copilot-instructions.md`: Python 3.12.10 stack + dependency management workflows
+  - `azure.instructions.md`: AgriSense-specific Azure deployment guidance (Python 3.12.10 runtime)
+  - `azurecosmosdb.instructions.md`: SQLite to Cosmos DB migration guide with code patterns
+  - Future AI agents can now debug, deploy to Azure, and migrate databases systematically
 
 ### 🤖 Hybrid Agricultural AI System (December 4, 2025)
 - ✅ **Multimodal AI Engine**: 900+ line hybrid LLM+VLM system combining Phi and SCOLD
