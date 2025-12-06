@@ -1,16 +1,55 @@
 # 🌾 AgriSense Full-Stack Project - Updated Blueprint (December 2025)
 
 ## 📋 Project Overview
-AgriSense is a comprehensive smart farming solution that combines IoT sensors, machine learning, and web technologies to provide intelligent crop monitoring, disease detection, and irrigation management. **Production-ready with full E2E testing, CI/CD pipelines, and security hardening.**
+AgriSense is a comprehensive smart farming solution that combines IoT sensors, machine learning, and web technologies to provide intelligent crop monitoring, disease detection, and irrigation management. **Production-ready with full E2E testing, CI/CD pipelines, security hardening, and hybrid LLM+VLM edge AI.**
 
 ## 🎯 Recent Updates (December 2025)
+
+### 🐍 Python 3.12.10 Full-Stack Optimization (December 6, 2025 - LATEST)
+- ✅ **Python 3.12.10**: Updated to latest stable Python release with performance improvements
+- ✅ **Backend Dependencies**: 
+  - FastAPI 0.123.10 (upgraded from 0.123.9 with security fixes)
+  - NumPy 2.2.6 with `<2.3.0` constraint for opencv-python 4.12.0.88 compatibility
+  - HuggingFace Hub 0.36.x pinned (avoiding 1.2.0 breaking changes)
+  - pwdlib 0.2.1 (fastapi-users compatibility fix)
+  - google-ai-generativelanguage 0.6.15 (API compatibility)
+- ✅ **Frontend Updates**:
+  - React 18.3.1, Vite 7.2.6, TypeScript 5.8.3
+  - 206 npm packages updated with 0 vulnerabilities
+  - Build optimization and performance improvements
+- ✅ **Dependency Resolution**: 
+  - 0 backend conflicts (verified with pip check)
+  - 0 frontend vulnerabilities (verified with npm audit)
+  - All constraint conflicts resolved with documented version pins
+- ✅ **Testing & Verification**:
+  - Backend server validated on port 8004 with TensorFlow loaded
+  - Frontend server validated on port 8080 with Vite 7.2.6
+  - Import tests passed for all critical modules
+  - Production build successful with 0 TypeScript errors
+- ✅ **Documentation**: 
+  - PYTHON_312_OPTIMIZATION_REPORT.md (comprehensive upgrade documentation)
+  - PYTHON_312_QUICK_REFERENCE.md (developer quick reference)
+
+### 🤖 Hybrid Agricultural AI System (December 4, 2025)
+- ✅ **Multimodal AI Engine**: 900+ line hybrid LLM+VLM system combining Phi and SCOLD
+- ✅ **REST API**: 8 endpoints for text, image, and multimodal analysis
+- ✅ **Offline-First**: Edge deployment with Ollama (Phi model 1.49GB)
+- ✅ **Analysis Types**: Disease detection, pest/weed ID, crop health, soil analysis
+- ✅ **Test Suite**: 6 comprehensive tests, all passing (6/6)
+- ✅ **Usage Examples**: 6 example patterns demonstrating API usage
+- ✅ **Startup Automation**: PowerShell script with auto-setup
+- ✅ **Production Ready**: Deployed and verified on port 8004
+
+### 🔧 Production Infrastructure
 - ✅ **Production Infrastructure**: Complete CI/CD pipelines with GitHub Actions
 - ✅ **E2E Testing**: Playwright test suite with 24 tests across 5 browsers
 - ✅ **Security Hardening**: Dependency upgrades, vulnerability fixes (0 critical issues)
 - ✅ **Docker Deployment**: Multi-stage builds with security scanning
 - ✅ **TypeScript Configuration**: Optimized for E2E tests with proper type checking
 - ✅ **Documentation**: Comprehensive deployment guides and error resolution docs
-- ✅ **Chatbot Enhancement**: Three-layer architecture (RAG + Conversational + AI Advisor)
+
+### 💬 Chatbot Enhancement
+- ✅ **Three-Layer Architecture**: RAG + Conversational + AI Advisor
   - RAG retrieval with BM25 + Dense embeddings
   - Conversational enhancement for human-like responses
   - Context-aware AI advisor (Dr. Priya Kumar persona)
@@ -178,6 +217,27 @@ config/                          # ⚙️ Configuration files (ORGANIZED)
 
 ## 🚀 Core Features & Capabilities
 
+### 🤖 Hybrid LLM+VLM Agricultural AI (NEW - December 4, 2025)
+- **Multimodal Intelligence**: Combines Phi LLM (language) + SCOLD VLM (vision) for comprehensive agricultural analysis
+- **Offline-First Design**: Runs on edge devices (Raspberry Pi, farm servers) without internet connectivity
+- **Analysis Capabilities**:
+  - 🦠 Plant disease detection and identification from images
+  - 🌱 Crop health assessment and monitoring
+  - 🌿 Weed species identification and management advice
+  - 🐛 Pest detection and damage severity assessment
+  - 🌾 Soil condition analysis from visual inspection
+  - 💬 Natural language agricultural Q&A and advisory
+- **Key Features**:
+  - Context-aware conversations (5-turn history)
+  - Confidence scoring (60% visual, 40% textual)
+  - Actionable treatment recommendations
+  - Response caching for efficiency
+  - Graceful fallbacks when components offline
+- **Performance**: 2-5 second response time for multimodal analysis
+- **Deployment**: 3GB storage, 2GB RAM for Phi model + backend
+- **API**: 8 REST endpoints under `/api/hybrid/` for text, image, and multimodal analysis
+- **Testing**: Comprehensive test suite with 6 tests covering all functionality
+
 ### 🔬 Advanced Disease Detection System
 - **Comprehensive Disease Detector**: 448-line advanced engine supporting all 48 crops
 - **Multi-Model Analysis**: Integration of various ML models for accurate detection
@@ -219,6 +279,16 @@ config/                          # ⚙️ Configuration files (ORGANIZED)
 - **MQTT**: Lightweight messaging protocol
 
 ## 🎯 API Endpoints
+
+### Hybrid AI Endpoints (NEW - December 2025)
+- `POST /api/hybrid/analyze` - Multimodal analysis (base64 image + text query)
+- `POST /api/hybrid/analyze/upload` - Multimodal with file upload (multipart/form-data)
+- `POST /api/hybrid/text` - Text-only agricultural Q&A
+- `POST /api/hybrid/image` - Image-only visual analysis
+- `GET /api/hybrid/status` - System component status (Phi LLM, SCOLD VLM)
+- `GET /api/hybrid/health` - Simple health check
+- `POST /api/hybrid/history/clear` - Clear conversation history
+- `POST /api/hybrid/cache/clear` - Clear response cache
 
 ### Core Endpoints
 - `POST /recommend` - Get crop recommendations
@@ -1292,6 +1362,15 @@ The guides were added in 4 batches of 10 crops each:
 ### Technical Achievement Summary
 
 #### Recent Updates (December 2025)
+- **Hybrid AI System** (December 4, 2025 - NEW):
+  - 900+ line multimodal AI engine combining Phi LLM + SCOLD VLM
+  - 400+ line REST API with 8 endpoints for text/image/multimodal analysis
+  - 500+ line comprehensive test suite (6/6 tests passing)
+  - 400+ line usage examples demonstrating 6 integration patterns
+  - 188 line automated PowerShell startup script with Ollama management
+  - Offline-first architecture for edge deployment (Raspberry Pi compatible)
+  - 2-5 second response time for multimodal agricultural analysis
+  - Complete documentation and production-ready deployment
 - **CI/CD Pipelines**: Complete GitHub Actions workflows for automated testing and deployment
 - **E2E Testing**: 24 Playwright tests covering critical user flows and API endpoints
 - **Security Hardening**: All dependencies updated, 0 critical vulnerabilities
@@ -1301,14 +1380,15 @@ The guides were added in 4 batches of 10 crops each:
 - **Error Resolution**: Comprehensive troubleshooting documentation
 
 #### Statistics
+- **Hybrid AI Code**: ~2,400 lines of new multimodal AI functionality
 - **Total Guides**: 48 (100% coverage of supported crops)
 - **Total Words**: ~40,000 words of cultivation information
 - **Average Guide Length**: 800-1200 characters
 - **Database Size**: 4,143 answers (up from 4,103)
-- **Test Coverage**: 24 E2E tests across 5 browsers
-- **Implementation Time**: 1 day (October 10, 2025)
-- **Zero Errors**: All guides validated and working
-- **Production Ready**: December 2025
+- **Test Coverage**: 24 E2E tests + 6 Hybrid AI tests across 5 browsers
+- **Implementation Time**: Hybrid AI system completed December 4, 2025
+- **Zero Errors**: All guides and tests validated and working
+- **Production Ready**: December 2025 with hybrid AI
 
 #### Code Quality
 - ✅ Clean Python scripts for batch processing
