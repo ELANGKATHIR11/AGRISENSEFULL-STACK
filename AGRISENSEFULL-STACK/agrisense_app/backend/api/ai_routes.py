@@ -3,16 +3,21 @@ FastAPI routes for AI-powered crop diagnosis and chatbot
 """
 
 import logging
-from typing import Dict, Optional
-from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
+from typing import Dict, Optional, Any
+from fastapi import APIRouter, UploadFile, File, HTTPException, Depends, Form
 from pydantic import BaseModel, Field
 
 from agrisense_app.backend.core.vlm_engine import get_vlm_engine, CropDiseaseDetector
 from agrisense_app.backend.core.chatbot_engine import get_chatbot_engine, AgriAdvisorBot
+from agrisense_app.backend.core.ai.rag_engine import FarmerAssistant, get_farmer_assistant
+from agrisense_app.backend.core.ai.vision_engine import CropVisionAnalyst, get_crop_vision_analyst
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Check if AI dependencies are available
+AI_AVAILABLE = True  # Set to True since we have the imports working
 
 # Create API router
 router = APIRouter(prefix="/ai", tags=["AI Services"])

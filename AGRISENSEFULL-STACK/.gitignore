@@ -91,3 +91,33 @@ logs/
 # Keep model metadata
 !ml_models/**/metadata.json
 !ml_models/**/config.json
+
+# Cleanup backup directories
+cleanup_backup_*/
+
+# Python optimization
+*.py[cod]
+*.class
+__pycache__/
+*.so
+
+# Node optimization
+node_modules/
+.npm
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+*.db-journal

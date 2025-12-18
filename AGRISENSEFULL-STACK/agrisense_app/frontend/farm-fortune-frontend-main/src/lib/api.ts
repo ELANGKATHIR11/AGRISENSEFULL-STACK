@@ -47,9 +47,18 @@ const getViteEnv = (): EnvShape => {
 const determineApiBase = (): string => {
   const env = getViteEnv();
   const fromEnv = env.VITE_API_URL;
-  if (fromEnv && fromEnv.trim().length > 0) return fromEnv.trim();
-  // Use localhost for local development, port 8004 to match backend
-  if (env.DEV) return "http://127.0.0.1:8004";
+  
+  // In production or if explicit URL is set
+  if (fromEnv && fromEnv.trim().length > 0) {
+    return fromEnv.trim();
+  }
+  
+  // In development, use relative path (proxy will handle it)
+  if (env.DEV) {
+    return ""; // Empty string means use relative paths, which Vite proxy will handle
+  }
+  
+  // Fallback to same-origin for production builds
   return "";
 };
 

@@ -614,6 +614,18 @@ class WeedManagementEngine:
         Returns:
             Weed detection results with management recommendations
         """
+        # 🆕 Try SCOLD VLM first for advanced vision analysis
+        try:
+            from .vlm_scold_integration import detect_weeds_with_scold
+            logger.info("🔍 Attempting SCOLD VLM weed detection...")
+            scold_result = detect_weeds_with_scold(image_data, crop_type, environmental_data)
+            if scold_result.get("success") and scold_result.get("detections"):
+                logger.info(f"✅ SCOLD VLM detected {len(scold_result['detections'])} weed regions")
+                return scold_result
+            logger.info("⚠️ SCOLD VLM returned no detections, falling back...")
+        except Exception as e:
+            logger.warning(f"⚠️ SCOLD VLM unavailable: {e}, using fallback detection")
+        
         # Try enhanced weed management first
         if ENHANCED_AVAILABLE:
             try:

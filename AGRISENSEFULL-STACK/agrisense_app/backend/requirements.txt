@@ -18,17 +18,21 @@ joblib>=1.4.2
 lightgbm>=4.5.0
 
 # ===== Deep Learning (TensorFlow) =====
-tensorflow>=2.18.0
-# SECURITY: keras 3.12.0+ fixes multiple CVEs - Now compatible with Python 3.12
+# NOTE: Upgraded to 2.20.0 for numpy 2.2.1 compatibility
+# Using tensorflow-cpu for better compatibility on non-GPU systems
+tensorflow-cpu==2.20.0
+# SECURITY: keras 3.13.0+ fixes multiple CVEs - Now compatible with Python 3.12
 # All CVEs fixed: GHSA-c9rc-mg46-23w3, GHSA-36fq-jgmw-4r9c, GHSA-36rr-ww3j-vrjv, 
 #                 GHSA-mq84-hjqx-cwf2, GHSA-hjqc-jx6g-rwp9
-keras>=3.7.0
+keras==3.13.0
 # REQUIRED: tf-keras for Keras 3 compatibility with Transformers
-tf-keras>=2.20.0
+tf-keras==2.20.1
+# NOTE: protobuf 6.x required by tensorflow-cpu 2.20.0
+protobuf>=6.0.0
 
 # ===== Deep Learning (PyTorch) =====
-torch>=2.5.1
-torchvision>=0.20.1
+torch==2.5.1
+torchvision==0.20.1
 sentence-transformers>=3.3.1
 
 # ===== Computer Vision =====
@@ -55,6 +59,7 @@ asyncpg>=0.30.0
 redis[hiredis]>=5.2.1
 celery[redis]>=5.4.0
 flower>=2.0.1
+# CONSTRAINT: kombu typing-extensions must match python version requirements
 kombu>=5.4.2
 
 # ===== Authentication & Security =====
@@ -67,10 +72,13 @@ pwdlib[argon2,bcrypt]==0.2.1
 
 # ===== API Integration =====
 # CONSTRAINT: google-generativeai 0.8.5 requires google-ai-generativelanguage==0.6.15
+# which requires protobuf<5.0.0
 google-generativeai>=0.8.5
 google-ai-generativelanguage==0.6.15
 openai>=1.59.7
 requests>=2.32.3
+# Fix typing-extensions version conflict
+typing-extensions>=4.12.2
 
 # ===== Local LLM (Ollama) =====
 ollama>=0.4.5

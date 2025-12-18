@@ -2028,6 +2028,7 @@ def _dataset_to_cards() -> List[CropCard]:
 
 
 @app.get("/crops")
+@app.get("/api/crops")
 def get_crops_full() -> CropsResponse:
     return CropsResponse(items=_dataset_to_cards())
 
@@ -2181,11 +2182,14 @@ def _get_crop_cultivation_guide(crop_name: str) -> Optional[str]:
         
         # Search for cultivation guide in loaded answers
         # Pattern: Look for answers that contain "cultivation guide" and the crop name
+        import re
         for idx, answer in enumerate(_chatbot_answers):
             answer_lower = str(answer).lower()
             
             # Check if this answer is a cultivation guide for the crop
-            if "cultivation guide" in answer_lower and crop_normalized in answer_lower:
+            # Use word boundaries to avoid partial matches (e.g., "hi" matching "chickpea" or "this")
+            pattern = r'\b' + re.escape(crop_normalized) + r'\b'
+            if "cultivation guide" in answer_lower and re.search(pattern, answer_lower):
                 # Found the detailed guide
                 logger.info(f"✅ Found cultivation guide for crop '{crop_name}' at index {idx}, length: {len(answer)} chars")
                 return str(answer)
@@ -2223,9 +2227,12 @@ def _normalize_crop_name(text: str) -> Optional[str]:
     if text_lower in SUPPORTED_CROPS:
         return text_lower
     
-    # Check if any supported crop is in the text
+    # Check if any supported crop is in the text (whole word match only)
+    import re
     for crop in SUPPORTED_CROPS:
-        if crop in text_lower or text_lower in crop:
+        # Use word boundaries to avoid partial matches (e.g., "hi" matching "chickpea")
+        pattern = r'\b' + re.escape(crop) + r'\b'
+        if re.search(pattern, text_lower):
             return crop
     
     # Check for plural forms
@@ -4192,6 +4199,12 @@ def _normalize_user_question(question: str) -> tuple[str, bool]:
     """
     qtext = question.strip().lower()
     
+    # Check for greetings first - don't expand these!
+    greeting_words = ["hi", "hello", "hey", "helo", "hii", "helllo", "greetings", "namaste", "namaskar", "vanakkam", "namaskaram"]
+    if qtext in greeting_words or any(qtext.startswith(g + " ") or qtext.endswith(" " + g) for g in greeting_words):
+        # Return as-is, will be handled by fallback as greeting
+        return qtext, False
+    
     # Common typo corrections
     typo_map = {
         "wat": "what", "wt": "what", "hw": "how", "wen": "when", "whn": "when",
@@ -4359,6 +4372,7 @@ def _generate_fallback_response(question: str, language: str = "en") -> str:
     """
     fallback_templates = {
         "en": {
+            "greeting": "👋 **Hello! Welcome to AgriSense!**\n\nI'm your AI farming assistant, here to help with all your agriculture questions!\n\n**I can help you with:**\n• 🌊 Irrigation and watering schedules\n• 🌱 Fertilizers and soil nutrients\n• 🌾 Crop selection and cultivation guides\n• 🐛 Pest control methods\n• 🦠 Disease prevention and treatment\n• 🌍 Soil management and improvement\n\n**Try asking me:**\n• \"What crops grow well in monsoon season?\"\n• \"How do I control aphids on tomatoes?\"\n• \"What is the best irrigation method for rice?\"\n• \"When should I apply fertilizer to wheat?\"\n\nHow can I help you today?",
             "water": "🌊 **About Watering & Irrigation:**\nI'd love to help with watering! Here are some common topics:\n• Irrigation methods (drip, sprinkler, flood)\n• Watering schedules for different crops\n• Signs of over/under-watering\n\nCould you ask a more specific question? For example: 'What is the best irrigation method for tomatoes?' or 'How often should I water wheat crops?'",
             "fertilizer": "🌱 **About Fertilizers:**\nI can help with fertilizer questions! Topics I know about:\n• Organic vs chemical fertilizers\n• NPK ratios for different crops\n• When and how to apply fertilizer\n• Soil testing\n\nTry asking: 'What fertilizer ratio is best for rice?' or 'When should I apply fertilizer to corn?'",
             "crop": "🌾 **About Crops:**\nI can help you choose the right crops! I know about:\n• Best crops for different soil types\n• Seasonal planting recommendations\n• Crop rotation benefits\n• High-yield varieties\n\nAsk me: 'What crops grow well in clay soil?' or 'What should I plant in monsoon season?'",
@@ -4368,6 +4382,7 @@ def _generate_fallback_response(question: str, language: str = "en") -> str:
             "general": "👋 **I'm here to help with farming questions!**\n\nI can assist with:\n• 🌊 Irrigation and watering\n• 🌱 Fertilizers and nutrients\n• 🌾 Crop selection and planting\n• 🐛 Pest control\n• 🦠 Disease management\n• 🌍 Soil improvement\n\nPlease ask a specific question like:\n• 'What is the best irrigation method for rice?'\n• 'How often should I fertilize wheat?'\n• 'What crops grow well in monsoon season?'\n• 'How to control pests naturally?'",
         },
         "hi": {
+            "greeting": "👋 **नमस्ते! AgriSense में आपका स्वागत है!**\n\nमैं आपका AI कृषि सहायक हूँ, आपके सभी कृषि प्रश्नों में मदद के लिए यहाँ हूँ!\n\n**मैं आपकी मदद कर सकता हूँ:**\n• 🌊 सिंचाई और पानी का समय\n• 🌱 उर्वरक और मिट्टी पोषक तत्व\n• 🌾 फसल चयन और खेती गाइड\n• 🐛 कीट नियंत्रण विधियाँ\n• 🦠 रोग रोकथाम और उपचार\n• 🌍 मिट्टी प्रबंधन और सुधार\n\n**मुझसे पूछें:**\n• \"मानसून में कौन सी फसलें अच्छी होती हैं?\"\n• \"टमाटर पर एफिड्स को कैसे नियंत्रित करें?\"\n• \"धान के लिए सबसे अच्छी सिंचाई विधि क्या है?\"\n\nआज मैं आपकी कैसे मदद कर सकता हूँ?",
             "general": "👋 **मैं खेती के सवालों में मदद के लिए यहाँ हूँ!**\n\nमैं इन विषयों में सहायता कर सकता हूँ:\n• 🌊 सिंचाई और पानी\n• 🌱 उर्वरक और पोषक तत्व\n• 🌾 फसल चयन और रोपण\n• 🐛 कीट नियंत्रण\n• 🦠 रोग प्रबंधन\n• 🌍 मिट्टी सुधार\n\nकृपया एक विशिष्ट प्रश्न पूछें जैसे:\n• 'धान के लिए सबसे अच्छी सिंचाई विधि क्या है?'\n• 'गेहूं को कितनी बार उर्वरक देना चाहिए?'\n• 'मानसून के मौसम में कौन सी फसलें अच्छी होती हैं?'",
         }
     }
@@ -4376,10 +4391,16 @@ def _generate_fallback_response(question: str, language: str = "en") -> str:
     question_lower = question.lower()
     topic = "general"
     
-    for keyword in ["water", "irrigation", "irri", "sinkhai", "watering"]:
-        if keyword in question_lower:
-            topic = "water"
-            break
+    # Check if it's a greeting
+    greeting_words = ["hi", "hello", "hey", "helo", "hii", "helllo", "greetings", "namaste", "namaskar", "vanakkam", "namaskaram"]
+    if question_lower in greeting_words or any(question_lower.startswith(g + " ") or question_lower.endswith(" " + g) for g in greeting_words):
+        topic = "greeting"
+    
+    if topic == "general":
+        for keyword in ["water", "irrigation", "irri", "sinkhai", "watering"]:
+            if keyword in question_lower:
+                topic = "water"
+                break
     
     if topic == "general":
         for keyword in ["fertilizer", "fert", "urvarak", "nutrient", "npk"]:
@@ -4426,6 +4447,30 @@ def chatbot_ask(q: ChatbotQuery) -> Dict[str, Any]:
     original_question = q.question.strip()
     if not original_question:
         raise HTTPException(status_code=400, detail="question must not be empty")
+    
+    # PRIORITY 0: Check if this is a greeting - return welcome message immediately
+    question_lower = original_question.lower().strip()
+    greeting_words = ["hi", "hello", "hey", "helo", "hii", "helllo", "greetings", "namaste", "namaskar", "vanakkam", "namaskaram"]
+    if question_lower in greeting_words or any(question_lower.startswith(g + " ") or question_lower.endswith(" " + g) for g in greeting_words):
+        language = q.language or "en"
+        greeting_response = _generate_fallback_response(original_question, language)
+        return {
+            "question": original_question,
+            "results": [{
+                "rank": 1,
+                "score": 1.0,
+                "answer": greeting_response,
+                "is_greeting": True
+            }],
+            "metadata": {
+                "session_id": q.session_id,
+                "language": language,
+                "enhanced": False,
+                "cached": False,
+                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+                "top_k": q.top_k,
+            }
+        }
     
     # PRIORITY 1: Check if this is a simple crop name query (before any expansion)
     # This handles queries like "carrot", "watermelon", "rice" etc.
@@ -5053,6 +5098,9 @@ def chatbot_ask(q: ChatbotQuery) -> Dict[str, Any]:
     if len(_chatbot_cache) > _CHATBOT_CACHE_MAX:
         _chatbot_cache.popitem(last=False)
     
+    # Track performance metrics
+    processing_time = time.time() - (q.dict().get('_start_time', time.time()))
+    
     # Enhance responses with conversational style (makes chatbot more human-like)
     try:
         if CONVERSATIONAL_ENHANCEMENT_AVAILABLE and results:
@@ -5080,7 +5128,57 @@ def chatbot_ask(q: ChatbotQuery) -> Dict[str, Any]:
         logger.warning(f"Failed to enhance chatbot response: {e}")
         # Continue with non-enhanced responses
     
-    return {"question": qtext, "results": results}
+    # 🆕 Phi LLM Enhancement: Enrich top answer with contextual AI insights
+    try:
+        from .phi_chatbot_integration import enrich_chatbot_answer, get_phi_status
+        phi_status = get_phi_status()
+        if phi_status.get("available") and results and len(results) > 0:
+            top_result = results[0]
+            base_answer = top_result.get("answer", "")
+            if base_answer and not top_result.get("is_fallback", False):
+                logger.info("🤖 Enriching answer with Phi LLM for human-like response...")
+                
+                # Extract crop type from question if mentioned
+                crop_type = "unknown"
+                crop_keywords = ["tomato", "rice", "wheat", "corn", "potato", "carrot", 
+                               "cabbage", "onion", "beans", "peas", "cucumber", "lettuce"]
+                qtext_lower = qtext.lower()
+                for crop in crop_keywords:
+                    if crop in qtext_lower:
+                        crop_type = crop
+                        break
+                
+                enriched_answer = enrich_chatbot_answer(
+                    question=qtext,
+                    base_answer=base_answer,
+                    crop_type=crop_type,
+                    language=q.language or "en",
+                    timeout_s=None
+                )
+                
+                if enriched_answer and enriched_answer != base_answer:
+                    top_result["answer"] = enriched_answer
+                    top_result["phi_enhanced"] = True
+                    top_result["original_answer"] = base_answer
+                    logger.info("✅ Phi enrichment successful - response is now more human-like!")
+                else:
+                    logger.info("⚠️ Phi enrichment returned base answer")
+    except Exception as e:
+        logger.warning(f"⚠️ Phi LLM enrichment unavailable: {e}")
+    
+    # Return response with metadata
+    return {
+        "question": qtext,
+        "results": results,
+        "metadata": {
+            "session_id": q.session_id,
+            "language": q.language or "en",
+            "enhanced": CONVERSATIONAL_ENHANCEMENT_AVAILABLE,
+            "cached": key in _chatbot_cache,
+            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "top_k": q.top_k,
+        }
+    }
 
 
 @app.get("/chatbot/ask")
@@ -5252,3 +5350,27 @@ def chatbot_tune(t: ChatbotTune) -> Dict[str, Any]:
     except Exception:
         logger.exception("tune failed")
         raise HTTPException(status_code=400, detail="invalid tune values")
+
+
+# ============================================================
+# Phi LLM & SCOLD VLM Integration
+# ============================================================
+try:
+    from .routes.ai_models_routes import router as ai_models_router
+    app.include_router(ai_models_router)
+    logger.info("✅ Phi LLM & SCOLD VLM routes registered")
+except ImportError as e:
+    logger.warning(f"⚠️ AI models routes not available: {e}")
+except Exception as e:
+    logger.error(f"❌ Failed to register AI models routes: {e}")
+
+# Hybrid LLM+VLM Agricultural AI
+# ============================================================
+try:
+    from .routes.hybrid_ai_routes import router as hybrid_ai_router
+    app.include_router(hybrid_ai_router)
+    logger.info("✅ Hybrid Agricultural AI routes registered")
+except ImportError as e:
+    logger.warning(f"⚠️ Hybrid AI routes not available: {e}")
+except Exception as e:
+    logger.error(f"❌ Failed to register Hybrid AI routes: {e}")

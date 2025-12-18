@@ -3,13 +3,17 @@ import { useTranslation } from "react-i18next";
 import { api } from "../lib/api";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { MessageSquare, Send, RefreshCw, Sparkles, Brain } from "lucide-react";
 
 type Msg = { 
   role: "user" | "assistant"; 
   text: string; 
   sources?: string[];
-  originalText?: string; // For debugging/comparison
+  originalText?: string;
   followUps?: string[];
+  timestamp?: string;
+  enhanced?: boolean;
+  phi_enhanced?: boolean;
 };
 
 function generateSessionId() {
@@ -24,7 +28,10 @@ export default function Chatbot() {
   const [loading, setLoading] = useState(false);
   const [sessionId] = useState(generateSessionId());
   const [showOriginal, setShowOriginal] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -53,9 +60,13 @@ export default function Chatbot() {
   const send = async () => {
     const msg = input.trim();
     if (!msg) return;
-    setMessages((m) => [...m, { role: "user", text: msg }]);
+    
+    const timestamp = new Date().toLocaleTimeString();
+    setMessages((m) => [...m, { role: "user", text: msg, timestamp }]);
     setInput("");
     setLoading(true);
+    setIsTyping(true);
+    
     try {
       // Call new enhanced chatbot endpoint with session_id and language
       const language = i18n.language || "en";
@@ -64,13 +75,17 @@ export default function Chatbot() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           question: msg,
-          top_k: 3,
+          top_k: 5,
           session_id: sessionId,
           language: language,
+          include_sources: true,
         }),
       });
       
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ detail: `HTTP ${response.status}` }));
+        throw new Error(errorData.detail || `HTTP ${response.status}`);
+      }
       
       const data = await response.json();
       
@@ -85,9 +100,12 @@ export default function Chatbot() {
         if (followUpMatch) {
           const bullets = followUpMatch[1].match(/•\s*(.+)/g);
           if (bullets) {
-            followUps.push(...bullets.map(b => b.replace(/^•\s*/, "").trim()));
+            followUps.push(...bullets.map(b => b.replace(/^•\s*/, "").trim()).slice(0, 3));
           }
         }
+        
+        // Extract sources if available
+        const sources = topResult.sources || [];
         
         setMessages((m) => [
           ...m,
@@ -96,16 +114,33 @@ export default function Chatbot() {
             text: answerText,
             originalText: topResult.original_answer,
             followUps: followUps.length > 0 ? followUps : undefined,
+            sources: sources.length > 0 ? sources : undefined,
+            timestamp: new Date().toLocaleTimeString(),
+            enhanced: !!topResult.original_answer || !!topResult.phi_enhanced,
+            phi_enhanced: !!topResult.phi_enhanced,
           },
         ]);
+        setRetryCount(0);
       } else {
-        setMessages((m) => [...m, { role: "assistant", text: t("chatbot.no_answer", "I couldn't find an answer. Please try rephrasing your question.") }]);
+        setMessages((m) => [...m, { role: "assistant", text: t("chatbot.no_answer", "I couldn't find an answer. Please try rephrasing your question or ask about specific crops, diseases, or farming practices.") }]);
       }
     } catch (e: unknown) {
       const err = e instanceof Error ? e.message : String(e);
-      setMessages((m) => [...m, { role: "assistant", text: `Error: ${err}` }]);
+      setRetryCount(prev => prev + 1);
+      
+      const errorMsg = retryCount < 2 
+        ? `${t("chatbot.error", "I'm having trouble connecting. Please try again.")} (${err})`
+        : `${t("chatbot.error_persistent", "Connection issues persist. Please check your internet or try later.")} (${err})`;
+      
+      setMessages((m) => [...m, { 
+        role: "assistant", 
+        text: errorMsg,
+        timestamp: new Date().toLocaleTimeString()
+      }]);
     } finally {
       setLoading(false);
+      setIsTyping(false);
+      inputRef.current?.focus();
     }
   };
 
@@ -113,6 +148,14 @@ export default function Chatbot() {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       void send();
+    }
+    // Ctrl+K or Cmd+K to clear chat
+    if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+      e.preventDefault();
+      if (confirm(t("chatbot.clear_confirm", "Clear all messages?"))) {
+        setMessages([]);
+        setInput("");
+      }
     }
   };
 
@@ -124,7 +167,23 @@ export default function Chatbot() {
     <div className="max-w-4xl mx-auto p-6 space-y-4">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>{t("chatbot.title", "Agricultural Assistant Chatbot")} 🌾</CardTitle>
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg">
+              <MessageSquare className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                {t("chatbot.title", "Agricultural Assistant Chatbot")}
+                <span className="flex items-center gap-1 text-xs font-normal text-green-600 dark:text-green-400">
+                  <Brain className="w-3 h-3" />
+                  {t("chatbot.ai_powered", "AI-Powered")}
+                </span>
+              </CardTitle>
+              <p className="text-xs text-muted-foreground mt-1">
+                {messages.length} {t("chatbot.messages", "messages")} • Session: {sessionId.substring(8, 16)}
+              </p>
+            </div>
+          </div>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
@@ -157,14 +216,28 @@ export default function Chatbot() {
                     {/* Message bubble */}
                     <div className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
                       <div
-                        className={`max-w-[80%] rounded-lg px-4 py-3 shadow-sm ${
+                        className={`max-w-[80%] rounded-lg px-4 py-3 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-300 ${
                           m.role === "user"
-                            ? "bg-blue-600 text-white"
-                            : "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700"
+                            ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-blue-500/20"
+                            : "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700 shadow-lg"
                         }`}
                       >
-                        <div className="text-xs font-semibold mb-1 opacity-75">
-                          {m.role === "user" ? t("chatbot.you", "You") : t("chatbot.assistant", "Assistant")} {m.role === "assistant" && "🌱"}
+                        <div className="text-xs font-semibold mb-1 opacity-75 flex items-center gap-1 justify-between">
+                          <div className="flex items-center gap-1">
+                            {m.role === "assistant" && <span className="text-base">🌱</span>}
+                            {m.role === "user" ? t("chatbot.you", "You") : t("chatbot.assistant", "AgriSense Assistant")}
+                            {m.role === "assistant" && m.enhanced && (
+                              <span className="flex items-center gap-1 text-green-600 dark:text-green-400">
+                                <Sparkles className="w-3 h-3" />
+                                <span className="text-[10px]">
+                                  {m.phi_enhanced ? t("chatbot.phi_enhanced", "✨ Phi AI") : t("chatbot.enhanced", "Enhanced")}
+                                </span>
+                              </span>
+                            )}
+                          </div>
+                          {m.timestamp && (
+                            <span className="text-[10px] opacity-60">{m.timestamp}</span>
+                          )}
                         </div>
                         <div className="text-sm whitespace-pre-wrap leading-relaxed">{m.text}</div>
                         
@@ -225,6 +298,7 @@ export default function Chatbot() {
           {/* Input area */}
           <div className="flex items-center gap-2">
             <input
+              ref={inputRef}
               className="border border-gray-300 dark:border-gray-700 px-4 py-3 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-800"
               placeholder={t("chatbot.input_placeholder", "Type your farming question...")}
               value={input}
@@ -232,16 +306,48 @@ export default function Chatbot() {
               onKeyDown={onKey}
               disabled={loading}
             />
-            <Button onClick={send} disabled={loading || !input.trim()} className="px-6">
-              {loading ? t("chatbot.thinking", "Thinking...") : t("chatbot.send", "Send")}
+            <Button 
+              onClick={send} 
+              disabled={loading || !input.trim()} 
+              className="px-4 flex items-center gap-2 bg-green-600 hover:bg-green-700"
+            >
+              {loading ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <span className="hidden sm:inline">{t("chatbot.thinking", "Thinking...")}</span>
+                </>
+              ) : (
+                <>
+                  <Send className="w-4 h-4" />
+                  <span className="hidden sm:inline">{t("chatbot.send", "Send")}</span>
+                </>
+              )}
             </Button>
           </div>
 
+          {/* Quick actions */}
+          <div className="flex flex-wrap gap-2 justify-center">
+            {["How to grow tomatoes?", "Best fertilizer for rice?", "Pest control tips"].map((q, idx) => (
+              <button
+                key={idx}
+                onClick={() => setInput(q)}
+                className="text-xs px-3 py-1.5 rounded-full bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors border border-green-200 dark:border-green-800"
+              >
+                💡 {q}
+              </button>
+            ))}
+          </div>
+
           {/* Info footer */}
-          <div className="text-xs text-center text-muted-foreground">
-            {t("chatbot.footer", "Ask questions about crops, irrigation, fertilizers, pests, diseases, and more!")} 
-            {" • "}
-            <span className="text-green-600 dark:text-green-400">Session: {sessionId.substring(0, 15)}...</span>
+          <div className="text-xs text-center text-muted-foreground space-y-1">
+            <div>
+              {t("chatbot.footer", "Ask questions about crops, irrigation, fertilizers, pests, diseases, and more!")} 
+            </div>
+            <div className="flex items-center justify-center gap-2">
+              <span className="text-green-600 dark:text-green-400 font-mono">Session: {sessionId.substring(0, 15)}...</span>
+              <span>•</span>
+              <span className="text-gray-500">Press Enter to send • Ctrl+K to clear</span>
+            </div>
           </div>
         </CardContent>
       </Card>

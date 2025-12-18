@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,8 +7,28 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Upload, Camera, Target, AlertCircle, Calendar, Brain, BookOpen } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Upload, Camera, Target, AlertCircle, Calendar, Brain, BookOpen, Eye, Leaf, Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+
+// SCOLD-specific interfaces
+interface SCOLDWeedDetection {
+  weed_name: string;
+  confidence: number;
+  coverage_percentage: number;
+  location_description?: string;
+}
+
+interface SCOLDAnalysisResult {
+  success: boolean;
+  analysis_method: string;
+  detections: SCOLDWeedDetection[];
+  recommendations: string[];
+  overall_infestation: string;
+  total_coverage: number;
+  confidence: number;
+}
 
 interface WeedAnalysisResult {
   weed_coverage_percentage: number;
@@ -58,6 +78,8 @@ interface WeedAnalysisResult {
 
 const WeedManagement = () => {
   const { t } = useTranslation();
+  
+  // Standard detection state
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -65,6 +87,13 @@ const WeedManagement = () => {
   const [cropType, setCropType] = useState("");
   const [fieldSize, setFieldSize] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // SCOLD detection state
+  const [scoldImage, setScoldImage] = useState<string | null>(null);
+  const [scoldCropType, setScoldCropType] = useState('wheat');
+  const [isScoldAnalyzing, setIsScoldAnalyzing] = useState(false);
+  const [scoldResult, setScoldResult] = useState<SCOLDAnalysisResult | null>(null);
+  const [scoldError, setScoldError] = useState<string | null>(null);
 
   const cropOptions = [
     "corn", "soybean", "wheat", "cotton", "rice", "tomato", 
@@ -104,28 +133,91 @@ const WeedManagement = () => {
         const base64 = reader.result as string;
         const imageData = base64.split(',')[1]; // Remove data URL prefix
 
-        const response = await fetch("/api/weed/analyze", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            image_data: imageData,
-            crop_type: cropType,
-            field_info: {
-              crop_type: cropType,
-              field_size_acres: fieldSize ? parseFloat(fieldSize) : 1.0
-            }
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error(`Analysis failed: ${response.statusText}`);
+        // 🆕 Try SCOLD VLM first for advanced weed detection
+        let detectionSuccess = false;
+        try {
+          const { detectWeedsWithScold } = await import('../services/aiModels');
+          toast.info("🔍 Using SCOLD VLM for advanced weed detection...");
+          
+          const scoldResponse = await detectWeedsWithScold(imageData, cropType);
+          
+          if (scoldResponse.success && scoldResponse.detections.length > 0) {
+            // Transform SCOLD response to match expected format
+            const transformedData: WeedAnalysisResult = {
+              weed_coverage_percentage: scoldResponse.total_weed_coverage,
+              weed_pressure: scoldResponse.total_weed_coverage > 30 ? "high" : 
+                             scoldResponse.total_weed_coverage > 15 ? "moderate" : "low",
+              dominant_weed_types: scoldResponse.detections.map(d => d.weed_type),
+              weed_regions: scoldResponse.detections.map((d, idx) => ({
+                region_id: `region-${idx}`,
+                weed_type: d.weed_type,
+                coverage_percentage: d.coverage_percent || 0,
+                density: d.coverage_percent && d.coverage_percent > 20 ? "high" : "moderate",
+                coordinates: d.bbox || []
+              })),
+              management_plan: {
+                recommended_actions: scoldResponse.detections.slice(0, 3).map((d, idx) => ({
+                  action_type: d.treatment?.manual_removal[0] || "Manual removal",
+                  priority: idx === 0 ? "high" : "medium",
+                  method: d.treatment?.mulching[0] || "Mulching",
+                  timing: "Immediate",
+                  cost_estimate: 50 * (idx + 1)
+                })),
+                herbicide_recommendations: scoldResponse.detections.slice(0, 2).map(d => ({
+                  product_name: d.treatment?.organic_herbicides[0] || "Organic herbicide",
+                  active_ingredient: "Natural compounds",
+                  application_rate: "As directed",
+                  target_weeds: [d.weed_type],
+                  cost_per_acre: 75
+                })),
+                cultural_practices: scoldResponse.detections[0]?.treatment?.prevention_tips || []
+              },
+              economic_analysis: {
+                potential_yield_loss: scoldResponse.total_weed_coverage * 0.5,
+                control_cost_estimate: scoldResponse.detections.length * 100,
+                roi_estimate: 2.5
+              },
+              vlm_analysis: {
+                knowledge_matches: scoldResponse.detections.length,
+                confidence_score: scoldResponse.detections[0]?.confidence || 0,
+                analysis_timestamp: scoldResponse.timestamp
+              }
+            };
+            
+            setResult(transformedData);
+            toast.success("✅ SCOLD VLM weed analysis completed!");
+            detectionSuccess = true;
+          }
+        } catch (scoldError) {
+          console.info("SCOLD VLM unavailable, using fallback detection:", scoldError);
         }
 
-        const data = await response.json();
-        setResult(data);
-        toast.success("Weed analysis completed!");
+        // Fallback to standard detection if SCOLD VLM fails
+        if (!detectionSuccess) {
+          toast.info("Using standard weed detection...");
+          const response = await fetch("/api/weed/analyze", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              image_data: imageData,
+              crop_type: cropType,
+              field_info: {
+                crop_type: cropType,
+                field_size_acres: fieldSize ? parseFloat(fieldSize) : 1.0
+              }
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`Analysis failed: ${response.statusText}`);
+          }
+
+          const data = await response.json();
+          setResult(data);
+          toast.success("Weed analysis completed!");
+        }
       };
       reader.readAsDataURL(selectedImage);
     } catch (error) {
@@ -155,16 +247,305 @@ const WeedManagement = () => {
     }
   };
 
+  // SCOLD-specific handlers
+  const handleScoldImageUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setScoldImage(reader.result as string);
+        setScoldResult(null);
+        setScoldError(null);
+      };
+      reader.readAsDataURL(file);
+    }
+  }, []);
+
+  const handleScoldAnalyze = async () => {
+    if (!scoldImage) return;
+
+    setIsScoldAnalyzing(true);
+    setScoldError(null);
+
+    try {
+      const base64Data = scoldImage.split(',')[1];
+
+      const response = await fetch('http://localhost:8004/api/weed/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          image_data: base64Data,
+          crop_type: scoldCropType,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Analysis failed: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      setScoldResult(data);
+      toast.success("SCOLD weed analysis completed!");
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Analysis failed';
+      setScoldError(errorMsg);
+      toast.error(errorMsg);
+      console.error('SCOLD weed identification error:', err);
+    } finally {
+      setIsScoldAnalyzing(false);
+    }
+  };
+
+  const getInfestationColor = (level: string) => {
+    switch (level.toLowerCase()) {
+      case 'high':
+      case 'severe':
+        return 'text-red-600 bg-red-50 border-red-200';
+      case 'medium':
+      case 'moderate':
+        return 'text-yellow-600 bg-yellow-50 border-yellow-200';
+      case 'low':
+      case 'minimal':
+        return 'text-green-600 bg-green-50 border-green-200';
+      default:
+        return 'text-gray-600 bg-gray-50 border-gray-200';
+    }
+  };
+
   return (
-    <div className="container mx-auto p-6 max-w-6xl">
+    <div className="container mx-auto p-6 max-w-7xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-foreground mb-2">
           Weed Management System
         </h1>
         <p className="text-muted-foreground">
-          Analyze field images to identify weeds and get targeted management strategies
+          Advanced AI-powered weed detection with multiple analysis methods
         </p>
       </div>
+
+      <Tabs defaultValue="scold" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsTrigger value="scold" className="flex items-center gap-2">
+            <Eye className="w-4 h-4" />
+            SCOLD VLM Detection
+          </TabsTrigger>
+          <TabsTrigger value="standard" className="flex items-center gap-2">
+            <Brain className="w-4 h-4" />
+            Standard Detection
+          </TabsTrigger>
+        </TabsList>
+
+        {/* SCOLD VLM Tab */}
+        <TabsContent value="scold" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* SCOLD Upload Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Camera className="w-5 h-5" />
+                  {t('scold_upload_field', 'Upload Field Image')}
+                </CardTitle>
+                <CardDescription>
+                  {t('scold_weed_subtitle', 'AI-powered weed detection and crop field analysis')}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Image Preview */}
+                <div className="mb-4">
+                  {scoldImage ? (
+                    <img
+                      src={scoldImage}
+                      alt="Selected field"
+                      className="w-full h-64 object-cover rounded-lg border-2 border-gray-200"
+                    />
+                  ) : (
+                    <div className="w-full h-64 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center">
+                      <div className="text-center">
+                        <Upload className="w-12 h-12 mx-auto mb-2 text-gray-400" />
+                        <p className="text-gray-600">{t('scold_no_image', 'No image selected')}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Upload Button */}
+                <label className="block">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleScoldImageUpload}
+                    className="hidden"
+                  />
+                  <div className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer text-center transition-colors">
+                    {t('scold_choose_file', 'Choose Image File')}
+                  </div>
+                </label>
+
+                {/* Crop Type Selection */}
+                <div>
+                  <Label htmlFor="scold-crop-type">{t('scold_crop_type', 'Crop Type')}</Label>
+                  <Select value={scoldCropType} onValueChange={setScoldCropType}>
+                    <SelectTrigger id="scold-crop-type">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="wheat">{t('crop_wheat', 'Wheat')}</SelectItem>
+                      <SelectItem value="rice">{t('crop_rice', 'Rice')}</SelectItem>
+                      <SelectItem value="corn">{t('crop_corn', 'Corn')}</SelectItem>
+                      <SelectItem value="soybean">{t('crop_soybean', 'Soybean')}</SelectItem>
+                      <SelectItem value="cotton">{t('crop_cotton', 'Cotton')}</SelectItem>
+                      <SelectItem value="sugarcane">{t('crop_sugarcane', 'Sugarcane')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Analyze Button */}
+                <Button
+                  onClick={handleScoldAnalyze}
+                  disabled={!scoldImage || isScoldAnalyzing}
+                  className="w-full"
+                  size="lg"
+                >
+                  {isScoldAnalyzing ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      {t('scold_analyzing', 'Analyzing...')}
+                    </>
+                  ) : (
+                    t('scold_identify_button', 'Identify Weeds')
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* SCOLD Results Section */}
+            <div className="space-y-4">
+              {scoldError && (
+                <Alert variant="destructive">
+                  <AlertTriangle className="w-5 h-5" />
+                  <AlertDescription>{scoldError}</AlertDescription>
+                </Alert>
+              )}
+
+              {scoldResult && (
+                <div className="space-y-4">
+                  {/* Analysis Method */}
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">{t('scold_analysis_method', 'Analysis Method')}</span>
+                        <Badge variant="outline" className="bg-blue-100 text-blue-800">
+                          {scoldResult.analysis_method === 'scold_vlm' ? 'SCOLD VLM' : scoldResult.analysis_method}
+                        </Badge>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Overall Infestation */}
+                  <Card>
+                    <CardContent className="pt-6 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">{t('scold_infestation_level', 'Infestation Level')}</span>
+                        <Badge className={getInfestationColor(scoldResult.overall_infestation)}>
+                          {scoldResult.overall_infestation}
+                        </Badge>
+                      </div>
+                      <div>
+                        <div className="flex justify-between text-xs text-gray-600 mb-1">
+                          <span>{t('scold_total_coverage', 'Total Weed Coverage')}</span>
+                          <span>{scoldResult.total_coverage.toFixed(1)}%</span>
+                        </div>
+                        <Progress value={scoldResult.total_coverage} className="h-2" />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Detected Weeds */}
+                  {scoldResult.detections.length > 0 ? (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">{t('scold_detected_weeds', 'Detected Weed Species')}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          {scoldResult.detections.map((weed, index) => (
+                            <div key={index} className="border rounded-lg p-3">
+                              <div className="flex items-start justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                  <Leaf className="w-4 h-4 text-green-600" />
+                                  <h4 className="font-medium capitalize">{weed.weed_name.replace(/_/g, ' ')}</h4>
+                                </div>
+                                <Badge variant="outline">
+                                  {(weed.confidence * 100).toFixed(0)}%
+                                </Badge>
+                              </div>
+                              <div className="text-sm text-gray-600">
+                                <span>{t('scold_coverage', 'Coverage')}: </span>
+                                <span className="font-semibold">{weed.coverage_percentage.toFixed(1)}%</span>
+                              </div>
+                              {weed.location_description && (
+                                <p className="text-xs text-gray-500 mt-1">{weed.location_description}</p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <Card>
+                      <CardContent className="flex items-center justify-center h-32 text-center">
+                        <div className="space-y-2">
+                          <CheckCircle2 className="w-12 h-12 mx-auto text-green-600" />
+                          <p className="text-green-600 font-medium">
+                            {t('scold_no_weeds', 'No weeds detected - field looks clean!')}
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Recommendations */}
+                  {scoldResult.recommendations.length > 0 && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">{t('scold_control_recommendations', 'Control Recommendations')}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ul className="space-y-2">
+                          {scoldResult.recommendations.map((rec, index) => (
+                            <li key={index} className="flex items-start gap-2">
+                              <Target className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                              <span className="text-sm">{rec}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              )}
+
+              {!scoldResult && !scoldError && !isScoldAnalyzing && (
+                <Card className="border-dashed">
+                  <CardContent className="flex items-center justify-center h-64 text-center">
+                    <div className="space-y-2">
+                      <Camera className="w-16 h-16 mx-auto text-gray-400" />
+                      <p className="text-gray-600">
+                        {t('scold_upload_field_prompt', 'Upload a field image and click identify to detect weeds')}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* Standard Detection Tab */}
+        <TabsContent value="standard" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Image Upload Section */}
@@ -457,6 +838,9 @@ const WeedManagement = () => {
           </CardContent>
         </Card>
       )}
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

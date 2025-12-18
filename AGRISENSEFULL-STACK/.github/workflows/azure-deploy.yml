@@ -1,0 +1,352 @@
+# ===================================================================
+# AgriSense Azure Deployment - GitHub Actions CI/CD
+# Deploys to Azure Container Registry + App Service + Static Web App
+# 
+# Required GitHub Secrets (configure in Settings > Secrets):
+# - AZURE_CONTAINER_REGISTRY: Azure Container Registry name
+# - AZURE_RESOURCE_GROUP: Azure resource group name
+# - AZURE_ACR_USERNAME: ACR username
+# - AZURE_ACR_PASSWORD: ACR password
+# - AZURE_CREDENTIALS: Azure service principal credentials
+# - AZURE_SUBSCRIPTION_ID: Azure subscription ID
+# - AZURE_BACKEND_APP_NAME: Backend App Service name
+# - AZURE_STATIC_WEB_APPS_API_TOKEN: Static Web App deployment token
+# - AZURE_FRONTEND_URL: Frontend URL for smoke tests
+# - VITE_API_URL: Backend API URL for frontend build
+# ===================================================================
+
+name: Azure Deployment
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+      - develop
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+
+env:
+  REGISTRY_NAME: ${{ secrets.AZURE_CONTAINER_REGISTRY || 'agrisenseacr' }}
+  RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP || 'agrisense-rg' }}
+  PYTHON_VERSION: '3.12.10'
+  NODE_VERSION: '20'
+
+jobs:
+  # ===================================================================
+  # Job 1: Build and Test Backend
+  # ===================================================================
+  build-backend:
+    name: Build & Test Backend (Python 3.12.10)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip==24.3.1 wheel==0.45.1 setuptools==75.6.0
+          pip install -r agrisense_app/backend/requirements.txt
+          pip check
+
+      - name: Run linting
+        run: |
+          pip install pylint black
+          black --check agrisense_app/backend/
+          pylint agrisense_app/backend/*.py --exit-zero
+
+      - name: Run backend tests
+        env:
+          AGRISENSE_DISABLE_ML: '1'
+        run: |
+          pip install pytest pytest-cov
+          pytest tests/ -v --cov=agrisense_app/backend --cov-report=xml
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          flags: backend
+
+  # ===================================================================
+  # Job 2: Build and Test Frontend
+  # ===================================================================
+  build-frontend:
+    name: Build & Test Frontend (React + Vite)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: agrisense_app/frontend/farm-fortune-frontend-main/package-lock.json
+
+      - name: Install dependencies
+        working-directory: agrisense_app/frontend/farm-fortune-frontend-main
+        run: npm ci
+
+      - name: Run type checking
+        working-directory: agrisense_app/frontend/farm-fortune-frontend-main
+        run: npm run typecheck
+
+      - name: Run linting
+        working-directory: agrisense_app/frontend/farm-fortune-frontend-main
+        run: npm run lint:ci
+
+      - name: Run frontend tests
+        working-directory: agrisense_app/frontend/farm-fortune-frontend-main
+        run: npm run test -- --run
+
+      - name: Build frontend
+        working-directory: agrisense_app/frontend/farm-fortune-frontend-main
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL || 'http://localhost:8004' }}
+        run: npm run build
+
+      - name: Upload frontend build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: agrisense_app/frontend/farm-fortune-frontend-main/dist
+          retention-days: 1
+
+  # ===================================================================
+  # Job 3: Build and Push Docker Images
+  # ===================================================================
+  docker-build-push:
+    name: Build & Push Docker Images
+    runs-on: ubuntu-latest
+    needs: [build-backend, build-frontend]
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Azure Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY_NAME }}.azurecr.io
+          username: ${{ secrets.AZURE_ACR_USERNAME }}
+          password: ${{ secrets.AZURE_ACR_PASSWORD }}
+
+      - name: Extract metadata for backend
+        id: meta-backend
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY_NAME }}.azurecr.io/agrisense/backend
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.azure
+          push: true
+          tags: ${{ steps.meta-backend.outputs.tags }}
+          labels: ${{ steps.meta-backend.outputs.labels }}
+          cache-from: type=registry,ref=${{ env.REGISTRY_NAME }}.azurecr.io/agrisense/backend:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY_NAME }}.azurecr.io/agrisense/backend:buildcache,mode=max
+          build-args: |
+            PYTHON_VERSION=3.12.10
+
+      - name: Extract metadata for frontend
+        id: meta-frontend
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY_NAME }}.azurecr.io/agrisense/frontend
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.frontend.azure
+          push: true
+          tags: ${{ steps.meta-frontend.outputs.tags }}
+          labels: ${{ steps.meta-frontend.outputs.labels }}
+          cache-from: type=registry,ref=${{ env.REGISTRY_NAME }}.azurecr.io/agrisense/frontend:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY_NAME }}.azurecr.io/agrisense/frontend:buildcache,mode=max
+          build-args: |
+            VITE_API_URL=${{ secrets.VITE_API_URL || 'http://localhost:8004' }}
+            NODE_ENV=production
+
+  # ===================================================================
+  # Job 4: Deploy Infrastructure (Bicep)
+  # ===================================================================
+  deploy-infrastructure:
+    name: Deploy Azure Infrastructure
+    runs-on: ubuntu-latest
+    needs: [docker-build-push]
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    environment:
+      name: ${{ github.event.inputs.environment || 'dev' }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy Bicep template
+        uses: azure/arm-deploy@v2
+        with:
+          scope: resourcegroup
+          subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          resourceGroupName: ${{ env.RESOURCE_GROUP }}
+          template: ./infrastructure/azure/main.bicep
+          parameters: ./infrastructure/azure/parameters.${{ github.event.inputs.environment || 'dev' }}.json
+          deploymentMode: Incremental
+          deploymentName: agrisense-${{ github.run_number }}
+
+  # ===================================================================
+  # Job 5: Deploy Backend to App Service
+  # ===================================================================
+  deploy-backend:
+    name: Deploy Backend to App Service
+    runs-on: ubuntu-latest
+    needs: [deploy-infrastructure]
+    environment:
+      name: ${{ github.event.inputs.environment || 'dev' }}
+    
+    steps:
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ secrets.AZURE_BACKEND_APP_NAME }}
+          images: ${{ env.REGISTRY_NAME }}.azurecr.io/agrisense/backend:${{ github.sha }}
+
+      - name: Wait for backend health check
+        run: |
+          echo "Waiting for backend to be healthy..."
+          for i in {1..30}; do
+            if curl -f https://${{ secrets.AZURE_BACKEND_APP_NAME }}.azurewebsites.net/health; then
+              echo "Backend is healthy!"
+              exit 0
+            fi
+            echo "Attempt $i/30 failed, retrying in 10s..."
+            sleep 10
+          done
+          echo "Backend health check failed"
+          exit 1
+
+  # ===================================================================
+  # Job 6: Deploy Frontend to Static Web App
+  # ===================================================================
+  deploy-frontend:
+    name: Deploy Frontend to Static Web App
+    runs-on: ubuntu-latest
+    needs: [build-frontend, deploy-backend]
+    environment:
+      name: ${{ github.event.inputs.environment || 'dev' }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download frontend artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: dist
+
+      - name: Deploy to Azure Static Web App
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: 'upload'
+          app_location: 'dist'
+          skip_app_build: true
+
+  # ===================================================================
+  # Job 7: Run Smoke Tests
+  # ===================================================================
+  smoke-tests:
+    name: Run Smoke Tests
+    runs-on: ubuntu-latest
+    needs: [deploy-backend, deploy-frontend]
+    environment:
+      name: ${{ github.event.inputs.environment || 'dev' }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install test dependencies
+        run: |
+          pip install requests pytest
+
+      - name: Run backend smoke tests
+        env:
+          BACKEND_URL: https://${{ secrets.AZURE_BACKEND_APP_NAME }}.azurewebsites.net
+        run: |
+          python -c "
+          import requests
+          import sys
+          
+          backend_url = '${{ env.BACKEND_URL }}'
+          
+          # Test health endpoint
+          r = requests.get(f'{backend_url}/health')
+          assert r.status_code == 200, f'Health check failed: {r.status_code}'
+          
+          # Test ready endpoint
+          r = requests.get(f'{backend_url}/ready')
+          assert r.status_code == 200, f'Ready check failed: {r.status_code}'
+          
+          print('✅ Backend smoke tests passed!')
+          "
+
+      - name: Run frontend smoke tests
+        env:
+          FRONTEND_URL: ${{ secrets.AZURE_FRONTEND_URL }}
+        run: |
+          curl -f ${{ env.FRONTEND_URL }} || exit 1
+          echo "✅ Frontend smoke tests passed!"

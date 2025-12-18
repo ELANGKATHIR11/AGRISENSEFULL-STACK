@@ -33,7 +33,8 @@ except ImportError:
     SQLAlchemyUserDatabase = None  # type: ignore
 
 try:
-    from jose import JWTError, jwt  # type: ignore
+    import jwt  # PyJWT library
+    from jwt.exceptions import InvalidTokenError as JWTError
     JOSE_AVAILABLE = True
 except ImportError:
     JOSE_AVAILABLE = False

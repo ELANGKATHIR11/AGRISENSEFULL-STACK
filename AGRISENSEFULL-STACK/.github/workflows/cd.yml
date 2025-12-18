@@ -1,5 +1,14 @@
 name: CD - Continuous Deployment
 
+# Required GitHub Secrets (configure in Settings > Secrets):
+# - STAGING_HOST: Staging server hostname
+# - STAGING_USER: Staging server SSH username
+# - STAGING_SSH_KEY: Staging server SSH private key
+# - PROD_HOST: Production server hostname
+# - PROD_USER: Production server SSH username
+# - PROD_SSH_KEY: Production server SSH private key
+# - SLACK_WEBHOOK_URL: Slack webhook for notifications (optional)
+
 on:
   push:
     branches: [main]
@@ -169,8 +178,9 @@ jobs:
       - name: Notify deployment success
         if: success()
         uses: slackapi/slack-github-action@v1.24.0
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         with:
-          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
           payload: |
             {
               "text": "✅ AgriSense production deployment successful!",
@@ -188,8 +198,9 @@ jobs:
       - name: Notify deployment failure
         if: failure()
         uses: slackapi/slack-github-action@v1.24.0
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         with:
-          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
           payload: |
             {
               "text": "❌ AgriSense production deployment failed!",

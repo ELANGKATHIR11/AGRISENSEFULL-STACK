@@ -6,11 +6,14 @@
   <p><em>Transforming Agriculture with AI, IoT, and Precision Farming</em></p>
   
   [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-  [![Python](https://img.shields.io/badge/python-3.9+-blue.svg)](https://python.org)
-  [![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-teal.svg)](https://fastapi.tiangolo.com)
+  [![Python](https://img.shields.io/badge/python-3.12+-blue.svg)](https://python.org)
+  [![FastAPI](https://img.shields.io/badge/FastAPI-0.123+-teal.svg)](https://fastapi.tiangolo.com)
   [![React](https://img.shields.io/badge/React-18+-cyan.svg)](https://reactjs.org)
   [![TypeScript](https://img.shields.io/badge/TypeScript-5+-blue.svg)](https://typescriptlang.org)
+  [![Security](https://img.shields.io/badge/vulnerabilities-0-brightgreen.svg)](PYTHON_312_UPGRADE_SUMMARY.md)
 </div>
+
+> **🎉 Latest Update (December 2025)**: Fully upgraded to **Python 3.12.10** with all dependencies at latest versions. See [PYTHON_312_UPGRADE_SUMMARY.md](PYTHON_312_UPGRADE_SUMMARY.md) for details.
 
 ## 🌱 About AgriSense
 

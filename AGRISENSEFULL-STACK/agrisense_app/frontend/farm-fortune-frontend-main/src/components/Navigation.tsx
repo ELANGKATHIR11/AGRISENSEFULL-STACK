@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { Home, Zap, Wheat, Settings, LineChart, Droplets, CloudRain, MessageSquare, Droplet, Bug, Sprout, Activity, BarChart3, Shield, Scissors, Cpu } from "lucide-react";
+import { Home, Zap, Wheat, Settings, LineChart, Droplets, CloudRain, MessageSquare, Droplet, Bug, Sprout, Activity, BarChart3, Shield, Scissors, Cpu, Eye, Search } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 

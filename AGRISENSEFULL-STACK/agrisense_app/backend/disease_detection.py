@@ -371,6 +371,18 @@ class DiseaseDetectionEngine:
 
         Attempts model inference, then optional comprehensive detector, and finally a deterministic stub.
         """
+        # 🆕 Try SCOLD VLM first for advanced vision analysis
+        try:
+            from .vlm_scold_integration import detect_disease_with_scold
+            logger.info("🔍 Attempting SCOLD VLM disease detection...")
+            scold_result = detect_disease_with_scold(image_data, crop_type, environmental_data)
+            if scold_result.get("success") and scold_result.get("detections"):
+                logger.info(f"✅ SCOLD VLM detected {len(scold_result['detections'])} disease regions")
+                return scold_result
+            logger.info("⚠️ SCOLD VLM returned no detections, falling back...")
+        except Exception as e:
+            logger.warning(f"⚠️ SCOLD VLM unavailable: {e}, using fallback detection")
+        
         try:
             # If a model is present, try model-based inference path
             if self.model is not None:
