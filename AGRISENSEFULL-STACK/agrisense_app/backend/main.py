@@ -1,6 +1,5 @@
 import asyncio
 import csv
-import hashlib
 import json
 import logging
 import os
@@ -12,11 +11,10 @@ import uuid
 from collections import OrderedDict
 from contextlib import asynccontextmanager
 from datetime import datetime
-from functools import lru_cache, wraps
 from importlib import import_module
 from math import isfinite
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Protocol, Set, Tuple, Union, cast, runtime_checkable
+from typing import Any, Dict, List, Optional, Protocol, Set, Union, cast, runtime_checkable
 
 import joblib
 import numpy as np
@@ -411,146 +409,6 @@ _metrics: Dict[str, Any] = {
 }
 
 
-# ===== Performance Optimization: Caching Layer =====
-
-# Cache configuration
-STATIC_CACHE_TTL = 3600  # 1 hour for static data like plants, crops
-ML_CACHE_TTL = 300  # 5 minutes for ML predictions
-ML_CACHE_MAX_SIZE = 100  # Maximum cached ML predictions
-
-
-class TTLCache:
-    """Simple TTL-based cache decorator for functions"""
-    def __init__(self, ttl: int):
-        self.ttl = ttl
-        self.cache: Dict[str, Tuple[Any, float]] = {}
-        self.lock = threading.Lock()
-    
-    def __call__(self, func: Callable) -> Callable:
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            # Create cache key from function name and serializable args
-            try:
-                key_parts = [func.__name__]
-                key_parts.extend([str(arg) for arg in args])
-                key_parts.extend([f"{k}={v}" for k, v in sorted(kwargs.items())])
-                cache_key = ":".join(key_parts)
-            except Exception:
-                # If key creation fails, don't cache
-                return func(*args, **kwargs)
-            
-            now = time.time()
-            
-            with self.lock:
-                if cache_key in self.cache:
-                    result, timestamp = self.cache[cache_key]
-                    if now - timestamp < self.ttl:
-                        logger.debug(f"Cache hit for {func.__name__}")
-                        return result
-                    else:
-                        # Remove expired entry
-                        del self.cache[cache_key]
-            
-            # Cache miss or expired - compute result
-            result = func(*args, **kwargs)
-            
-            with self.lock:
-                self.cache[cache_key] = (result, now)
-                # Optional: Limit cache size
-                if len(self.cache) > 1000:
-                    # Remove oldest 10% of entries
-                    sorted_items = sorted(self.cache.items(), key=lambda x: x[1][1])
-                    for old_key, _ in sorted_items[:100]:
-                        del self.cache[old_key]
-            
-            return result
-        return wrapper
-
-
-# ML prediction cache with image-based keys
-_ml_prediction_cache: Dict[str, Tuple[Dict[str, Any], float]] = {}
-_ml_cache_lock = threading.Lock()
-
-
-def create_ml_cache_key(image_data: Union[str, bytes], crop_type: str, analysis_type: str) -> str:
-    """Create consistent cache key for ML predictions based on image content"""
-    try:
-        # Hash image data to create key
-        hasher = hashlib.sha256()
-        
-        if isinstance(image_data, str):
-            # Assume base64 string
-            hasher.update(image_data.encode())
-        elif isinstance(image_data, bytes):
-            hasher.update(image_data)
-        else:
-            hasher.update(str(image_data).encode())
-        
-        hasher.update(crop_type.encode())
-        hasher.update(analysis_type.encode())
-        return hasher.hexdigest()
-    except Exception as e:
-        logger.warning(f"Failed to create ML cache key: {e}")
-        return f"{analysis_type}:{crop_type}:{time.time()}"  # Unique fallback
-
-
-def get_cached_ml_prediction(cache_key: str) -> Optional[Dict[str, Any]]:
-    """Get cached ML prediction if available and not expired"""
-    with _ml_cache_lock:
-        if cache_key in _ml_prediction_cache:
-            result, timestamp = _ml_prediction_cache[cache_key]
-            if time.time() - timestamp < ML_CACHE_TTL:
-                logger.debug(f"ML cache hit for key: {cache_key[:16]}...")
-                return result
-            else:
-                # Remove expired entry
-                del _ml_prediction_cache[cache_key]
-    return None
-
-
-def cache_ml_prediction(cache_key: str, result: Dict[str, Any]):
-    """Cache ML prediction with TTL and size limits"""
-    with _ml_cache_lock:
-        # Limit cache size (FIFO eviction)
-        if len(_ml_prediction_cache) >= ML_CACHE_MAX_SIZE:
-            # Remove oldest entry
-            oldest_key = min(_ml_prediction_cache.items(), key=lambda x: x[1][1])[0]
-            del _ml_prediction_cache[oldest_key]
-            logger.debug(f"Evicted oldest ML cache entry: {oldest_key[:16]}...")
-        
-        _ml_prediction_cache[cache_key] = (result, time.time())
-        logger.debug(f"Cached ML prediction for key: {cache_key[:16]}...")
-
-
-@app.get("/diagnostics/cache")
-def cache_diagnostics() -> Dict[str, Any]:
-    """Get cache statistics for performance monitoring"""
-    with _ml_cache_lock:
-        ml_cache_size = len(_ml_prediction_cache)
-        ml_cache_oldest = None
-        ml_cache_newest = None
-        
-        if _ml_prediction_cache:
-            timestamps = [ts for _, ts in _ml_prediction_cache.values()]
-            ml_cache_oldest = datetime.fromtimestamp(min(timestamps)).isoformat()
-            ml_cache_newest = datetime.fromtimestamp(max(timestamps)).isoformat()
-    
-    return {
-        "ml_prediction_cache": {
-            "size": ml_cache_size,
-            "max_size": ML_CACHE_MAX_SIZE,
-            "ttl_seconds": ML_CACHE_TTL,
-            "oldest_entry": ml_cache_oldest,
-            "newest_entry": ml_cache_newest
-        },
-        "static_cache_ttl_seconds": STATIC_CACHE_TTL,
-        "timestamp": datetime.now().isoformat()
-    }
-
-
-# ===== End Caching Layer =====
-
-
 # Request ID + timing + counters middleware
 @app.middleware("http")
 async def log_requests(request: Request, call_next):  # type: ignore[no-redef]
@@ -767,27 +625,6 @@ except ImportError as e:
     # VLM API optional - continue without it
     pass
 
-# Include GenAI (RAG Chatbot + VLM Vision) API router
-# Why separate router: Clean separation of GenAI features from core sensors/IoT
-# Endpoints: /ai/chat (RAG), /ai/analyze (VLM), /ai/ingest (knowledge base), /ai/stats
-try:
-    if __package__:
-        from .api.ai_routes import router as ai_router
-    else:
-        from api.ai_routes import router as ai_router  # type: ignore
-    
-    app.include_router(ai_router)
-    logger.info("✅ GenAI API router included successfully - RAG Chatbot & VLM available at /ai/*")
-    logger.info("   - POST /ai/chat - RAG-based farmer Q&A")
-    logger.info("   - POST /ai/analyze - VLM crop image analysis")
-    logger.info("   - POST /ai/ingest - Trigger knowledge base ingestion")
-    logger.info("   - GET /ai/stats - AI system statistics")
-except ImportError as e:
-    logger.warning(f"⚠️ GenAI API not available: {e}")
-    logger.warning("   To enable: pip install -r requirements-ai.txt")
-    # GenAI API optional - continue without it
-    pass
-
 # Optionally mount Flask-based storage server under /storage via WSGI
 try:
     from starlette.middleware.wsgi import WSGIMiddleware  # type: ignore
@@ -938,141 +775,6 @@ def ready() -> Dict[str, Any]:
         "water_model": safe_engine_attr("water_model") is not None,
         "fert_model": safe_engine_attr("fert_model") is not None,
     }
-
-
-# Diagnostics endpoints for system components
-@app.get("/diagnostics/disease-model")
-def disease_model_diagnostics() -> Dict[str, Any]:
-    """Get comprehensive disease detection model status and diagnostics"""
-    try:
-        if DiseaseDetectionEngine is None:
-            return {
-                "status": "unavailable",
-                "error": "DiseaseDetectionEngine module not imported",
-                "fallback_mode": True,
-                "timestamp": datetime.now().isoformat()
-            }
-        
-        engine = DiseaseDetectionEngine()
-        model_info = engine.get_model_info()
-        
-        # Check for comprehensive detector
-        comprehensive_available = False
-        try:
-            from .comprehensive_disease_detector import comprehensive_detector
-            comprehensive_available = True
-        except Exception:
-            pass
-        
-        return {
-            "status": "healthy" if model_info["loaded"] else "degraded",
-            "model_loaded": model_info["loaded"],
-            "model_name": model_info["model_name"],
-            "processor_loaded": model_info["processor_loaded"],
-            "model_accuracy": model_info.get("model_accuracy"),
-            "comprehensive_detector_available": comprehensive_available,
-            "vlm_available": VLM_AVAILABLE,
-            "fallback_mode": not model_info["loaded"],
-            "timestamp": datetime.now().isoformat()
-        }
-    except Exception as e:
-        logger.error(f"Disease model diagnostics failed: {e}")
-        return {
-            "status": "error",
-            "error": str(e),
-            "fallback_mode": True,
-            "timestamp": datetime.now().isoformat()
-        }
-
-
-@app.get("/diagnostics/weed-management")
-def weed_management_diagnostics() -> Dict[str, Any]:
-    """Get weed management system status"""
-    try:
-        if WeedManagementEngine is None:
-            return {
-                "status": "unavailable",
-                "error": "WeedManagementEngine module not imported",
-                "fallback_mode": True,
-                "timestamp": datetime.now().isoformat()
-            }
-        
-        engine = WeedManagementEngine()
-        model_info = engine.get_model_info()
-        
-        # Check if enhanced weed management is available
-        enhanced_available = False
-        try:
-            from .enhanced_weed_management import weed_engine
-            enhanced_available = True
-        except Exception:
-            pass
-        
-        return {
-            "status": "healthy" if model_info.get("status") == "loaded" else "degraded",
-            "enhanced_system_available": enhanced_available,
-            "model_loaded": model_info.get("status") == "loaded",
-            "model_name": model_info.get("model_name"),
-            "model_type": model_info.get("model_type"),
-            "fallback_mode": not enhanced_available and model_info.get("status") != "loaded",
-            "timestamp": datetime.now().isoformat()
-        }
-    except Exception as e:
-        logger.error(f"Weed management diagnostics failed: {e}")
-        return {
-            "status": "error",
-            "error": str(e),
-            "fallback_mode": True,
-            "timestamp": datetime.now().isoformat()
-        }
-
-
-@app.get("/diagnostics/system")
-def system_diagnostics() -> Dict[str, Any]:
-    """Get comprehensive system diagnostics"""
-    try:
-        # Get disease model status
-        disease_status = disease_model_diagnostics()
-        
-        # Get weed management status
-        weed_status = weed_management_diagnostics()
-        
-        # Get recommendation engine status
-        engine_status = {
-            "loaded": engine is not None,
-            "water_model": safe_engine_attr("water_model") is not None,
-            "fert_model": safe_engine_attr("fert_model") is not None,
-        }
-        
-        # Overall system health
-        all_healthy = (
-            disease_status.get("status") in ["healthy", "degraded"] and
-            weed_status.get("status") in ["healthy", "degraded"] and
-            engine_status.get("loaded")
-        )
-        
-        return {
-            "status": "healthy" if all_healthy else "degraded",
-            "components": {
-                "disease_detection": disease_status,
-                "weed_management": weed_status,
-                "recommendation_engine": engine_status,
-                "plant_health_monitor": {
-                    "loaded": plant_health_monitor is not None,
-                    "status": "healthy" if plant_health_monitor else "unavailable"
-                }
-            },
-            "ml_disabled": DISABLE_ML,
-            "enhanced_backend_available": ENHANCED_BACKEND_AVAILABLE,
-            "timestamp": datetime.now().isoformat()
-        }
-    except Exception as e:
-        logger.error(f"System diagnostics failed: {e}")
-        return {
-            "status": "error",
-            "error": str(e),
-            "timestamp": datetime.now().isoformat()
-        }
 
 
 # Enhanced health endpoints
@@ -2028,7 +1730,6 @@ def _dataset_to_cards() -> List[CropCard]:
 
 
 @app.get("/crops")
-@app.get("/api/crops")
 def get_crops_full() -> CropsResponse:
     return CropsResponse(items=_dataset_to_cards())
 
@@ -2182,14 +1883,11 @@ def _get_crop_cultivation_guide(crop_name: str) -> Optional[str]:
         
         # Search for cultivation guide in loaded answers
         # Pattern: Look for answers that contain "cultivation guide" and the crop name
-        import re
         for idx, answer in enumerate(_chatbot_answers):
             answer_lower = str(answer).lower()
             
             # Check if this answer is a cultivation guide for the crop
-            # Use word boundaries to avoid partial matches (e.g., "hi" matching "chickpea" or "this")
-            pattern = r'\b' + re.escape(crop_normalized) + r'\b'
-            if "cultivation guide" in answer_lower and re.search(pattern, answer_lower):
+            if "cultivation guide" in answer_lower and crop_normalized in answer_lower:
                 # Found the detailed guide
                 logger.info(f"✅ Found cultivation guide for crop '{crop_name}' at index {idx}, length: {len(answer)} chars")
                 return str(answer)
@@ -2227,12 +1925,9 @@ def _normalize_crop_name(text: str) -> Optional[str]:
     if text_lower in SUPPORTED_CROPS:
         return text_lower
     
-    # Check if any supported crop is in the text (whole word match only)
-    import re
+    # Check if any supported crop is in the text
     for crop in SUPPORTED_CROPS:
-        # Use word boundaries to avoid partial matches (e.g., "hi" matching "chickpea")
-        pattern = r'\b' + re.escape(crop) + r'\b'
-        if re.search(pattern, text_lower):
+        if crop in text_lower or text_lower in crop:
             return crop
     
     # Check for plural forms
@@ -3278,39 +2973,15 @@ def get_health_system_status() -> Dict[str, Any]:
             # Check individual component status
             if DiseaseDetectionEngine is not None:
                 disease_engine = DiseaseDetectionEngine()
-                disease_info = disease_engine.get_model_info() or {}
-                # Support multiple model_info shapes: some detectors return {'status': 'loaded'}
-                # while others return {'loaded': True}. Handle both safely.
-                try:
-                    if isinstance(disease_info, dict):
-                        if "status" in disease_info:
-                            status["capabilities"]["disease_detection"] = str(disease_info.get("status")).lower() == "loaded"
-                        elif "loaded" in disease_info:
-                            status["capabilities"]["disease_detection"] = bool(disease_info.get("loaded"))
-                        else:
-                            status["capabilities"]["disease_detection"] = False
-                    else:
-                        status["capabilities"]["disease_detection"] = False
-                except Exception:
-                    status["capabilities"]["disease_detection"] = False
+                disease_info = disease_engine.get_model_info()
+                status["capabilities"]["disease_detection"] = disease_info["status"] == "loaded"
             else:
                 disease_info = {"status": "not_available"}
 
             if WeedManagementEngine is not None:
                 weed_engine = WeedManagementEngine()
-                weed_info = weed_engine.get_model_info() or {}
-                try:
-                    if isinstance(weed_info, dict):
-                        if "status" in weed_info:
-                            status["capabilities"]["weed_management"] = str(weed_info.get("status")).lower() == "loaded"
-                        elif "loaded" in weed_info:
-                            status["capabilities"]["weed_management"] = bool(weed_info.get("loaded"))
-                        else:
-                            status["capabilities"]["weed_management"] = False
-                    else:
-                        status["capabilities"]["weed_management"] = False
-                except Exception:
-                    status["capabilities"]["weed_management"] = False
+                weed_info = weed_engine.get_model_info()
+                status["capabilities"]["weed_management"] = weed_info["status"] == "loaded"
             else:
                 weed_info = {"status": "not_available"}
 
@@ -4199,12 +3870,6 @@ def _normalize_user_question(question: str) -> tuple[str, bool]:
     """
     qtext = question.strip().lower()
     
-    # Check for greetings first - don't expand these!
-    greeting_words = ["hi", "hello", "hey", "helo", "hii", "helllo", "greetings", "namaste", "namaskar", "vanakkam", "namaskaram"]
-    if qtext in greeting_words or any(qtext.startswith(g + " ") or qtext.endswith(" " + g) for g in greeting_words):
-        # Return as-is, will be handled by fallback as greeting
-        return qtext, False
-    
     # Common typo corrections
     typo_map = {
         "wat": "what", "wt": "what", "hw": "how", "wen": "when", "whn": "when",
@@ -4372,7 +4037,6 @@ def _generate_fallback_response(question: str, language: str = "en") -> str:
     """
     fallback_templates = {
         "en": {
-            "greeting": "👋 **Hello! Welcome to AgriSense!**\n\nI'm your AI farming assistant, here to help with all your agriculture questions!\n\n**I can help you with:**\n• 🌊 Irrigation and watering schedules\n• 🌱 Fertilizers and soil nutrients\n• 🌾 Crop selection and cultivation guides\n• 🐛 Pest control methods\n• 🦠 Disease prevention and treatment\n• 🌍 Soil management and improvement\n\n**Try asking me:**\n• \"What crops grow well in monsoon season?\"\n• \"How do I control aphids on tomatoes?\"\n• \"What is the best irrigation method for rice?\"\n• \"When should I apply fertilizer to wheat?\"\n\nHow can I help you today?",
             "water": "🌊 **About Watering & Irrigation:**\nI'd love to help with watering! Here are some common topics:\n• Irrigation methods (drip, sprinkler, flood)\n• Watering schedules for different crops\n• Signs of over/under-watering\n\nCould you ask a more specific question? For example: 'What is the best irrigation method for tomatoes?' or 'How often should I water wheat crops?'",
             "fertilizer": "🌱 **About Fertilizers:**\nI can help with fertilizer questions! Topics I know about:\n• Organic vs chemical fertilizers\n• NPK ratios for different crops\n• When and how to apply fertilizer\n• Soil testing\n\nTry asking: 'What fertilizer ratio is best for rice?' or 'When should I apply fertilizer to corn?'",
             "crop": "🌾 **About Crops:**\nI can help you choose the right crops! I know about:\n• Best crops for different soil types\n• Seasonal planting recommendations\n• Crop rotation benefits\n• High-yield varieties\n\nAsk me: 'What crops grow well in clay soil?' or 'What should I plant in monsoon season?'",
@@ -4382,7 +4046,6 @@ def _generate_fallback_response(question: str, language: str = "en") -> str:
             "general": "👋 **I'm here to help with farming questions!**\n\nI can assist with:\n• 🌊 Irrigation and watering\n• 🌱 Fertilizers and nutrients\n• 🌾 Crop selection and planting\n• 🐛 Pest control\n• 🦠 Disease management\n• 🌍 Soil improvement\n\nPlease ask a specific question like:\n• 'What is the best irrigation method for rice?'\n• 'How often should I fertilize wheat?'\n• 'What crops grow well in monsoon season?'\n• 'How to control pests naturally?'",
         },
         "hi": {
-            "greeting": "👋 **नमस्ते! AgriSense में आपका स्वागत है!**\n\nमैं आपका AI कृषि सहायक हूँ, आपके सभी कृषि प्रश्नों में मदद के लिए यहाँ हूँ!\n\n**मैं आपकी मदद कर सकता हूँ:**\n• 🌊 सिंचाई और पानी का समय\n• 🌱 उर्वरक और मिट्टी पोषक तत्व\n• 🌾 फसल चयन और खेती गाइड\n• 🐛 कीट नियंत्रण विधियाँ\n• 🦠 रोग रोकथाम और उपचार\n• 🌍 मिट्टी प्रबंधन और सुधार\n\n**मुझसे पूछें:**\n• \"मानसून में कौन सी फसलें अच्छी होती हैं?\"\n• \"टमाटर पर एफिड्स को कैसे नियंत्रित करें?\"\n• \"धान के लिए सबसे अच्छी सिंचाई विधि क्या है?\"\n\nआज मैं आपकी कैसे मदद कर सकता हूँ?",
             "general": "👋 **मैं खेती के सवालों में मदद के लिए यहाँ हूँ!**\n\nमैं इन विषयों में सहायता कर सकता हूँ:\n• 🌊 सिंचाई और पानी\n• 🌱 उर्वरक और पोषक तत्व\n• 🌾 फसल चयन और रोपण\n• 🐛 कीट नियंत्रण\n• 🦠 रोग प्रबंधन\n• 🌍 मिट्टी सुधार\n\nकृपया एक विशिष्ट प्रश्न पूछें जैसे:\n• 'धान के लिए सबसे अच्छी सिंचाई विधि क्या है?'\n• 'गेहूं को कितनी बार उर्वरक देना चाहिए?'\n• 'मानसून के मौसम में कौन सी फसलें अच्छी होती हैं?'",
         }
     }
@@ -4391,16 +4054,10 @@ def _generate_fallback_response(question: str, language: str = "en") -> str:
     question_lower = question.lower()
     topic = "general"
     
-    # Check if it's a greeting
-    greeting_words = ["hi", "hello", "hey", "helo", "hii", "helllo", "greetings", "namaste", "namaskar", "vanakkam", "namaskaram"]
-    if question_lower in greeting_words or any(question_lower.startswith(g + " ") or question_lower.endswith(" " + g) for g in greeting_words):
-        topic = "greeting"
-    
-    if topic == "general":
-        for keyword in ["water", "irrigation", "irri", "sinkhai", "watering"]:
-            if keyword in question_lower:
-                topic = "water"
-                break
+    for keyword in ["water", "irrigation", "irri", "sinkhai", "watering"]:
+        if keyword in question_lower:
+            topic = "water"
+            break
     
     if topic == "general":
         for keyword in ["fertilizer", "fert", "urvarak", "nutrient", "npk"]:
@@ -4447,30 +4104,6 @@ def chatbot_ask(q: ChatbotQuery) -> Dict[str, Any]:
     original_question = q.question.strip()
     if not original_question:
         raise HTTPException(status_code=400, detail="question must not be empty")
-    
-    # PRIORITY 0: Check if this is a greeting - return welcome message immediately
-    question_lower = original_question.lower().strip()
-    greeting_words = ["hi", "hello", "hey", "helo", "hii", "helllo", "greetings", "namaste", "namaskar", "vanakkam", "namaskaram"]
-    if question_lower in greeting_words or any(question_lower.startswith(g + " ") or question_lower.endswith(" " + g) for g in greeting_words):
-        language = q.language or "en"
-        greeting_response = _generate_fallback_response(original_question, language)
-        return {
-            "question": original_question,
-            "results": [{
-                "rank": 1,
-                "score": 1.0,
-                "answer": greeting_response,
-                "is_greeting": True
-            }],
-            "metadata": {
-                "session_id": q.session_id,
-                "language": language,
-                "enhanced": False,
-                "cached": False,
-                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
-                "top_k": q.top_k,
-            }
-        }
     
     # PRIORITY 1: Check if this is a simple crop name query (before any expansion)
     # This handles queries like "carrot", "watermelon", "rice" etc.
@@ -5098,9 +4731,6 @@ def chatbot_ask(q: ChatbotQuery) -> Dict[str, Any]:
     if len(_chatbot_cache) > _CHATBOT_CACHE_MAX:
         _chatbot_cache.popitem(last=False)
     
-    # Track performance metrics
-    processing_time = time.time() - (q.dict().get('_start_time', time.time()))
-    
     # Enhance responses with conversational style (makes chatbot more human-like)
     try:
         if CONVERSATIONAL_ENHANCEMENT_AVAILABLE and results:
@@ -5128,57 +4758,7 @@ def chatbot_ask(q: ChatbotQuery) -> Dict[str, Any]:
         logger.warning(f"Failed to enhance chatbot response: {e}")
         # Continue with non-enhanced responses
     
-    # 🆕 Phi LLM Enhancement: Enrich top answer with contextual AI insights
-    try:
-        from .phi_chatbot_integration import enrich_chatbot_answer, get_phi_status
-        phi_status = get_phi_status()
-        if phi_status.get("available") and results and len(results) > 0:
-            top_result = results[0]
-            base_answer = top_result.get("answer", "")
-            if base_answer and not top_result.get("is_fallback", False):
-                logger.info("🤖 Enriching answer with Phi LLM for human-like response...")
-                
-                # Extract crop type from question if mentioned
-                crop_type = "unknown"
-                crop_keywords = ["tomato", "rice", "wheat", "corn", "potato", "carrot", 
-                               "cabbage", "onion", "beans", "peas", "cucumber", "lettuce"]
-                qtext_lower = qtext.lower()
-                for crop in crop_keywords:
-                    if crop in qtext_lower:
-                        crop_type = crop
-                        break
-                
-                enriched_answer = enrich_chatbot_answer(
-                    question=qtext,
-                    base_answer=base_answer,
-                    crop_type=crop_type,
-                    language=q.language or "en",
-                    timeout_s=None
-                )
-                
-                if enriched_answer and enriched_answer != base_answer:
-                    top_result["answer"] = enriched_answer
-                    top_result["phi_enhanced"] = True
-                    top_result["original_answer"] = base_answer
-                    logger.info("✅ Phi enrichment successful - response is now more human-like!")
-                else:
-                    logger.info("⚠️ Phi enrichment returned base answer")
-    except Exception as e:
-        logger.warning(f"⚠️ Phi LLM enrichment unavailable: {e}")
-    
-    # Return response with metadata
-    return {
-        "question": qtext,
-        "results": results,
-        "metadata": {
-            "session_id": q.session_id,
-            "language": q.language or "en",
-            "enhanced": CONVERSATIONAL_ENHANCEMENT_AVAILABLE,
-            "cached": key in _chatbot_cache,
-            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
-            "top_k": q.top_k,
-        }
-    }
+    return {"question": qtext, "results": results}
 
 
 @app.get("/chatbot/ask")
@@ -5224,73 +4804,6 @@ def chatbot_greeting(language: str = "en") -> Dict[str, str]:
             "greeting": "Hello! How can I help you today?",
             "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
         }
-
-
-class ChatbotAdviceQuery(BaseModel):
-    """Request model for context-aware agronomist advice"""
-    query: str = Field(..., description="Farmer's question or concern")
-    diagnosis_context: Optional[Dict[str, Any]] = Field(None, description="Optional disease diagnosis context")
-    conversation_history: Optional[List[Dict[str, str]]] = Field(None, description="Previous conversation messages")
-
-
-@app.post("/chatbot/advice")
-def chatbot_get_advice(req: ChatbotAdviceQuery) -> Dict[str, Any]:
-    """
-    Get context-aware agricultural advice from the AgriAdvisorBot (Senior Agronomist persona).
-    
-    This endpoint provides empathetic, professional advice that references specific details
-    from disease diagnosis context (if provided) and maintains conversation continuity.
-    
-    Args:
-        req: ChatbotAdviceQuery with user query, optional diagnosis context, and conversation history
-        
-    Returns:
-        Dict with advice text, timestamp, and metadata
-    """
-    try:
-        # Import and initialize the chatbot engine
-        try:
-            from .core.chatbot_engine import get_chatbot_engine
-            chatbot = get_chatbot_engine()
-        except ImportError:
-            try:
-                from core.chatbot_engine import get_chatbot_engine  # type: ignore
-                chatbot = get_chatbot_engine()
-            except ImportError as e:
-                logger.warning(f"AgriAdvisorBot not available: {e}")
-                raise HTTPException(
-                    status_code=503, 
-                    detail="Context-aware chatbot not available. Install required dependencies (google-generativeai)."
-                )
-        
-        # Get advice based on whether we have conversation history
-        if req.conversation_history:
-            advice = chatbot.get_multi_turn_advice(
-                conversation_history=req.conversation_history,
-                diagnosis_context=req.diagnosis_context
-            )
-        else:
-            advice = chatbot.get_advice(
-                user_query=req.query,
-                diagnosis_context=req.diagnosis_context
-            )
-        
-        return {
-            "query": req.query,
-            "advice": advice,
-            "has_diagnosis_context": req.diagnosis_context is not None,
-            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
-            "advisor": "Dr. Priya Kumar (Senior Agronomist)"
-        }
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to generate advice: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to generate agricultural advice: {str(e)}"
-        )
 
 
 @app.get("/chatbot/metrics")
@@ -5350,27 +4863,3 @@ def chatbot_tune(t: ChatbotTune) -> Dict[str, Any]:
     except Exception:
         logger.exception("tune failed")
         raise HTTPException(status_code=400, detail="invalid tune values")
-
-
-# ============================================================
-# Phi LLM & SCOLD VLM Integration
-# ============================================================
-try:
-    from .routes.ai_models_routes import router as ai_models_router
-    app.include_router(ai_models_router)
-    logger.info("✅ Phi LLM & SCOLD VLM routes registered")
-except ImportError as e:
-    logger.warning(f"⚠️ AI models routes not available: {e}")
-except Exception as e:
-    logger.error(f"❌ Failed to register AI models routes: {e}")
-
-# Hybrid LLM+VLM Agricultural AI
-# ============================================================
-try:
-    from .routes.hybrid_ai_routes import router as hybrid_ai_router
-    app.include_router(hybrid_ai_router)
-    logger.info("✅ Hybrid Agricultural AI routes registered")
-except ImportError as e:
-    logger.warning(f"⚠️ Hybrid AI routes not available: {e}")
-except Exception as e:
-    logger.error(f"❌ Failed to register Hybrid AI routes: {e}")

@@ -4,7 +4,7 @@
 // ===================================================================
 
 @description('Environment name (dev, staging, prod)')
-@allowed(['dev', 'staging', 'prod'])
+@allowed(['dev', 'staging', 'prod', 'free'])
 param environment string = 'dev'
 
 @description('Azure region for resources')
@@ -23,8 +23,8 @@ param enableCosmosDb bool = true
 param enableAppInsights bool = true
 
 @description('SKU for App Service Plan')
-@allowed(['B1', 'B2', 'S1', 'S2', 'P1V2', 'P2V2'])
-param appServicePlanSku string = environment == 'prod' ? 'P1V2' : 'B1'
+@allowed(['F1', 'B1', 'B2', 'S1', 'S2', 'P1V2', 'P2V2'])
+param appServicePlanSku string = environment == 'prod' ? 'P1V2' : environment == 'free' ? 'F1' : 'B1'
 
 @description('Deployment timestamp')
 param deploymentTimestamp string = utcNow('yyyyMMddHHmmss')
