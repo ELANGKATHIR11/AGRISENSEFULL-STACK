@@ -1,0 +1,28 @@
+# TensorFlow Serving Batching Configuration
+# This file configures batch processing parameters for improved throughput
+
+# Maximum batch size for inference
+max_batch_size { value: 32 }
+
+# Batch timeout in microseconds (10ms)
+batch_timeout_micros { value: 10000 }
+
+# Number of batch threads
+num_batch_threads { value: 4 }
+
+# Maximum number of batches to enqueue
+max_enqueued_batches { value: 100 }
+
+# Enable mixed precision for faster inference (if supported)
+enable_mixed_precision_serving { value: true }
+
+# Pad variable length sequences to max length in batch
+pad_variable_length_inputs { value: true }
+
+# Model-specific batching configurations
+allowed_batch_sizes: 1
+allowed_batch_sizes: 2
+allowed_batch_sizes: 4
+allowed_batch_sizes: 8
+allowed_batch_sizes: 16
+allowed_batch_sizes: 32

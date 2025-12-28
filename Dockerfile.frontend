@@ -1,0 +1,41 @@
+# AgriSense Frontend - Production Dockerfile
+FROM node:18-alpine as builder
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY agrisense_app/frontend/farm-fortune-frontend-main/package*.json ./
+
+# Install dependencies
+RUN npm ci --only=production
+
+# Copy source code
+COPY agrisense_app/frontend/farm-fortune-frontend-main .
+
+# Build application
+RUN npm run build
+
+# Stage 2: Nginx runtime
+FROM nginx:alpine
+
+# Copy custom nginx config
+COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copy built assets from builder
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Add non-root user
+RUN addgroup -g 1001 -S agrisense && \
+    adduser -S -u 1001 -G agrisense agrisense && \
+    chown -R agrisense:agrisense /usr/share/nginx/html
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s \
+    CMD wget --quiet --tries=1 --spider http://localhost:80/ || exit 1
+
+# Expose port
+EXPOSE 80
+
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]

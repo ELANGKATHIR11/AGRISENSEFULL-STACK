@@ -1,0 +1,31 @@
+# Basic plant coefficients and pH windows (edit per locale)
+plants:
+  rice:      {kc: 1.15, ph_min: 5.5, ph_max: 6.5, water_factor: 1.2, n_need: high}
+  wheat:     {kc: 1.00, ph_min: 6.0, ph_max: 7.0, water_factor: 1.0, n_need: medium}
+  maize:     {kc: 1.05, ph_min: 5.8, ph_max: 7.0, water_factor: 1.1, n_need: high}
+  tomato:    {kc: 1.05, ph_min: 6.0, ph_max: 6.8, water_factor: 1.1, n_need: medium}
+  cotton:    {kc: 1.15, ph_min: 5.8, ph_max: 7.0, water_factor: 1.2, n_need: high}
+  chilli:    {kc: 1.05, ph_min: 6.0, ph_max: 6.8, water_factor: 1.0, n_need: medium}
+  groundnut: {kc: 0.95, ph_min: 5.8, ph_max: 6.5, water_factor: 0.9, n_need: low}
+  generic:   {kc: 1.00, ph_min: 6.0, ph_max: 7.0, water_factor: 1.0, n_need: medium}
+
+# Soil texture multipliers (affects water capacity / infiltration)
+soil:
+  sand: {water_mult: 1.10, fert_leach_risk: high}
+  loam: {water_mult: 1.00, fert_leach_risk: medium}
+  clay: {water_mult: 0.90, fert_leach_risk: low}
+
+# Defaults for unknown values
+defaults:
+  area_m2: 100.0
+  moisture_pct: 35.0
+  temperature_c: 28.0
+  ec_dS_m: 1.0
+  n_ppm: 20.0
+  p_ppm: 10.0
+  k_ppm: 80.0
+
+targets_ppm: {N: 40, P: 20, K: 150}
+rs_per_1000l: 5.0
+kwh_per_1000l: 0.9
+grid_kgco2_per_kwh: 0.82

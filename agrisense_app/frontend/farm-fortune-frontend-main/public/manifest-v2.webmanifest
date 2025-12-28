@@ -1,0 +1,197 @@
+{
+  "name": "AgriSense - Smart Farming Intelligence",
+  "short_name": "AgriSense",
+  "description": "AI-powered smart agriculture platform for precision farming, crop optimization, and sustainable water management with real-time monitoring and offline capabilities",
+  "start_url": "/ui/?source=pwa",
+  "id": "/ui/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
+  "background_color": "#f0fdf4",
+  "theme_color": "#14532d",
+  "categories": ["agriculture", "productivity", "utilities", "business"],
+  "lang": "en-US",
+  "scope": "/ui/",
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+  "icons": [
+    {
+      "src": "icons/icon-32.png",
+      "type": "image/png",
+      "sizes": "32x32",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-64.png",
+      "type": "image/png",
+      "sizes": "64x64",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-128.png",
+      "type": "image/png",
+      "sizes": "128x128",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-256.png",
+      "type": "image/png",
+      "sizes": "256x256",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-128-maskable.png",
+      "type": "image/png",
+      "sizes": "128x128",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon-256-maskable.png",
+      "type": "image/png",
+      "sizes": "256x256",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon-512-maskable.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
+    },
+    {
+      "src": "logo-agrisense-mark-v2.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshots/dashboard-desktop.png",
+      "type": "image/png",
+      "sizes": "1280x720",
+      "form_factor": "wide",
+      "label": "Dashboard overview on desktop"
+    },
+    {
+      "src": "screenshots/dashboard-mobile.png",
+      "type": "image/png",
+      "sizes": "390x844",
+      "form_factor": "narrow",
+      "label": "Mobile dashboard view"
+    },
+    {
+      "src": "screenshots/sensors-mobile.png",
+      "type": "image/png",
+      "sizes": "390x844",
+      "form_factor": "narrow",
+      "label": "Real-time sensor monitoring"
+    },
+    {
+      "src": "screenshots/recommendations-mobile.png",
+      "type": "image/png",
+      "sizes": "390x844",
+      "form_factor": "narrow",
+      "label": "AI-powered crop recommendations"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "View farm dashboard and real-time data",
+      "url": "/ui/dashboard?source=shortcut",
+      "icons": [
+        {
+          "src": "icons/shortcut-dashboard.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Sensors",
+      "short_name": "Sensors",
+      "description": "Monitor sensor readings and alerts",
+      "url": "/ui/sensors?source=shortcut",
+      "icons": [
+        {
+          "src": "icons/shortcut-sensors.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Recommendations",
+      "short_name": "Recommendations",
+      "description": "Get AI-powered farming recommendations",
+      "url": "/ui/recommendations?source=shortcut",
+      "icons": [
+        {
+          "src": "icons/shortcut-recommendations.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Irrigation",
+      "short_name": "Irrigation",
+      "description": "Control irrigation system",
+      "url": "/ui/irrigation?source=shortcut",
+      "icons": [
+        {
+          "src": "icons/shortcut-irrigation.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "share_target": {
+    "action": "/ui/share",
+    "method": "POST",
+    "enctype": "application/json",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  },
+  "file_handlers": [
+    {
+      "action": "/ui/import",
+      "accept": {
+        "text/csv": [".csv"],
+        "application/json": [".json"]
+      },
+      "launch_type": "single-client"
+    }
+  ],
+  "protocol_handlers": [
+    {
+      "protocol": "agrisense",
+      "url": "/ui/protocol?action=%s"
+    }
+  ],
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "handle_links": "preferred",
+  "prefer_related_applications": false,
+  "related_applications": [
+    {
+      "platform": "play",
+      "id": "com.agrisense.app",
+      "url": "https://play.google.com/store/apps/details?id=com.agrisense.app"
+    },
+    {
+      "platform": "itunes",
+      "id": "123456789",
+      "url": "https://apps.apple.com/app/agrisense/id123456789"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "classes": {
+    "broadleaf": ["dandelion", "clover", "plantain", "chickweed"],
+    "grassy": ["crabgrass", "bermuda_grass", "foxtail", "quackgrass"],
+    "sedges": ["nutsedge", "yellow_sedge", "purple_sedge"]
+  },
+  "control_methods": {
+    "dandelion": {
+      "mechanical": ["Hand pulling", "Cultivation"],
+      "biological": ["Proper lawn care"],
+      "chemical": ["2,4-D", "Glyphosate (spot treatment)"],
+      "prevention": ["Maintain healthy soil"]
+    },
+    "crabgrass": {
+      "mechanical": ["Hand pulling", "Mowing"],
+      "biological": ["Dense turf competition"],
+      "chemical": ["Pre-emergent herbicides"],
+      "prevention": ["Fall overseeding"]
+    }
+  }
+}

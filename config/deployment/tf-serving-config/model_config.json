@@ -1,0 +1,44 @@
+{
+  "model_config_list": [
+    {
+      "name": "water_recommendation",
+      "base_path": "/models/water_model",
+      "model_platform": "tensorflow",
+      "model_version_policy": {
+        "latest": {
+          "num_versions": 2
+        }
+      }
+    },
+    {
+      "name": "fertilizer_recommendation", 
+      "base_path": "/models/fertilizer_model",
+      "model_platform": "tensorflow",
+      "model_version_policy": {
+        "latest": {
+          "num_versions": 2
+        }
+      }
+    },
+    {
+      "name": "crop_recommendation",
+      "base_path": "/models/crop_model", 
+      "model_platform": "tensorflow",
+      "model_version_policy": {
+        "latest": {
+          "num_versions": 2
+        }
+      }
+    },
+    {
+      "name": "yield_prediction",
+      "base_path": "/models/yield_model",
+      "model_platform": "tensorflow", 
+      "model_version_policy": {
+        "latest": {
+          "num_versions": 2
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,4100 @@
+{
+  "collection": {
+    "general": {
+      "total_collected": 0,
+      "disease_images": 0,
+      "weed_images": 0,
+      "failed_downloads": 39,
+      "duration_seconds": 38.342116594314575,
+      "output_directory": "agricultural_ml_datasets\\general_images"
+    },
+    "diseases": {
+      "total_collected": 0,
+      "unique_diseases": 0,
+      "unique_crops": 0,
+      "duration": 0.7720355987548828,
+      "output_dir": "agricultural_ml_datasets\\disease_images"
+    },
+    "weeds": {
+      "total_collected": 0,
+      "unique_weeds": 0,
+      "unique_families": 0,
+      "growth_stages": 0,
+      "duration": 0.594301700592041,
+      "output_dir": "agricultural_ml_datasets\\weed_images"
+    },
+    "total_images": 0,
+    "total_time": 38.346237659454346,
+    "collection_complete": true
+  },
+  "organization": {
+    "total_organized": 105,
+    "valid_files": [
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\anthracnose_rice_severe_3.jpg",
+        "organized_path": "disease_images\\anthracnose_rice_severe_3.jpg",
+        "filename": "anthracnose_rice_severe_3.jpg",
+        "category": "disease_anthracnose",
+        "subcategory": "anthracnose",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_anthracnose\\anthracnose\\anthracnose_rice_severe_3.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\anthracnose_rose_severe_1.jpg",
+        "organized_path": "disease_images\\anthracnose_rose_severe_1.jpg",
+        "filename": "anthracnose_rose_severe_1.jpg",
+        "category": "disease_anthracnose",
+        "subcategory": "anthracnose",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_anthracnose\\anthracnose\\anthracnose_rose_severe_1.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\bacterial_blight_potato_severe_2.jpg",
+        "organized_path": "disease_images\\bacterial_blight_potato_severe_2.jpg",
+        "filename": "bacterial_blight_potato_severe_2.jpg",
+        "category": "disease_bacterial_blight",
+        "subcategory": "bacterial_blight",
+        "type": "disease",
+        "valid": true,
+        "val_path": "splits\\val\\disease_bacterial_blight\\bacterial_blight\\bacterial_blight_potato_severe_2.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\bacterial_blight_rice_moderate_1.jpg",
+        "organized_path": "disease_images\\bacterial_blight_rice_moderate_1.jpg",
+        "filename": "bacterial_blight_rice_moderate_1.jpg",
+        "category": "disease_bacterial_blight",
+        "subcategory": "bacterial_blight",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_bacterial_blight\\bacterial_blight\\bacterial_blight_rice_moderate_1.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\bacterial_blight_rice_moderate_3.jpg",
+        "organized_path": "disease_images\\bacterial_blight_rice_moderate_3.jpg",
+        "filename": "bacterial_blight_rice_moderate_3.jpg",
+        "category": "disease_bacterial_blight",
+        "subcategory": "bacterial_blight",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_bacterial_blight\\bacterial_blight\\bacterial_blight_rice_moderate_3.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\bacterial_canker_grape_moderate_2.jpg",
+        "organized_path": "disease_images\\bacterial_canker_grape_moderate_2.jpg",
+        "filename": "bacterial_canker_grape_moderate_2.jpg",
+        "category": "disease_bacterial_canker",
+        "subcategory": "bacterial_canker",
+        "type": "disease",
+        "valid": true,
+        "val_path": "splits\\val\\disease_bacterial_canker\\bacterial_canker\\bacterial_canker_grape_moderate_2.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\bacterial_canker_potato_mild_1.jpg",
+        "organized_path": "disease_images\\bacterial_canker_potato_mild_1.jpg",
+        "filename": "bacterial_canker_potato_mild_1.jpg",
+        "category": "disease_bacterial_canker",
+        "subcategory": "bacterial_canker",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_bacterial_canker\\bacterial_canker\\bacterial_canker_potato_mild_1.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\bacterial_canker_rice_severe_3.jpg",
+        "organized_path": "disease_images\\bacterial_canker_rice_severe_3.jpg",
+        "filename": "bacterial_canker_rice_severe_3.jpg",
+        "category": "disease_bacterial_canker",
+        "subcategory": "bacterial_canker",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_bacterial_canker\\bacterial_canker\\bacterial_canker_rice_severe_3.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\bacterial_spot_bean_moderate_3.jpg",
+        "organized_path": "disease_images\\bacterial_spot_bean_moderate_3.jpg",
+        "filename": "bacterial_spot_bean_moderate_3.jpg",
+        "category": "disease_bacterial_spot",
+        "subcategory": "bacterial_spot",
+        "type": "disease",
+        "valid": true,
+        "val_path": "splits\\val\\disease_bacterial_spot\\bacterial_spot\\bacterial_spot_bean_moderate_3.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\bacterial_spot_rice_severe_2.jpg",
+        "organized_path": "disease_images\\bacterial_spot_rice_severe_2.jpg",
+        "filename": "bacterial_spot_rice_severe_2.jpg",
+        "category": "disease_bacterial_spot",
+        "subcategory": "bacterial_spot",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_bacterial_spot\\bacterial_spot\\bacterial_spot_rice_severe_2.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\bacterial_spot_rose_moderate_1.jpg",
+        "organized_path": "disease_images\\bacterial_spot_rose_moderate_1.jpg",
+        "filename": "bacterial_spot_rose_moderate_1.jpg",
+        "category": "disease_bacterial_spot",
+        "subcategory": "bacterial_spot",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_bacterial_spot\\bacterial_spot\\bacterial_spot_rose_moderate_1.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\bacterial_wilt_citrus_severe_3.jpg",
+        "organized_path": "disease_images\\bacterial_wilt_citrus_severe_3.jpg",
+        "filename": "bacterial_wilt_citrus_severe_3.jpg",
+        "category": "disease_bacterial_wilt",
+        "subcategory": "bacterial_wilt",
+        "type": "disease",
+        "valid": true,
+        "val_path": "splits\\val\\disease_bacterial_wilt\\bacterial_wilt\\bacterial_wilt_citrus_severe_3.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\bacterial_wilt_rose_mild_1.jpg",
+        "organized_path": "disease_images\\bacterial_wilt_rose_mild_1.jpg",
+        "filename": "bacterial_wilt_rose_mild_1.jpg",
+        "category": "disease_bacterial_wilt",
+        "subcategory": "bacterial_wilt",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_bacterial_wilt\\bacterial_wilt\\bacterial_wilt_rose_mild_1.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\bacterial_wilt_wheat_moderate_2.jpg",
+        "organized_path": "disease_images\\bacterial_wilt_wheat_moderate_2.jpg",
+        "filename": "bacterial_wilt_wheat_moderate_2.jpg",
+        "category": "disease_bacterial_wilt",
+        "subcategory": "bacterial_wilt",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_bacterial_wilt\\bacterial_wilt\\bacterial_wilt_wheat_moderate_2.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\black_rot_bean_moderate_1.jpg",
+        "organized_path": "disease_images\\black_rot_bean_moderate_1.jpg",
+        "filename": "black_rot_bean_moderate_1.jpg",
+        "category": "disease_black",
+        "subcategory": "black",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_black\\black\\black_rot_bean_moderate_1.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\black_rot_rice_severe_2.jpg",
+        "organized_path": "disease_images\\black_rot_rice_severe_2.jpg",
+        "filename": "black_rot_rice_severe_2.jpg",
+        "category": "disease_black",
+        "subcategory": "black",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_black\\black\\black_rot_rice_severe_2.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\blight_bean_severe_3.jpg",
+        "organized_path": "disease_images\\blight_bean_severe_3.jpg",
+        "filename": "blight_bean_severe_3.jpg",
+        "category": "disease_blight",
+        "subcategory": "blight",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_blight\\blight\\blight_bean_severe_3.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\blight_tomato_mild_1.jpg",
+        "organized_path": "disease_images\\blight_tomato_mild_1.jpg",
+        "filename": "blight_tomato_mild_1.jpg",
+        "category": "disease_blight",
+        "subcategory": "blight",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_blight\\blight\\blight_tomato_mild_1.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\downy_mildew_bean_mild_3.jpg",
+        "organized_path": "disease_images\\downy_mildew_bean_mild_3.jpg",
+        "filename": "downy_mildew_bean_mild_3.jpg",
+        "category": "disease_downy",
+        "subcategory": "downy",
+        "type": "disease",
+        "valid": true,
+        "val_path": "splits\\val\\disease_downy\\downy\\downy_mildew_bean_mild_3.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\downy_mildew_citrus_mild_1.jpg",
+        "organized_path": "disease_images\\downy_mildew_citrus_mild_1.jpg",
+        "filename": "downy_mildew_citrus_mild_1.jpg",
+        "category": "disease_downy",
+        "subcategory": "downy",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_downy\\downy\\downy_mildew_citrus_mild_1.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\downy_mildew_tomato_mild_2.jpg",
+        "organized_path": "disease_images\\downy_mildew_tomato_mild_2.jpg",
+        "filename": "downy_mildew_tomato_mild_2.jpg",
+        "category": "disease_downy",
+        "subcategory": "downy",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_downy\\downy\\downy_mildew_tomato_mild_2.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\fire_blight_apple_severe_3.jpg",
+        "organized_path": "disease_images\\fire_blight_apple_severe_3.jpg",
+        "filename": "fire_blight_apple_severe_3.jpg",
+        "category": "disease_fire",
+        "subcategory": "fire",
+        "type": "disease",
+        "valid": true,
+        "val_path": "splits\\val\\disease_fire\\fire\\fire_blight_apple_severe_3.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\fire_blight_pepper_mild_1.jpg",
+        "organized_path": "disease_images\\fire_blight_pepper_mild_1.jpg",
+        "filename": "fire_blight_pepper_mild_1.jpg",
+        "category": "disease_fire",
+        "subcategory": "fire",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_fire\\fire\\fire_blight_pepper_mild_1.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\fire_blight_rose_mild_2.jpg",
+        "organized_path": "disease_images\\fire_blight_rose_mild_2.jpg",
+        "filename": "fire_blight_rose_mild_2.jpg",
+        "category": "disease_fire",
+        "subcategory": "fire",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_fire\\fire\\fire_blight_rose_mild_2.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\fusarium_wilt_apple_mild_2.jpg",
+        "organized_path": "disease_images\\fusarium_wilt_apple_mild_2.jpg",
+        "filename": "fusarium_wilt_apple_mild_2.jpg",
+        "category": "disease_fusarium",
+        "subcategory": "fusarium",
+        "type": "disease",
+        "valid": true,
+        "val_path": "splits\\val\\disease_fusarium\\fusarium\\fusarium_wilt_apple_mild_2.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\fusarium_wilt_grape_mild_3.jpg",
+        "organized_path": "disease_images\\fusarium_wilt_grape_mild_3.jpg",
+        "filename": "fusarium_wilt_grape_mild_3.jpg",
+        "category": "disease_fusarium",
+        "subcategory": "fusarium",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_fusarium\\fusarium\\fusarium_wilt_grape_mild_3.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\fusarium_wilt_rose_severe_1.jpg",
+        "organized_path": "disease_images\\fusarium_wilt_rose_severe_1.jpg",
+        "filename": "fusarium_wilt_rose_severe_1.jpg",
+        "category": "disease_fusarium",
+        "subcategory": "fusarium",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_fusarium\\fusarium\\fusarium_wilt_rose_severe_1.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\iron_deficiency_grape_severe_2.jpg",
+        "organized_path": "disease_images\\iron_deficiency_grape_severe_2.jpg",
+        "filename": "iron_deficiency_grape_severe_2.jpg",
+        "category": "disease_iron_deficiency",
+        "subcategory": "iron_deficiency",
+        "type": "disease",
+        "valid": true,
+        "val_path": "splits\\val\\disease_iron_deficiency\\iron_deficiency\\iron_deficiency_grape_severe_2.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\iron_deficiency_pepper_severe_3.jpg",
+        "organized_path": "disease_images\\iron_deficiency_pepper_severe_3.jpg",
+        "filename": "iron_deficiency_pepper_severe_3.jpg",
+        "category": "disease_iron_deficiency",
+        "subcategory": "iron_deficiency",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_iron_deficiency\\iron_deficiency\\iron_deficiency_pepper_severe_3.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\iron_deficiency_rice_severe_1.jpg",
+        "organized_path": "disease_images\\iron_deficiency_rice_severe_1.jpg",
+        "filename": "iron_deficiency_rice_severe_1.jpg",
+        "category": "disease_iron_deficiency",
+        "subcategory": "iron_deficiency",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_iron_deficiency\\iron_deficiency\\iron_deficiency_rice_severe_1.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\leaf_roll_citrus_mild_2.jpg",
+        "organized_path": "disease_images\\leaf_roll_citrus_mild_2.jpg",
+        "filename": "leaf_roll_citrus_mild_2.jpg",
+        "category": "disease_leaf",
+        "subcategory": "leaf",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_leaf\\leaf\\leaf_roll_citrus_mild_2.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\leaf_roll_rice_mild_3.jpg",
+        "organized_path": "disease_images\\leaf_roll_rice_mild_3.jpg",
+        "filename": "leaf_roll_rice_mild_3.jpg",
+        "category": "disease_leaf",
+        "subcategory": "leaf",
+        "type": "disease",
+        "valid": true,
+        "val_path": "splits\\val\\disease_leaf\\leaf\\leaf_roll_rice_mild_3.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\leaf_spot_apple_moderate_3.jpg",
+        "organized_path": "disease_images\\leaf_spot_apple_moderate_3.jpg",
+        "filename": "leaf_spot_apple_moderate_3.jpg",
+        "category": "disease_leaf",
+        "subcategory": "leaf",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_leaf\\leaf\\leaf_spot_apple_moderate_3.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\leaf_spot_citrus_mild_2.jpg",
+        "organized_path": "disease_images\\leaf_spot_citrus_mild_2.jpg",
+        "filename": "leaf_spot_citrus_mild_2.jpg",
+        "category": "disease_leaf",
+        "subcategory": "leaf",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_leaf\\leaf\\leaf_spot_citrus_mild_2.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\leaf_spot_potato_moderate_1.jpg",
+        "organized_path": "disease_images\\leaf_spot_potato_moderate_1.jpg",
+        "filename": "leaf_spot_potato_moderate_1.jpg",
+        "category": "disease_leaf",
+        "subcategory": "leaf",
+        "type": "disease",
+        "valid": true,
+        "test_path": "splits\\test\\disease_leaf\\leaf\\leaf_spot_potato_moderate_1.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\magnesium_deficiency_pepper_moderate_2.jpg",
+        "organized_path": "disease_images\\magnesium_deficiency_pepper_moderate_2.jpg",
+        "filename": "magnesium_deficiency_pepper_moderate_2.jpg",
+        "category": "disease_magnesium_deficiency",
+        "subcategory": "magnesium_deficiency",
+        "type": "disease",
+        "valid": true,
+        "val_path": "splits\\val\\disease_magnesium_deficiency\\magnesium_deficiency\\magnesium_deficiency_pepper_moderate_2.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\magnesium_deficiency_potato_severe_1.jpg",
+        "organized_path": "disease_images\\magnesium_deficiency_potato_severe_1.jpg",
+        "filename": "magnesium_deficiency_potato_severe_1.jpg",
+        "category": "disease_magnesium_deficiency",
+        "subcategory": "magnesium_deficiency",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_magnesium_deficiency\\magnesium_deficiency\\magnesium_deficiency_potato_severe_1.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\magnesium_deficiency_wheat_mild_3.jpg",
+        "organized_path": "disease_images\\magnesium_deficiency_wheat_mild_3.jpg",
+        "filename": "magnesium_deficiency_wheat_mild_3.jpg",
+        "category": "disease_magnesium_deficiency",
+        "subcategory": "magnesium_deficiency",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_magnesium_deficiency\\magnesium_deficiency\\magnesium_deficiency_wheat_mild_3.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\mosaic_virus_apple_moderate_2.jpg",
+        "organized_path": "disease_images\\mosaic_virus_apple_moderate_2.jpg",
+        "filename": "mosaic_virus_apple_moderate_2.jpg",
+        "category": "disease_mosaic",
+        "subcategory": "mosaic",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_mosaic\\mosaic\\mosaic_virus_apple_moderate_2.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\mosaic_virus_wheat_severe_1.jpg",
+        "organized_path": "disease_images\\mosaic_virus_wheat_severe_1.jpg",
+        "filename": "mosaic_virus_wheat_severe_1.jpg",
+        "category": "disease_mosaic",
+        "subcategory": "mosaic",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_mosaic\\mosaic\\mosaic_virus_wheat_severe_1.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\nitrogen_deficiency_grape_mild_1.jpg",
+        "organized_path": "disease_images\\nitrogen_deficiency_grape_mild_1.jpg",
+        "filename": "nitrogen_deficiency_grape_mild_1.jpg",
+        "category": "disease_nitrogen_deficiency",
+        "subcategory": "nitrogen_deficiency",
+        "type": "disease",
+        "valid": true,
+        "val_path": "splits\\val\\disease_nitrogen_deficiency\\nitrogen_deficiency\\nitrogen_deficiency_grape_mild_1.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\nitrogen_deficiency_rose_mild_3.jpg",
+        "organized_path": "disease_images\\nitrogen_deficiency_rose_mild_3.jpg",
+        "filename": "nitrogen_deficiency_rose_mild_3.jpg",
+        "category": "disease_nitrogen_deficiency",
+        "subcategory": "nitrogen_deficiency",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_nitrogen_deficiency\\nitrogen_deficiency\\nitrogen_deficiency_rose_mild_3.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\nitrogen_deficiency_tomato_severe_2.jpg",
+        "organized_path": "disease_images\\nitrogen_deficiency_tomato_severe_2.jpg",
+        "filename": "nitrogen_deficiency_tomato_severe_2.jpg",
+        "category": "disease_nitrogen_deficiency",
+        "subcategory": "nitrogen_deficiency",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_nitrogen_deficiency\\nitrogen_deficiency\\nitrogen_deficiency_tomato_severe_2.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\phosphorus_deficiency_bean_mild_3.jpg",
+        "organized_path": "disease_images\\phosphorus_deficiency_bean_mild_3.jpg",
+        "filename": "phosphorus_deficiency_bean_mild_3.jpg",
+        "category": "disease_phosphorus_deficiency",
+        "subcategory": "phosphorus_deficiency",
+        "type": "disease",
+        "valid": true,
+        "val_path": "splits\\val\\disease_phosphorus_deficiency\\phosphorus_deficiency\\phosphorus_deficiency_bean_mild_3.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\phosphorus_deficiency_grape_mild_1.jpg",
+        "organized_path": "disease_images\\phosphorus_deficiency_grape_mild_1.jpg",
+        "filename": "phosphorus_deficiency_grape_mild_1.jpg",
+        "category": "disease_phosphorus_deficiency",
+        "subcategory": "phosphorus_deficiency",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_phosphorus_deficiency\\phosphorus_deficiency\\phosphorus_deficiency_grape_mild_1.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\phosphorus_deficiency_grape_severe_2.jpg",
+        "organized_path": "disease_images\\phosphorus_deficiency_grape_severe_2.jpg",
+        "filename": "phosphorus_deficiency_grape_severe_2.jpg",
+        "category": "disease_phosphorus_deficiency",
+        "subcategory": "phosphorus_deficiency",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_phosphorus_deficiency\\phosphorus_deficiency\\phosphorus_deficiency_grape_severe_2.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\potassium_deficiency_pepper_severe_3.jpg",
+        "organized_path": "disease_images\\potassium_deficiency_pepper_severe_3.jpg",
+        "filename": "potassium_deficiency_pepper_severe_3.jpg",
+        "category": "disease_potassium_deficiency",
+        "subcategory": "potassium_deficiency",
+        "type": "disease",
+        "valid": true,
+        "val_path": "splits\\val\\disease_potassium_deficiency\\potassium_deficiency\\potassium_deficiency_pepper_severe_3.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\potassium_deficiency_rice_mild_1.jpg",
+        "organized_path": "disease_images\\potassium_deficiency_rice_mild_1.jpg",
+        "filename": "potassium_deficiency_rice_mild_1.jpg",
+        "category": "disease_potassium_deficiency",
+        "subcategory": "potassium_deficiency",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_potassium_deficiency\\potassium_deficiency\\potassium_deficiency_rice_mild_1.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\potassium_deficiency_rice_severe_2.jpg",
+        "organized_path": "disease_images\\potassium_deficiency_rice_severe_2.jpg",
+        "filename": "potassium_deficiency_rice_severe_2.jpg",
+        "category": "disease_potassium_deficiency",
+        "subcategory": "potassium_deficiency",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_potassium_deficiency\\potassium_deficiency\\potassium_deficiency_rice_severe_2.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\powdery_mildew_bean_moderate_3.jpg",
+        "organized_path": "disease_images\\powdery_mildew_bean_moderate_3.jpg",
+        "filename": "powdery_mildew_bean_moderate_3.jpg",
+        "category": "disease_powdery",
+        "subcategory": "powdery",
+        "type": "disease",
+        "valid": true,
+        "val_path": "splits\\val\\disease_powdery\\powdery\\powdery_mildew_bean_moderate_3.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\powdery_mildew_grape_mild_1.jpg",
+        "organized_path": "disease_images\\powdery_mildew_grape_mild_1.jpg",
+        "filename": "powdery_mildew_grape_mild_1.jpg",
+        "category": "disease_powdery",
+        "subcategory": "powdery",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_powdery\\powdery\\powdery_mildew_grape_mild_1.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\powdery_mildew_grape_severe_2.jpg",
+        "organized_path": "disease_images\\powdery_mildew_grape_severe_2.jpg",
+        "filename": "powdery_mildew_grape_severe_2.jpg",
+        "category": "disease_powdery",
+        "subcategory": "powdery",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_powdery\\powdery\\powdery_mildew_grape_severe_2.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\ring_spot_corn_moderate_1.jpg",
+        "organized_path": "disease_images\\ring_spot_corn_moderate_1.jpg",
+        "filename": "ring_spot_corn_moderate_1.jpg",
+        "category": "disease_ring",
+        "subcategory": "ring",
+        "type": "disease",
+        "valid": true,
+        "val_path": "splits\\val\\disease_ring\\ring\\ring_spot_corn_moderate_1.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\ring_spot_rose_mild_2.jpg",
+        "organized_path": "disease_images\\ring_spot_rose_mild_2.jpg",
+        "filename": "ring_spot_rose_mild_2.jpg",
+        "category": "disease_ring",
+        "subcategory": "ring",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_ring\\ring\\ring_spot_rose_mild_2.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\ring_spot_rose_moderate_3.jpg",
+        "organized_path": "disease_images\\ring_spot_rose_moderate_3.jpg",
+        "filename": "ring_spot_rose_moderate_3.jpg",
+        "category": "disease_ring",
+        "subcategory": "ring",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_ring\\ring\\ring_spot_rose_moderate_3.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\rust_bean_mild_1.jpg",
+        "organized_path": "disease_images\\rust_bean_mild_1.jpg",
+        "filename": "rust_bean_mild_1.jpg",
+        "category": "disease_rust",
+        "subcategory": "rust",
+        "type": "disease",
+        "valid": true,
+        "val_path": "splits\\val\\disease_rust\\rust\\rust_bean_mild_1.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\rust_cucumber_moderate_2.jpg",
+        "organized_path": "disease_images\\rust_cucumber_moderate_2.jpg",
+        "filename": "rust_cucumber_moderate_2.jpg",
+        "category": "disease_rust",
+        "subcategory": "rust",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_rust\\rust\\rust_cucumber_moderate_2.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\rust_tomato_severe_3.jpg",
+        "organized_path": "disease_images\\rust_tomato_severe_3.jpg",
+        "filename": "rust_tomato_severe_3.jpg",
+        "category": "disease_rust",
+        "subcategory": "rust",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_rust\\rust\\rust_tomato_severe_3.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\streak_virus_pepper_mild_3.jpg",
+        "organized_path": "disease_images\\streak_virus_pepper_mild_3.jpg",
+        "filename": "streak_virus_pepper_mild_3.jpg",
+        "category": "disease_streak",
+        "subcategory": "streak",
+        "type": "disease",
+        "valid": true,
+        "val_path": "splits\\val\\disease_streak\\streak\\streak_virus_pepper_mild_3.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\streak_virus_pepper_severe_2.jpg",
+        "organized_path": "disease_images\\streak_virus_pepper_severe_2.jpg",
+        "filename": "streak_virus_pepper_severe_2.jpg",
+        "category": "disease_streak",
+        "subcategory": "streak",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_streak\\streak\\streak_virus_pepper_severe_2.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\streak_virus_rice_severe_1.jpg",
+        "organized_path": "disease_images\\streak_virus_rice_severe_1.jpg",
+        "filename": "streak_virus_rice_severe_1.jpg",
+        "category": "disease_streak",
+        "subcategory": "streak",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_streak\\streak\\streak_virus_rice_severe_1.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\yellow_leaf_curl_corn_severe_2.jpg",
+        "organized_path": "disease_images\\yellow_leaf_curl_corn_severe_2.jpg",
+        "filename": "yellow_leaf_curl_corn_severe_2.jpg",
+        "category": "disease_yellow_leaf",
+        "subcategory": "yellow_leaf",
+        "type": "disease",
+        "valid": true,
+        "val_path": "splits\\val\\disease_yellow_leaf\\yellow_leaf\\yellow_leaf_curl_corn_severe_2.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\yellow_leaf_curl_rice_moderate_1.jpg",
+        "organized_path": "disease_images\\yellow_leaf_curl_rice_moderate_1.jpg",
+        "filename": "yellow_leaf_curl_rice_moderate_1.jpg",
+        "category": "disease_yellow_leaf",
+        "subcategory": "yellow_leaf",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_yellow_leaf\\yellow_leaf\\yellow_leaf_curl_rice_moderate_1.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\disease_images\\yellow_leaf_curl_wheat_mild_3.jpg",
+        "organized_path": "disease_images\\yellow_leaf_curl_wheat_mild_3.jpg",
+        "filename": "yellow_leaf_curl_wheat_mild_3.jpg",
+        "category": "disease_yellow_leaf",
+        "subcategory": "yellow_leaf",
+        "type": "disease",
+        "valid": true,
+        "train_path": "splits\\train\\disease_yellow_leaf\\yellow_leaf\\yellow_leaf_curl_wheat_mild_3.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\weed_images\\canada_thistle_flowering_3.jpg",
+        "organized_path": "weed_images\\canada_thistle_flowering_3.jpg",
+        "filename": "canada_thistle_flowering_3.jpg",
+        "category": "weed_canada_thistle",
+        "subcategory": "canada_thistle",
+        "type": "weed",
+        "valid": true,
+        "val_path": "splits\\val\\weed_canada_thistle\\canada_thistle\\canada_thistle_flowering_3.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\weed_images\\canada_thistle_juvenile_2.jpg",
+        "organized_path": "weed_images\\canada_thistle_juvenile_2.jpg",
+        "filename": "canada_thistle_juvenile_2.jpg",
+        "category": "weed_canada_thistle",
+        "subcategory": "canada_thistle",
+        "type": "weed",
+        "valid": true,
+        "train_path": "splits\\train\\weed_canada_thistle\\canada_thistle\\canada_thistle_juvenile_2.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\weed_images\\canada_thistle_mature_1.jpg",
+        "organized_path": "weed_images\\canada_thistle_mature_1.jpg",
+        "filename": "canada_thistle_mature_1.jpg",
+        "category": "weed_canada_thistle",
+        "subcategory": "canada_thistle",
+        "type": "weed",
+        "valid": true,
+        "train_path": "splits\\train\\weed_canada_thistle\\canada_thistle\\canada_thistle_mature_1.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\weed_images\\chickweed_flowering_2.jpg",
+        "organized_path": "weed_images\\chickweed_flowering_2.jpg",
+        "filename": "chickweed_flowering_2.jpg",
+        "category": "weed_chickweed",
+        "subcategory": "chickweed",
+        "type": "weed",
+        "valid": true,
+        "val_path": "splits\\val\\weed_chickweed\\chickweed\\chickweed_flowering_2.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\weed_images\\chickweed_seedling_1.jpg",
+        "organized_path": "weed_images\\chickweed_seedling_1.jpg",
+        "filename": "chickweed_seedling_1.jpg",
+        "category": "weed_chickweed",
+        "subcategory": "chickweed",
+        "type": "weed",
+        "valid": true,
+        "train_path": "splits\\train\\weed_chickweed\\chickweed\\chickweed_seedling_1.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\weed_images\\chickweed_seedling_3.jpg",
+        "organized_path": "weed_images\\chickweed_seedling_3.jpg",
+        "filename": "chickweed_seedling_3.jpg",
+        "category": "weed_chickweed",
+        "subcategory": "chickweed",
+        "type": "weed",
+        "valid": true,
+        "train_path": "splits\\train\\weed_chickweed\\chickweed\\chickweed_seedling_3.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\weed_images\\crabgrass_flowering_1.jpg",
+        "organized_path": "weed_images\\crabgrass_flowering_1.jpg",
+        "filename": "crabgrass_flowering_1.jpg",
+        "category": "weed_crabgrass",
+        "subcategory": "crabgrass",
+        "type": "weed",
+        "valid": true,
+        "val_path": "splits\\val\\weed_crabgrass\\crabgrass\\crabgrass_flowering_1.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\weed_images\\crabgrass_mature_3.jpg",
+        "organized_path": "weed_images\\crabgrass_mature_3.jpg",
+        "filename": "crabgrass_mature_3.jpg",
+        "category": "weed_crabgrass",
+        "subcategory": "crabgrass",
+        "type": "weed",
+        "valid": true,
+        "train_path": "splits\\train\\weed_crabgrass\\crabgrass\\crabgrass_mature_3.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\weed_images\\crabgrass_seedling_2.jpg",
+        "organized_path": "weed_images\\crabgrass_seedling_2.jpg",
+        "filename": "crabgrass_seedling_2.jpg",
+        "category": "weed_crabgrass",
+        "subcategory": "crabgrass",
+        "type": "weed",
+        "valid": true,
+        "train_path": "splits\\train\\weed_crabgrass\\crabgrass\\crabgrass_seedling_2.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\weed_images\\dandelion_juvenile_2.jpg",
+        "organized_path": "weed_images\\dandelion_juvenile_2.jpg",
+        "filename": "dandelion_juvenile_2.jpg",
+        "category": "weed_dandelion",
+        "subcategory": "dandelion",
+        "type": "weed",
+        "valid": true,
+        "val_path": "splits\\val\\weed_dandelion\\dandelion\\dandelion_juvenile_2.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\weed_images\\dandelion_juvenile_3.jpg",
+        "organized_path": "weed_images\\dandelion_juvenile_3.jpg",
+        "filename": "dandelion_juvenile_3.jpg",
+        "category": "weed_dandelion",
+        "subcategory": "dandelion",
+        "type": "weed",
+        "valid": true,
+        "train_path": "splits\\train\\weed_dandelion\\dandelion\\dandelion_juvenile_3.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\weed_images\\dandelion_mature_1.jpg",
+        "organized_path": "weed_images\\dandelion_mature_1.jpg",
+        "filename": "dandelion_mature_1.jpg",
+        "category": "weed_dandelion",
+        "subcategory": "dandelion",
+        "type": "weed",
+        "valid": true,
+        "train_path": "splits\\train\\weed_dandelion\\dandelion\\dandelion_mature_1.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\weed_images\\field_bindweed_juvenile_1.jpg",
+        "organized_path": "weed_images\\field_bindweed_juvenile_1.jpg",
+        "filename": "field_bindweed_juvenile_1.jpg",
+        "category": "weed_field_bindweed",
+        "subcategory": "field_bindweed",
+        "type": "weed",
+        "valid": true,
+        "val_path": "splits\\val\\weed_field_bindweed\\field_bindweed\\field_bindweed_juvenile_1.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\weed_images\\field_bindweed_mature_2.jpg",
+        "organized_path": "weed_images\\field_bindweed_mature_2.jpg",
+        "filename": "field_bindweed_mature_2.jpg",
+        "category": "weed_field_bindweed",
+        "subcategory": "field_bindweed",
+        "type": "weed",
+        "valid": true,
+        "train_path": "splits\\train\\weed_field_bindweed\\field_bindweed\\field_bindweed_mature_2.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\weed_images\\field_bindweed_seedling_3.jpg",
+        "organized_path": "weed_images\\field_bindweed_seedling_3.jpg",
+        "filename": "field_bindweed_seedling_3.jpg",
+        "category": "weed_field_bindweed",
+        "subcategory": "field_bindweed",
+        "type": "weed",
+        "valid": true,
+        "train_path": "splits\\train\\weed_field_bindweed\\field_bindweed\\field_bindweed_seedling_3.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\weed_images\\foxtail_mature_2.jpg",
+        "organized_path": "weed_images\\foxtail_mature_2.jpg",
+        "filename": "foxtail_mature_2.jpg",
+        "category": "weed_foxtail",
+        "subcategory": "foxtail",
+        "type": "weed",
+        "valid": true,
+        "val_path": "splits\\val\\weed_foxtail\\foxtail\\foxtail_mature_2.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\weed_images\\foxtail_seedling_1.jpg",
+        "organized_path": "weed_images\\foxtail_seedling_1.jpg",
+        "filename": "foxtail_seedling_1.jpg",
+        "category": "weed_foxtail",
+        "subcategory": "foxtail",
+        "type": "weed",
+        "valid": true,
+        "train_path": "splits\\train\\weed_foxtail\\foxtail\\foxtail_seedling_1.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\weed_images\\foxtail_seedling_3.jpg",
+        "organized_path": "weed_images\\foxtail_seedling_3.jpg",
+        "filename": "foxtail_seedling_3.jpg",
+        "category": "weed_foxtail",
+        "subcategory": "foxtail",
+        "type": "weed",
+        "valid": true,
+        "train_path": "splits\\train\\weed_foxtail\\foxtail\\foxtail_seedling_3.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\weed_images\\lambsquarters_juvenile_2.jpg",
+        "organized_path": "weed_images\\lambsquarters_juvenile_2.jpg",
+        "filename": "lambsquarters_juvenile_2.jpg",
+        "category": "weed_lambsquarters",
+        "subcategory": "lambsquarters",
+        "type": "weed",
+        "valid": true,
+        "val_path": "splits\\val\\weed_lambsquarters\\lambsquarters\\lambsquarters_juvenile_2.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\weed_images\\lambsquarters_mature_1.jpg",
+        "organized_path": "weed_images\\lambsquarters_mature_1.jpg",
+        "filename": "lambsquarters_mature_1.jpg",
+        "category": "weed_lambsquarters",
+        "subcategory": "lambsquarters",
+        "type": "weed",
+        "valid": true,
+        "train_path": "splits\\train\\weed_lambsquarters\\lambsquarters\\lambsquarters_mature_1.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\weed_images\\lambsquarters_mature_3.jpg",
+        "organized_path": "weed_images\\lambsquarters_mature_3.jpg",
+        "filename": "lambsquarters_mature_3.jpg",
+        "category": "weed_lambsquarters",
+        "subcategory": "lambsquarters",
+        "type": "weed",
+        "valid": true,
+        "train_path": "splits\\train\\weed_lambsquarters\\lambsquarters\\lambsquarters_mature_3.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\weed_images\\pigweed_flowering_3.jpg",
+        "organized_path": "weed_images\\pigweed_flowering_3.jpg",
+        "filename": "pigweed_flowering_3.jpg",
+        "category": "weed_pigweed",
+        "subcategory": "pigweed",
+        "type": "weed",
+        "valid": true,
+        "val_path": "splits\\val\\weed_pigweed\\pigweed\\pigweed_flowering_3.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\weed_images\\pigweed_juvenile_2.jpg",
+        "organized_path": "weed_images\\pigweed_juvenile_2.jpg",
+        "filename": "pigweed_juvenile_2.jpg",
+        "category": "weed_pigweed",
+        "subcategory": "pigweed",
+        "type": "weed",
+        "valid": true,
+        "train_path": "splits\\train\\weed_pigweed\\pigweed\\pigweed_juvenile_2.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\weed_images\\pigweed_seedling_1.jpg",
+        "organized_path": "weed_images\\pigweed_seedling_1.jpg",
+        "filename": "pigweed_seedling_1.jpg",
+        "category": "weed_pigweed",
+        "subcategory": "pigweed",
+        "type": "weed",
+        "valid": true,
+        "train_path": "splits\\train\\weed_pigweed\\pigweed\\pigweed_seedling_1.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\weed_images\\plantain_juvenile_2.jpg",
+        "organized_path": "weed_images\\plantain_juvenile_2.jpg",
+        "filename": "plantain_juvenile_2.jpg",
+        "category": "weed_plantain",
+        "subcategory": "plantain",
+        "type": "weed",
+        "valid": true,
+        "val_path": "splits\\val\\weed_plantain\\plantain\\plantain_juvenile_2.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\weed_images\\plantain_juvenile_3.jpg",
+        "organized_path": "weed_images\\plantain_juvenile_3.jpg",
+        "filename": "plantain_juvenile_3.jpg",
+        "category": "weed_plantain",
+        "subcategory": "plantain",
+        "type": "weed",
+        "valid": true,
+        "train_path": "splits\\train\\weed_plantain\\plantain\\plantain_juvenile_3.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\weed_images\\plantain_mature_1.jpg",
+        "organized_path": "weed_images\\plantain_mature_1.jpg",
+        "filename": "plantain_mature_1.jpg",
+        "category": "weed_plantain",
+        "subcategory": "plantain",
+        "type": "weed",
+        "valid": true,
+        "train_path": "splits\\train\\weed_plantain\\plantain\\plantain_mature_1.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\weed_images\\purple_nutsedge_flowering_2.jpg",
+        "organized_path": "weed_images\\purple_nutsedge_flowering_2.jpg",
+        "filename": "purple_nutsedge_flowering_2.jpg",
+        "category": "weed_purple_nutsedge",
+        "subcategory": "purple_nutsedge",
+        "type": "weed",
+        "valid": true,
+        "val_path": "splits\\val\\weed_purple_nutsedge\\purple_nutsedge\\purple_nutsedge_flowering_2.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\weed_images\\purple_nutsedge_juvenile_1.jpg",
+        "organized_path": "weed_images\\purple_nutsedge_juvenile_1.jpg",
+        "filename": "purple_nutsedge_juvenile_1.jpg",
+        "category": "weed_purple_nutsedge",
+        "subcategory": "purple_nutsedge",
+        "type": "weed",
+        "valid": true,
+        "train_path": "splits\\train\\weed_purple_nutsedge\\purple_nutsedge\\purple_nutsedge_juvenile_1.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\weed_images\\purple_nutsedge_mature_3.jpg",
+        "organized_path": "weed_images\\purple_nutsedge_mature_3.jpg",
+        "filename": "purple_nutsedge_mature_3.jpg",
+        "category": "weed_purple_nutsedge",
+        "subcategory": "purple_nutsedge",
+        "type": "weed",
+        "valid": true,
+        "train_path": "splits\\train\\weed_purple_nutsedge\\purple_nutsedge\\purple_nutsedge_mature_3.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\weed_images\\purslane_flowering_1.jpg",
+        "organized_path": "weed_images\\purslane_flowering_1.jpg",
+        "filename": "purslane_flowering_1.jpg",
+        "category": "weed_purslane",
+        "subcategory": "purslane",
+        "type": "weed",
+        "valid": true,
+        "val_path": "splits\\val\\weed_purslane\\purslane\\purslane_flowering_1.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\weed_images\\purslane_mature_2.jpg",
+        "organized_path": "weed_images\\purslane_mature_2.jpg",
+        "filename": "purslane_mature_2.jpg",
+        "category": "weed_purslane",
+        "subcategory": "purslane",
+        "type": "weed",
+        "valid": true,
+        "train_path": "splits\\train\\weed_purslane\\purslane\\purslane_mature_2.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\weed_images\\purslane_mature_3.jpg",
+        "organized_path": "weed_images\\purslane_mature_3.jpg",
+        "filename": "purslane_mature_3.jpg",
+        "category": "weed_purslane",
+        "subcategory": "purslane",
+        "type": "weed",
+        "valid": true,
+        "train_path": "splits\\train\\weed_purslane\\purslane\\purslane_mature_3.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\weed_images\\yellow_nutsedge_flowering_1.jpg",
+        "organized_path": "weed_images\\yellow_nutsedge_flowering_1.jpg",
+        "filename": "yellow_nutsedge_flowering_1.jpg",
+        "category": "weed_yellow_nutsedge",
+        "subcategory": "yellow_nutsedge",
+        "type": "weed",
+        "valid": true,
+        "val_path": "splits\\val\\weed_yellow_nutsedge\\yellow_nutsedge\\yellow_nutsedge_flowering_1.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\weed_images\\yellow_nutsedge_juvenile_2.jpg",
+        "organized_path": "weed_images\\yellow_nutsedge_juvenile_2.jpg",
+        "filename": "yellow_nutsedge_juvenile_2.jpg",
+        "category": "weed_yellow_nutsedge",
+        "subcategory": "yellow_nutsedge",
+        "type": "weed",
+        "valid": true,
+        "train_path": "splits\\train\\weed_yellow_nutsedge\\yellow_nutsedge\\yellow_nutsedge_juvenile_2.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\weed_images\\yellow_nutsedge_juvenile_3.jpg",
+        "organized_path": "weed_images\\yellow_nutsedge_juvenile_3.jpg",
+        "filename": "yellow_nutsedge_juvenile_3.jpg",
+        "category": "weed_yellow_nutsedge",
+        "subcategory": "yellow_nutsedge",
+        "type": "weed",
+        "valid": true,
+        "train_path": "splits\\train\\weed_yellow_nutsedge\\yellow_nutsedge\\yellow_nutsedge_juvenile_3.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\general_images\\fertilization_citrus_3.jpg",
+        "organized_path": "general_images\\fertilization_citrus_3.jpg",
+        "filename": "fertilization_citrus_3.jpg",
+        "category": "general_fertilization",
+        "subcategory": "fertilization",
+        "type": "general",
+        "valid": true,
+        "train_path": "splits\\train\\general_fertilization\\fertilization\\fertilization_citrus_3.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\general_images\\fertilization_corn_2.jpg",
+        "organized_path": "general_images\\fertilization_corn_2.jpg",
+        "filename": "fertilization_corn_2.jpg",
+        "category": "general_fertilization",
+        "subcategory": "fertilization",
+        "type": "general",
+        "valid": true,
+        "train_path": "splits\\train\\general_fertilization\\fertilization\\fertilization_corn_2.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\general_images\\irrigation_apple_4.jpg",
+        "organized_path": "general_images\\irrigation_apple_4.jpg",
+        "filename": "irrigation_apple_4.jpg",
+        "category": "general_irrigation",
+        "subcategory": "irrigation",
+        "type": "general",
+        "valid": true,
+        "train_path": "splits\\train\\general_irrigation\\irrigation\\irrigation_apple_4.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\general_images\\pest_control_cucumber_1.jpg",
+        "organized_path": "general_images\\pest_control_cucumber_1.jpg",
+        "filename": "pest_control_cucumber_1.jpg",
+        "category": "general_pest",
+        "subcategory": "pest",
+        "type": "general",
+        "valid": true,
+        "train_path": "splits\\train\\general_pest\\pest\\pest_control_cucumber_1.jpg"
+      },
+      {
+        "original_path": "agricultural_ml_datasets\\general_images\\pest_control_rose_5.jpg",
+        "organized_path": "general_images\\pest_control_rose_5.jpg",
+        "filename": "pest_control_rose_5.jpg",
+        "category": "general_pest",
+        "subcategory": "pest",
+        "type": "general",
+        "valid": true,
+        "train_path": "splits\\train\\general_pest\\pest\\pest_control_rose_5.jpg"
+      }
+    ],
+    "invalid_files": [
+      {
+        "path": "agricultural_ml_datasets\\disease_images\\anthracnose_tomato_severe_2.jpg",
+        "issues": [
+          "Duplicate image"
+        ]
+      },
+      {
+        "path": "agricultural_ml_datasets\\disease_images\\black_rot_rose_severe_3.jpg",
+        "issues": [
+          "Duplicate image"
+        ]
+      },
+      {
+        "path": "agricultural_ml_datasets\\disease_images\\blight_potato_severe_2.jpg",
+        "issues": [
+          "Duplicate image"
+        ]
+      },
+      {
+        "path": "agricultural_ml_datasets\\disease_images\\leaf_roll_rose_mild_1.jpg",
+        "issues": [
+          "Duplicate image"
+        ]
+      },
+      {
+        "path": "agricultural_ml_datasets\\disease_images\\mosaic_virus_rose_moderate_3.jpg",
+        "issues": [
+          "Duplicate image"
+        ]
+      }
+    ],
+    "categories": {
+      "disease_anthracnose": [
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\anthracnose_rice_severe_3.jpg",
+          "organized_path": "disease_images\\anthracnose_rice_severe_3.jpg",
+          "filename": "anthracnose_rice_severe_3.jpg",
+          "category": "disease_anthracnose",
+          "subcategory": "anthracnose",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_anthracnose\\anthracnose\\anthracnose_rice_severe_3.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\anthracnose_rose_severe_1.jpg",
+          "organized_path": "disease_images\\anthracnose_rose_severe_1.jpg",
+          "filename": "anthracnose_rose_severe_1.jpg",
+          "category": "disease_anthracnose",
+          "subcategory": "anthracnose",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_anthracnose\\anthracnose\\anthracnose_rose_severe_1.jpg"
+        }
+      ],
+      "disease_bacterial_blight": [
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\bacterial_blight_potato_severe_2.jpg",
+          "organized_path": "disease_images\\bacterial_blight_potato_severe_2.jpg",
+          "filename": "bacterial_blight_potato_severe_2.jpg",
+          "category": "disease_bacterial_blight",
+          "subcategory": "bacterial_blight",
+          "type": "disease",
+          "valid": true,
+          "val_path": "splits\\val\\disease_bacterial_blight\\bacterial_blight\\bacterial_blight_potato_severe_2.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\bacterial_blight_rice_moderate_1.jpg",
+          "organized_path": "disease_images\\bacterial_blight_rice_moderate_1.jpg",
+          "filename": "bacterial_blight_rice_moderate_1.jpg",
+          "category": "disease_bacterial_blight",
+          "subcategory": "bacterial_blight",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_bacterial_blight\\bacterial_blight\\bacterial_blight_rice_moderate_1.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\bacterial_blight_rice_moderate_3.jpg",
+          "organized_path": "disease_images\\bacterial_blight_rice_moderate_3.jpg",
+          "filename": "bacterial_blight_rice_moderate_3.jpg",
+          "category": "disease_bacterial_blight",
+          "subcategory": "bacterial_blight",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_bacterial_blight\\bacterial_blight\\bacterial_blight_rice_moderate_3.jpg"
+        }
+      ],
+      "disease_bacterial_canker": [
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\bacterial_canker_grape_moderate_2.jpg",
+          "organized_path": "disease_images\\bacterial_canker_grape_moderate_2.jpg",
+          "filename": "bacterial_canker_grape_moderate_2.jpg",
+          "category": "disease_bacterial_canker",
+          "subcategory": "bacterial_canker",
+          "type": "disease",
+          "valid": true,
+          "val_path": "splits\\val\\disease_bacterial_canker\\bacterial_canker\\bacterial_canker_grape_moderate_2.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\bacterial_canker_potato_mild_1.jpg",
+          "organized_path": "disease_images\\bacterial_canker_potato_mild_1.jpg",
+          "filename": "bacterial_canker_potato_mild_1.jpg",
+          "category": "disease_bacterial_canker",
+          "subcategory": "bacterial_canker",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_bacterial_canker\\bacterial_canker\\bacterial_canker_potato_mild_1.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\bacterial_canker_rice_severe_3.jpg",
+          "organized_path": "disease_images\\bacterial_canker_rice_severe_3.jpg",
+          "filename": "bacterial_canker_rice_severe_3.jpg",
+          "category": "disease_bacterial_canker",
+          "subcategory": "bacterial_canker",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_bacterial_canker\\bacterial_canker\\bacterial_canker_rice_severe_3.jpg"
+        }
+      ],
+      "disease_bacterial_spot": [
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\bacterial_spot_bean_moderate_3.jpg",
+          "organized_path": "disease_images\\bacterial_spot_bean_moderate_3.jpg",
+          "filename": "bacterial_spot_bean_moderate_3.jpg",
+          "category": "disease_bacterial_spot",
+          "subcategory": "bacterial_spot",
+          "type": "disease",
+          "valid": true,
+          "val_path": "splits\\val\\disease_bacterial_spot\\bacterial_spot\\bacterial_spot_bean_moderate_3.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\bacterial_spot_rice_severe_2.jpg",
+          "organized_path": "disease_images\\bacterial_spot_rice_severe_2.jpg",
+          "filename": "bacterial_spot_rice_severe_2.jpg",
+          "category": "disease_bacterial_spot",
+          "subcategory": "bacterial_spot",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_bacterial_spot\\bacterial_spot\\bacterial_spot_rice_severe_2.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\bacterial_spot_rose_moderate_1.jpg",
+          "organized_path": "disease_images\\bacterial_spot_rose_moderate_1.jpg",
+          "filename": "bacterial_spot_rose_moderate_1.jpg",
+          "category": "disease_bacterial_spot",
+          "subcategory": "bacterial_spot",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_bacterial_spot\\bacterial_spot\\bacterial_spot_rose_moderate_1.jpg"
+        }
+      ],
+      "disease_bacterial_wilt": [
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\bacterial_wilt_citrus_severe_3.jpg",
+          "organized_path": "disease_images\\bacterial_wilt_citrus_severe_3.jpg",
+          "filename": "bacterial_wilt_citrus_severe_3.jpg",
+          "category": "disease_bacterial_wilt",
+          "subcategory": "bacterial_wilt",
+          "type": "disease",
+          "valid": true,
+          "val_path": "splits\\val\\disease_bacterial_wilt\\bacterial_wilt\\bacterial_wilt_citrus_severe_3.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\bacterial_wilt_rose_mild_1.jpg",
+          "organized_path": "disease_images\\bacterial_wilt_rose_mild_1.jpg",
+          "filename": "bacterial_wilt_rose_mild_1.jpg",
+          "category": "disease_bacterial_wilt",
+          "subcategory": "bacterial_wilt",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_bacterial_wilt\\bacterial_wilt\\bacterial_wilt_rose_mild_1.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\bacterial_wilt_wheat_moderate_2.jpg",
+          "organized_path": "disease_images\\bacterial_wilt_wheat_moderate_2.jpg",
+          "filename": "bacterial_wilt_wheat_moderate_2.jpg",
+          "category": "disease_bacterial_wilt",
+          "subcategory": "bacterial_wilt",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_bacterial_wilt\\bacterial_wilt\\bacterial_wilt_wheat_moderate_2.jpg"
+        }
+      ],
+      "disease_black": [
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\black_rot_bean_moderate_1.jpg",
+          "organized_path": "disease_images\\black_rot_bean_moderate_1.jpg",
+          "filename": "black_rot_bean_moderate_1.jpg",
+          "category": "disease_black",
+          "subcategory": "black",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_black\\black\\black_rot_bean_moderate_1.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\black_rot_rice_severe_2.jpg",
+          "organized_path": "disease_images\\black_rot_rice_severe_2.jpg",
+          "filename": "black_rot_rice_severe_2.jpg",
+          "category": "disease_black",
+          "subcategory": "black",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_black\\black\\black_rot_rice_severe_2.jpg"
+        }
+      ],
+      "disease_blight": [
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\blight_bean_severe_3.jpg",
+          "organized_path": "disease_images\\blight_bean_severe_3.jpg",
+          "filename": "blight_bean_severe_3.jpg",
+          "category": "disease_blight",
+          "subcategory": "blight",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_blight\\blight\\blight_bean_severe_3.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\blight_tomato_mild_1.jpg",
+          "organized_path": "disease_images\\blight_tomato_mild_1.jpg",
+          "filename": "blight_tomato_mild_1.jpg",
+          "category": "disease_blight",
+          "subcategory": "blight",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_blight\\blight\\blight_tomato_mild_1.jpg"
+        }
+      ],
+      "disease_downy": [
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\downy_mildew_bean_mild_3.jpg",
+          "organized_path": "disease_images\\downy_mildew_bean_mild_3.jpg",
+          "filename": "downy_mildew_bean_mild_3.jpg",
+          "category": "disease_downy",
+          "subcategory": "downy",
+          "type": "disease",
+          "valid": true,
+          "val_path": "splits\\val\\disease_downy\\downy\\downy_mildew_bean_mild_3.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\downy_mildew_citrus_mild_1.jpg",
+          "organized_path": "disease_images\\downy_mildew_citrus_mild_1.jpg",
+          "filename": "downy_mildew_citrus_mild_1.jpg",
+          "category": "disease_downy",
+          "subcategory": "downy",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_downy\\downy\\downy_mildew_citrus_mild_1.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\downy_mildew_tomato_mild_2.jpg",
+          "organized_path": "disease_images\\downy_mildew_tomato_mild_2.jpg",
+          "filename": "downy_mildew_tomato_mild_2.jpg",
+          "category": "disease_downy",
+          "subcategory": "downy",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_downy\\downy\\downy_mildew_tomato_mild_2.jpg"
+        }
+      ],
+      "disease_fire": [
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\fire_blight_apple_severe_3.jpg",
+          "organized_path": "disease_images\\fire_blight_apple_severe_3.jpg",
+          "filename": "fire_blight_apple_severe_3.jpg",
+          "category": "disease_fire",
+          "subcategory": "fire",
+          "type": "disease",
+          "valid": true,
+          "val_path": "splits\\val\\disease_fire\\fire\\fire_blight_apple_severe_3.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\fire_blight_pepper_mild_1.jpg",
+          "organized_path": "disease_images\\fire_blight_pepper_mild_1.jpg",
+          "filename": "fire_blight_pepper_mild_1.jpg",
+          "category": "disease_fire",
+          "subcategory": "fire",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_fire\\fire\\fire_blight_pepper_mild_1.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\fire_blight_rose_mild_2.jpg",
+          "organized_path": "disease_images\\fire_blight_rose_mild_2.jpg",
+          "filename": "fire_blight_rose_mild_2.jpg",
+          "category": "disease_fire",
+          "subcategory": "fire",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_fire\\fire\\fire_blight_rose_mild_2.jpg"
+        }
+      ],
+      "disease_fusarium": [
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\fusarium_wilt_apple_mild_2.jpg",
+          "organized_path": "disease_images\\fusarium_wilt_apple_mild_2.jpg",
+          "filename": "fusarium_wilt_apple_mild_2.jpg",
+          "category": "disease_fusarium",
+          "subcategory": "fusarium",
+          "type": "disease",
+          "valid": true,
+          "val_path": "splits\\val\\disease_fusarium\\fusarium\\fusarium_wilt_apple_mild_2.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\fusarium_wilt_grape_mild_3.jpg",
+          "organized_path": "disease_images\\fusarium_wilt_grape_mild_3.jpg",
+          "filename": "fusarium_wilt_grape_mild_3.jpg",
+          "category": "disease_fusarium",
+          "subcategory": "fusarium",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_fusarium\\fusarium\\fusarium_wilt_grape_mild_3.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\fusarium_wilt_rose_severe_1.jpg",
+          "organized_path": "disease_images\\fusarium_wilt_rose_severe_1.jpg",
+          "filename": "fusarium_wilt_rose_severe_1.jpg",
+          "category": "disease_fusarium",
+          "subcategory": "fusarium",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_fusarium\\fusarium\\fusarium_wilt_rose_severe_1.jpg"
+        }
+      ],
+      "disease_iron_deficiency": [
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\iron_deficiency_grape_severe_2.jpg",
+          "organized_path": "disease_images\\iron_deficiency_grape_severe_2.jpg",
+          "filename": "iron_deficiency_grape_severe_2.jpg",
+          "category": "disease_iron_deficiency",
+          "subcategory": "iron_deficiency",
+          "type": "disease",
+          "valid": true,
+          "val_path": "splits\\val\\disease_iron_deficiency\\iron_deficiency\\iron_deficiency_grape_severe_2.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\iron_deficiency_pepper_severe_3.jpg",
+          "organized_path": "disease_images\\iron_deficiency_pepper_severe_3.jpg",
+          "filename": "iron_deficiency_pepper_severe_3.jpg",
+          "category": "disease_iron_deficiency",
+          "subcategory": "iron_deficiency",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_iron_deficiency\\iron_deficiency\\iron_deficiency_pepper_severe_3.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\iron_deficiency_rice_severe_1.jpg",
+          "organized_path": "disease_images\\iron_deficiency_rice_severe_1.jpg",
+          "filename": "iron_deficiency_rice_severe_1.jpg",
+          "category": "disease_iron_deficiency",
+          "subcategory": "iron_deficiency",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_iron_deficiency\\iron_deficiency\\iron_deficiency_rice_severe_1.jpg"
+        }
+      ],
+      "disease_leaf": [
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\leaf_roll_citrus_mild_2.jpg",
+          "organized_path": "disease_images\\leaf_roll_citrus_mild_2.jpg",
+          "filename": "leaf_roll_citrus_mild_2.jpg",
+          "category": "disease_leaf",
+          "subcategory": "leaf",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_leaf\\leaf\\leaf_roll_citrus_mild_2.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\leaf_roll_rice_mild_3.jpg",
+          "organized_path": "disease_images\\leaf_roll_rice_mild_3.jpg",
+          "filename": "leaf_roll_rice_mild_3.jpg",
+          "category": "disease_leaf",
+          "subcategory": "leaf",
+          "type": "disease",
+          "valid": true,
+          "val_path": "splits\\val\\disease_leaf\\leaf\\leaf_roll_rice_mild_3.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\leaf_spot_apple_moderate_3.jpg",
+          "organized_path": "disease_images\\leaf_spot_apple_moderate_3.jpg",
+          "filename": "leaf_spot_apple_moderate_3.jpg",
+          "category": "disease_leaf",
+          "subcategory": "leaf",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_leaf\\leaf\\leaf_spot_apple_moderate_3.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\leaf_spot_citrus_mild_2.jpg",
+          "organized_path": "disease_images\\leaf_spot_citrus_mild_2.jpg",
+          "filename": "leaf_spot_citrus_mild_2.jpg",
+          "category": "disease_leaf",
+          "subcategory": "leaf",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_leaf\\leaf\\leaf_spot_citrus_mild_2.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\leaf_spot_potato_moderate_1.jpg",
+          "organized_path": "disease_images\\leaf_spot_potato_moderate_1.jpg",
+          "filename": "leaf_spot_potato_moderate_1.jpg",
+          "category": "disease_leaf",
+          "subcategory": "leaf",
+          "type": "disease",
+          "valid": true,
+          "test_path": "splits\\test\\disease_leaf\\leaf\\leaf_spot_potato_moderate_1.jpg"
+        }
+      ],
+      "disease_magnesium_deficiency": [
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\magnesium_deficiency_pepper_moderate_2.jpg",
+          "organized_path": "disease_images\\magnesium_deficiency_pepper_moderate_2.jpg",
+          "filename": "magnesium_deficiency_pepper_moderate_2.jpg",
+          "category": "disease_magnesium_deficiency",
+          "subcategory": "magnesium_deficiency",
+          "type": "disease",
+          "valid": true,
+          "val_path": "splits\\val\\disease_magnesium_deficiency\\magnesium_deficiency\\magnesium_deficiency_pepper_moderate_2.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\magnesium_deficiency_potato_severe_1.jpg",
+          "organized_path": "disease_images\\magnesium_deficiency_potato_severe_1.jpg",
+          "filename": "magnesium_deficiency_potato_severe_1.jpg",
+          "category": "disease_magnesium_deficiency",
+          "subcategory": "magnesium_deficiency",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_magnesium_deficiency\\magnesium_deficiency\\magnesium_deficiency_potato_severe_1.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\magnesium_deficiency_wheat_mild_3.jpg",
+          "organized_path": "disease_images\\magnesium_deficiency_wheat_mild_3.jpg",
+          "filename": "magnesium_deficiency_wheat_mild_3.jpg",
+          "category": "disease_magnesium_deficiency",
+          "subcategory": "magnesium_deficiency",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_magnesium_deficiency\\magnesium_deficiency\\magnesium_deficiency_wheat_mild_3.jpg"
+        }
+      ],
+      "disease_mosaic": [
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\mosaic_virus_apple_moderate_2.jpg",
+          "organized_path": "disease_images\\mosaic_virus_apple_moderate_2.jpg",
+          "filename": "mosaic_virus_apple_moderate_2.jpg",
+          "category": "disease_mosaic",
+          "subcategory": "mosaic",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_mosaic\\mosaic\\mosaic_virus_apple_moderate_2.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\mosaic_virus_wheat_severe_1.jpg",
+          "organized_path": "disease_images\\mosaic_virus_wheat_severe_1.jpg",
+          "filename": "mosaic_virus_wheat_severe_1.jpg",
+          "category": "disease_mosaic",
+          "subcategory": "mosaic",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_mosaic\\mosaic\\mosaic_virus_wheat_severe_1.jpg"
+        }
+      ],
+      "disease_nitrogen_deficiency": [
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\nitrogen_deficiency_grape_mild_1.jpg",
+          "organized_path": "disease_images\\nitrogen_deficiency_grape_mild_1.jpg",
+          "filename": "nitrogen_deficiency_grape_mild_1.jpg",
+          "category": "disease_nitrogen_deficiency",
+          "subcategory": "nitrogen_deficiency",
+          "type": "disease",
+          "valid": true,
+          "val_path": "splits\\val\\disease_nitrogen_deficiency\\nitrogen_deficiency\\nitrogen_deficiency_grape_mild_1.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\nitrogen_deficiency_rose_mild_3.jpg",
+          "organized_path": "disease_images\\nitrogen_deficiency_rose_mild_3.jpg",
+          "filename": "nitrogen_deficiency_rose_mild_3.jpg",
+          "category": "disease_nitrogen_deficiency",
+          "subcategory": "nitrogen_deficiency",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_nitrogen_deficiency\\nitrogen_deficiency\\nitrogen_deficiency_rose_mild_3.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\nitrogen_deficiency_tomato_severe_2.jpg",
+          "organized_path": "disease_images\\nitrogen_deficiency_tomato_severe_2.jpg",
+          "filename": "nitrogen_deficiency_tomato_severe_2.jpg",
+          "category": "disease_nitrogen_deficiency",
+          "subcategory": "nitrogen_deficiency",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_nitrogen_deficiency\\nitrogen_deficiency\\nitrogen_deficiency_tomato_severe_2.jpg"
+        }
+      ],
+      "disease_phosphorus_deficiency": [
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\phosphorus_deficiency_bean_mild_3.jpg",
+          "organized_path": "disease_images\\phosphorus_deficiency_bean_mild_3.jpg",
+          "filename": "phosphorus_deficiency_bean_mild_3.jpg",
+          "category": "disease_phosphorus_deficiency",
+          "subcategory": "phosphorus_deficiency",
+          "type": "disease",
+          "valid": true,
+          "val_path": "splits\\val\\disease_phosphorus_deficiency\\phosphorus_deficiency\\phosphorus_deficiency_bean_mild_3.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\phosphorus_deficiency_grape_mild_1.jpg",
+          "organized_path": "disease_images\\phosphorus_deficiency_grape_mild_1.jpg",
+          "filename": "phosphorus_deficiency_grape_mild_1.jpg",
+          "category": "disease_phosphorus_deficiency",
+          "subcategory": "phosphorus_deficiency",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_phosphorus_deficiency\\phosphorus_deficiency\\phosphorus_deficiency_grape_mild_1.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\phosphorus_deficiency_grape_severe_2.jpg",
+          "organized_path": "disease_images\\phosphorus_deficiency_grape_severe_2.jpg",
+          "filename": "phosphorus_deficiency_grape_severe_2.jpg",
+          "category": "disease_phosphorus_deficiency",
+          "subcategory": "phosphorus_deficiency",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_phosphorus_deficiency\\phosphorus_deficiency\\phosphorus_deficiency_grape_severe_2.jpg"
+        }
+      ],
+      "disease_potassium_deficiency": [
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\potassium_deficiency_pepper_severe_3.jpg",
+          "organized_path": "disease_images\\potassium_deficiency_pepper_severe_3.jpg",
+          "filename": "potassium_deficiency_pepper_severe_3.jpg",
+          "category": "disease_potassium_deficiency",
+          "subcategory": "potassium_deficiency",
+          "type": "disease",
+          "valid": true,
+          "val_path": "splits\\val\\disease_potassium_deficiency\\potassium_deficiency\\potassium_deficiency_pepper_severe_3.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\potassium_deficiency_rice_mild_1.jpg",
+          "organized_path": "disease_images\\potassium_deficiency_rice_mild_1.jpg",
+          "filename": "potassium_deficiency_rice_mild_1.jpg",
+          "category": "disease_potassium_deficiency",
+          "subcategory": "potassium_deficiency",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_potassium_deficiency\\potassium_deficiency\\potassium_deficiency_rice_mild_1.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\potassium_deficiency_rice_severe_2.jpg",
+          "organized_path": "disease_images\\potassium_deficiency_rice_severe_2.jpg",
+          "filename": "potassium_deficiency_rice_severe_2.jpg",
+          "category": "disease_potassium_deficiency",
+          "subcategory": "potassium_deficiency",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_potassium_deficiency\\potassium_deficiency\\potassium_deficiency_rice_severe_2.jpg"
+        }
+      ],
+      "disease_powdery": [
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\powdery_mildew_bean_moderate_3.jpg",
+          "organized_path": "disease_images\\powdery_mildew_bean_moderate_3.jpg",
+          "filename": "powdery_mildew_bean_moderate_3.jpg",
+          "category": "disease_powdery",
+          "subcategory": "powdery",
+          "type": "disease",
+          "valid": true,
+          "val_path": "splits\\val\\disease_powdery\\powdery\\powdery_mildew_bean_moderate_3.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\powdery_mildew_grape_mild_1.jpg",
+          "organized_path": "disease_images\\powdery_mildew_grape_mild_1.jpg",
+          "filename": "powdery_mildew_grape_mild_1.jpg",
+          "category": "disease_powdery",
+          "subcategory": "powdery",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_powdery\\powdery\\powdery_mildew_grape_mild_1.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\powdery_mildew_grape_severe_2.jpg",
+          "organized_path": "disease_images\\powdery_mildew_grape_severe_2.jpg",
+          "filename": "powdery_mildew_grape_severe_2.jpg",
+          "category": "disease_powdery",
+          "subcategory": "powdery",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_powdery\\powdery\\powdery_mildew_grape_severe_2.jpg"
+        }
+      ],
+      "disease_ring": [
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\ring_spot_corn_moderate_1.jpg",
+          "organized_path": "disease_images\\ring_spot_corn_moderate_1.jpg",
+          "filename": "ring_spot_corn_moderate_1.jpg",
+          "category": "disease_ring",
+          "subcategory": "ring",
+          "type": "disease",
+          "valid": true,
+          "val_path": "splits\\val\\disease_ring\\ring\\ring_spot_corn_moderate_1.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\ring_spot_rose_mild_2.jpg",
+          "organized_path": "disease_images\\ring_spot_rose_mild_2.jpg",
+          "filename": "ring_spot_rose_mild_2.jpg",
+          "category": "disease_ring",
+          "subcategory": "ring",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_ring\\ring\\ring_spot_rose_mild_2.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\ring_spot_rose_moderate_3.jpg",
+          "organized_path": "disease_images\\ring_spot_rose_moderate_3.jpg",
+          "filename": "ring_spot_rose_moderate_3.jpg",
+          "category": "disease_ring",
+          "subcategory": "ring",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_ring\\ring\\ring_spot_rose_moderate_3.jpg"
+        }
+      ],
+      "disease_rust": [
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\rust_bean_mild_1.jpg",
+          "organized_path": "disease_images\\rust_bean_mild_1.jpg",
+          "filename": "rust_bean_mild_1.jpg",
+          "category": "disease_rust",
+          "subcategory": "rust",
+          "type": "disease",
+          "valid": true,
+          "val_path": "splits\\val\\disease_rust\\rust\\rust_bean_mild_1.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\rust_cucumber_moderate_2.jpg",
+          "organized_path": "disease_images\\rust_cucumber_moderate_2.jpg",
+          "filename": "rust_cucumber_moderate_2.jpg",
+          "category": "disease_rust",
+          "subcategory": "rust",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_rust\\rust\\rust_cucumber_moderate_2.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\rust_tomato_severe_3.jpg",
+          "organized_path": "disease_images\\rust_tomato_severe_3.jpg",
+          "filename": "rust_tomato_severe_3.jpg",
+          "category": "disease_rust",
+          "subcategory": "rust",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_rust\\rust\\rust_tomato_severe_3.jpg"
+        }
+      ],
+      "disease_streak": [
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\streak_virus_pepper_mild_3.jpg",
+          "organized_path": "disease_images\\streak_virus_pepper_mild_3.jpg",
+          "filename": "streak_virus_pepper_mild_3.jpg",
+          "category": "disease_streak",
+          "subcategory": "streak",
+          "type": "disease",
+          "valid": true,
+          "val_path": "splits\\val\\disease_streak\\streak\\streak_virus_pepper_mild_3.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\streak_virus_pepper_severe_2.jpg",
+          "organized_path": "disease_images\\streak_virus_pepper_severe_2.jpg",
+          "filename": "streak_virus_pepper_severe_2.jpg",
+          "category": "disease_streak",
+          "subcategory": "streak",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_streak\\streak\\streak_virus_pepper_severe_2.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\streak_virus_rice_severe_1.jpg",
+          "organized_path": "disease_images\\streak_virus_rice_severe_1.jpg",
+          "filename": "streak_virus_rice_severe_1.jpg",
+          "category": "disease_streak",
+          "subcategory": "streak",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_streak\\streak\\streak_virus_rice_severe_1.jpg"
+        }
+      ],
+      "disease_yellow_leaf": [
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\yellow_leaf_curl_corn_severe_2.jpg",
+          "organized_path": "disease_images\\yellow_leaf_curl_corn_severe_2.jpg",
+          "filename": "yellow_leaf_curl_corn_severe_2.jpg",
+          "category": "disease_yellow_leaf",
+          "subcategory": "yellow_leaf",
+          "type": "disease",
+          "valid": true,
+          "val_path": "splits\\val\\disease_yellow_leaf\\yellow_leaf\\yellow_leaf_curl_corn_severe_2.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\yellow_leaf_curl_rice_moderate_1.jpg",
+          "organized_path": "disease_images\\yellow_leaf_curl_rice_moderate_1.jpg",
+          "filename": "yellow_leaf_curl_rice_moderate_1.jpg",
+          "category": "disease_yellow_leaf",
+          "subcategory": "yellow_leaf",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_yellow_leaf\\yellow_leaf\\yellow_leaf_curl_rice_moderate_1.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\disease_images\\yellow_leaf_curl_wheat_mild_3.jpg",
+          "organized_path": "disease_images\\yellow_leaf_curl_wheat_mild_3.jpg",
+          "filename": "yellow_leaf_curl_wheat_mild_3.jpg",
+          "category": "disease_yellow_leaf",
+          "subcategory": "yellow_leaf",
+          "type": "disease",
+          "valid": true,
+          "train_path": "splits\\train\\disease_yellow_leaf\\yellow_leaf\\yellow_leaf_curl_wheat_mild_3.jpg"
+        }
+      ],
+      "weed_canada_thistle": [
+        {
+          "original_path": "agricultural_ml_datasets\\weed_images\\canada_thistle_flowering_3.jpg",
+          "organized_path": "weed_images\\canada_thistle_flowering_3.jpg",
+          "filename": "canada_thistle_flowering_3.jpg",
+          "category": "weed_canada_thistle",
+          "subcategory": "canada_thistle",
+          "type": "weed",
+          "valid": true,
+          "val_path": "splits\\val\\weed_canada_thistle\\canada_thistle\\canada_thistle_flowering_3.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\weed_images\\canada_thistle_juvenile_2.jpg",
+          "organized_path": "weed_images\\canada_thistle_juvenile_2.jpg",
+          "filename": "canada_thistle_juvenile_2.jpg",
+          "category": "weed_canada_thistle",
+          "subcategory": "canada_thistle",
+          "type": "weed",
+          "valid": true,
+          "train_path": "splits\\train\\weed_canada_thistle\\canada_thistle\\canada_thistle_juvenile_2.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\weed_images\\canada_thistle_mature_1.jpg",
+          "organized_path": "weed_images\\canada_thistle_mature_1.jpg",
+          "filename": "canada_thistle_mature_1.jpg",
+          "category": "weed_canada_thistle",
+          "subcategory": "canada_thistle",
+          "type": "weed",
+          "valid": true,
+          "train_path": "splits\\train\\weed_canada_thistle\\canada_thistle\\canada_thistle_mature_1.jpg"
+        }
+      ],
+      "weed_chickweed": [
+        {
+          "original_path": "agricultural_ml_datasets\\weed_images\\chickweed_flowering_2.jpg",
+          "organized_path": "weed_images\\chickweed_flowering_2.jpg",
+          "filename": "chickweed_flowering_2.jpg",
+          "category": "weed_chickweed",
+          "subcategory": "chickweed",
+          "type": "weed",
+          "valid": true,
+          "val_path": "splits\\val\\weed_chickweed\\chickweed\\chickweed_flowering_2.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\weed_images\\chickweed_seedling_1.jpg",
+          "organized_path": "weed_images\\chickweed_seedling_1.jpg",
+          "filename": "chickweed_seedling_1.jpg",
+          "category": "weed_chickweed",
+          "subcategory": "chickweed",
+          "type": "weed",
+          "valid": true,
+          "train_path": "splits\\train\\weed_chickweed\\chickweed\\chickweed_seedling_1.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\weed_images\\chickweed_seedling_3.jpg",
+          "organized_path": "weed_images\\chickweed_seedling_3.jpg",
+          "filename": "chickweed_seedling_3.jpg",
+          "category": "weed_chickweed",
+          "subcategory": "chickweed",
+          "type": "weed",
+          "valid": true,
+          "train_path": "splits\\train\\weed_chickweed\\chickweed\\chickweed_seedling_3.jpg"
+        }
+      ],
+      "weed_crabgrass": [
+        {
+          "original_path": "agricultural_ml_datasets\\weed_images\\crabgrass_flowering_1.jpg",
+          "organized_path": "weed_images\\crabgrass_flowering_1.jpg",
+          "filename": "crabgrass_flowering_1.jpg",
+          "category": "weed_crabgrass",
+          "subcategory": "crabgrass",
+          "type": "weed",
+          "valid": true,
+          "val_path": "splits\\val\\weed_crabgrass\\crabgrass\\crabgrass_flowering_1.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\weed_images\\crabgrass_mature_3.jpg",
+          "organized_path": "weed_images\\crabgrass_mature_3.jpg",
+          "filename": "crabgrass_mature_3.jpg",
+          "category": "weed_crabgrass",
+          "subcategory": "crabgrass",
+          "type": "weed",
+          "valid": true,
+          "train_path": "splits\\train\\weed_crabgrass\\crabgrass\\crabgrass_mature_3.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\weed_images\\crabgrass_seedling_2.jpg",
+          "organized_path": "weed_images\\crabgrass_seedling_2.jpg",
+          "filename": "crabgrass_seedling_2.jpg",
+          "category": "weed_crabgrass",
+          "subcategory": "crabgrass",
+          "type": "weed",
+          "valid": true,
+          "train_path": "splits\\train\\weed_crabgrass\\crabgrass\\crabgrass_seedling_2.jpg"
+        }
+      ],
+      "weed_dandelion": [
+        {
+          "original_path": "agricultural_ml_datasets\\weed_images\\dandelion_juvenile_2.jpg",
+          "organized_path": "weed_images\\dandelion_juvenile_2.jpg",
+          "filename": "dandelion_juvenile_2.jpg",
+          "category": "weed_dandelion",
+          "subcategory": "dandelion",
+          "type": "weed",
+          "valid": true,
+          "val_path": "splits\\val\\weed_dandelion\\dandelion\\dandelion_juvenile_2.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\weed_images\\dandelion_juvenile_3.jpg",
+          "organized_path": "weed_images\\dandelion_juvenile_3.jpg",
+          "filename": "dandelion_juvenile_3.jpg",
+          "category": "weed_dandelion",
+          "subcategory": "dandelion",
+          "type": "weed",
+          "valid": true,
+          "train_path": "splits\\train\\weed_dandelion\\dandelion\\dandelion_juvenile_3.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\weed_images\\dandelion_mature_1.jpg",
+          "organized_path": "weed_images\\dandelion_mature_1.jpg",
+          "filename": "dandelion_mature_1.jpg",
+          "category": "weed_dandelion",
+          "subcategory": "dandelion",
+          "type": "weed",
+          "valid": true,
+          "train_path": "splits\\train\\weed_dandelion\\dandelion\\dandelion_mature_1.jpg"
+        }
+      ],
+      "weed_field_bindweed": [
+        {
+          "original_path": "agricultural_ml_datasets\\weed_images\\field_bindweed_juvenile_1.jpg",
+          "organized_path": "weed_images\\field_bindweed_juvenile_1.jpg",
+          "filename": "field_bindweed_juvenile_1.jpg",
+          "category": "weed_field_bindweed",
+          "subcategory": "field_bindweed",
+          "type": "weed",
+          "valid": true,
+          "val_path": "splits\\val\\weed_field_bindweed\\field_bindweed\\field_bindweed_juvenile_1.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\weed_images\\field_bindweed_mature_2.jpg",
+          "organized_path": "weed_images\\field_bindweed_mature_2.jpg",
+          "filename": "field_bindweed_mature_2.jpg",
+          "category": "weed_field_bindweed",
+          "subcategory": "field_bindweed",
+          "type": "weed",
+          "valid": true,
+          "train_path": "splits\\train\\weed_field_bindweed\\field_bindweed\\field_bindweed_mature_2.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\weed_images\\field_bindweed_seedling_3.jpg",
+          "organized_path": "weed_images\\field_bindweed_seedling_3.jpg",
+          "filename": "field_bindweed_seedling_3.jpg",
+          "category": "weed_field_bindweed",
+          "subcategory": "field_bindweed",
+          "type": "weed",
+          "valid": true,
+          "train_path": "splits\\train\\weed_field_bindweed\\field_bindweed\\field_bindweed_seedling_3.jpg"
+        }
+      ],
+      "weed_foxtail": [
+        {
+          "original_path": "agricultural_ml_datasets\\weed_images\\foxtail_mature_2.jpg",
+          "organized_path": "weed_images\\foxtail_mature_2.jpg",
+          "filename": "foxtail_mature_2.jpg",
+          "category": "weed_foxtail",
+          "subcategory": "foxtail",
+          "type": "weed",
+          "valid": true,
+          "val_path": "splits\\val\\weed_foxtail\\foxtail\\foxtail_mature_2.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\weed_images\\foxtail_seedling_1.jpg",
+          "organized_path": "weed_images\\foxtail_seedling_1.jpg",
+          "filename": "foxtail_seedling_1.jpg",
+          "category": "weed_foxtail",
+          "subcategory": "foxtail",
+          "type": "weed",
+          "valid": true,
+          "train_path": "splits\\train\\weed_foxtail\\foxtail\\foxtail_seedling_1.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\weed_images\\foxtail_seedling_3.jpg",
+          "organized_path": "weed_images\\foxtail_seedling_3.jpg",
+          "filename": "foxtail_seedling_3.jpg",
+          "category": "weed_foxtail",
+          "subcategory": "foxtail",
+          "type": "weed",
+          "valid": true,
+          "train_path": "splits\\train\\weed_foxtail\\foxtail\\foxtail_seedling_3.jpg"
+        }
+      ],
+      "weed_lambsquarters": [
+        {
+          "original_path": "agricultural_ml_datasets\\weed_images\\lambsquarters_juvenile_2.jpg",
+          "organized_path": "weed_images\\lambsquarters_juvenile_2.jpg",
+          "filename": "lambsquarters_juvenile_2.jpg",
+          "category": "weed_lambsquarters",
+          "subcategory": "lambsquarters",
+          "type": "weed",
+          "valid": true,
+          "val_path": "splits\\val\\weed_lambsquarters\\lambsquarters\\lambsquarters_juvenile_2.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\weed_images\\lambsquarters_mature_1.jpg",
+          "organized_path": "weed_images\\lambsquarters_mature_1.jpg",
+          "filename": "lambsquarters_mature_1.jpg",
+          "category": "weed_lambsquarters",
+          "subcategory": "lambsquarters",
+          "type": "weed",
+          "valid": true,
+          "train_path": "splits\\train\\weed_lambsquarters\\lambsquarters\\lambsquarters_mature_1.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\weed_images\\lambsquarters_mature_3.jpg",
+          "organized_path": "weed_images\\lambsquarters_mature_3.jpg",
+          "filename": "lambsquarters_mature_3.jpg",
+          "category": "weed_lambsquarters",
+          "subcategory": "lambsquarters",
+          "type": "weed",
+          "valid": true,
+          "train_path": "splits\\train\\weed_lambsquarters\\lambsquarters\\lambsquarters_mature_3.jpg"
+        }
+      ],
+      "weed_pigweed": [
+        {
+          "original_path": "agricultural_ml_datasets\\weed_images\\pigweed_flowering_3.jpg",
+          "organized_path": "weed_images\\pigweed_flowering_3.jpg",
+          "filename": "pigweed_flowering_3.jpg",
+          "category": "weed_pigweed",
+          "subcategory": "pigweed",
+          "type": "weed",
+          "valid": true,
+          "val_path": "splits\\val\\weed_pigweed\\pigweed\\pigweed_flowering_3.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\weed_images\\pigweed_juvenile_2.jpg",
+          "organized_path": "weed_images\\pigweed_juvenile_2.jpg",
+          "filename": "pigweed_juvenile_2.jpg",
+          "category": "weed_pigweed",
+          "subcategory": "pigweed",
+          "type": "weed",
+          "valid": true,
+          "train_path": "splits\\train\\weed_pigweed\\pigweed\\pigweed_juvenile_2.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\weed_images\\pigweed_seedling_1.jpg",
+          "organized_path": "weed_images\\pigweed_seedling_1.jpg",
+          "filename": "pigweed_seedling_1.jpg",
+          "category": "weed_pigweed",
+          "subcategory": "pigweed",
+          "type": "weed",
+          "valid": true,
+          "train_path": "splits\\train\\weed_pigweed\\pigweed\\pigweed_seedling_1.jpg"
+        }
+      ],
+      "weed_plantain": [
+        {
+          "original_path": "agricultural_ml_datasets\\weed_images\\plantain_juvenile_2.jpg",
+          "organized_path": "weed_images\\plantain_juvenile_2.jpg",
+          "filename": "plantain_juvenile_2.jpg",
+          "category": "weed_plantain",
+          "subcategory": "plantain",
+          "type": "weed",
+          "valid": true,
+          "val_path": "splits\\val\\weed_plantain\\plantain\\plantain_juvenile_2.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\weed_images\\plantain_juvenile_3.jpg",
+          "organized_path": "weed_images\\plantain_juvenile_3.jpg",
+          "filename": "plantain_juvenile_3.jpg",
+          "category": "weed_plantain",
+          "subcategory": "plantain",
+          "type": "weed",
+          "valid": true,
+          "train_path": "splits\\train\\weed_plantain\\plantain\\plantain_juvenile_3.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\weed_images\\plantain_mature_1.jpg",
+          "organized_path": "weed_images\\plantain_mature_1.jpg",
+          "filename": "plantain_mature_1.jpg",
+          "category": "weed_plantain",
+          "subcategory": "plantain",
+          "type": "weed",
+          "valid": true,
+          "train_path": "splits\\train\\weed_plantain\\plantain\\plantain_mature_1.jpg"
+        }
+      ],
+      "weed_purple_nutsedge": [
+        {
+          "original_path": "agricultural_ml_datasets\\weed_images\\purple_nutsedge_flowering_2.jpg",
+          "organized_path": "weed_images\\purple_nutsedge_flowering_2.jpg",
+          "filename": "purple_nutsedge_flowering_2.jpg",
+          "category": "weed_purple_nutsedge",
+          "subcategory": "purple_nutsedge",
+          "type": "weed",
+          "valid": true,
+          "val_path": "splits\\val\\weed_purple_nutsedge\\purple_nutsedge\\purple_nutsedge_flowering_2.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\weed_images\\purple_nutsedge_juvenile_1.jpg",
+          "organized_path": "weed_images\\purple_nutsedge_juvenile_1.jpg",
+          "filename": "purple_nutsedge_juvenile_1.jpg",
+          "category": "weed_purple_nutsedge",
+          "subcategory": "purple_nutsedge",
+          "type": "weed",
+          "valid": true,
+          "train_path": "splits\\train\\weed_purple_nutsedge\\purple_nutsedge\\purple_nutsedge_juvenile_1.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\weed_images\\purple_nutsedge_mature_3.jpg",
+          "organized_path": "weed_images\\purple_nutsedge_mature_3.jpg",
+          "filename": "purple_nutsedge_mature_3.jpg",
+          "category": "weed_purple_nutsedge",
+          "subcategory": "purple_nutsedge",
+          "type": "weed",
+          "valid": true,
+          "train_path": "splits\\train\\weed_purple_nutsedge\\purple_nutsedge\\purple_nutsedge_mature_3.jpg"
+        }
+      ],
+      "weed_purslane": [
+        {
+          "original_path": "agricultural_ml_datasets\\weed_images\\purslane_flowering_1.jpg",
+          "organized_path": "weed_images\\purslane_flowering_1.jpg",
+          "filename": "purslane_flowering_1.jpg",
+          "category": "weed_purslane",
+          "subcategory": "purslane",
+          "type": "weed",
+          "valid": true,
+          "val_path": "splits\\val\\weed_purslane\\purslane\\purslane_flowering_1.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\weed_images\\purslane_mature_2.jpg",
+          "organized_path": "weed_images\\purslane_mature_2.jpg",
+          "filename": "purslane_mature_2.jpg",
+          "category": "weed_purslane",
+          "subcategory": "purslane",
+          "type": "weed",
+          "valid": true,
+          "train_path": "splits\\train\\weed_purslane\\purslane\\purslane_mature_2.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\weed_images\\purslane_mature_3.jpg",
+          "organized_path": "weed_images\\purslane_mature_3.jpg",
+          "filename": "purslane_mature_3.jpg",
+          "category": "weed_purslane",
+          "subcategory": "purslane",
+          "type": "weed",
+          "valid": true,
+          "train_path": "splits\\train\\weed_purslane\\purslane\\purslane_mature_3.jpg"
+        }
+      ],
+      "weed_yellow_nutsedge": [
+        {
+          "original_path": "agricultural_ml_datasets\\weed_images\\yellow_nutsedge_flowering_1.jpg",
+          "organized_path": "weed_images\\yellow_nutsedge_flowering_1.jpg",
+          "filename": "yellow_nutsedge_flowering_1.jpg",
+          "category": "weed_yellow_nutsedge",
+          "subcategory": "yellow_nutsedge",
+          "type": "weed",
+          "valid": true,
+          "val_path": "splits\\val\\weed_yellow_nutsedge\\yellow_nutsedge\\yellow_nutsedge_flowering_1.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\weed_images\\yellow_nutsedge_juvenile_2.jpg",
+          "organized_path": "weed_images\\yellow_nutsedge_juvenile_2.jpg",
+          "filename": "yellow_nutsedge_juvenile_2.jpg",
+          "category": "weed_yellow_nutsedge",
+          "subcategory": "yellow_nutsedge",
+          "type": "weed",
+          "valid": true,
+          "train_path": "splits\\train\\weed_yellow_nutsedge\\yellow_nutsedge\\yellow_nutsedge_juvenile_2.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\weed_images\\yellow_nutsedge_juvenile_3.jpg",
+          "organized_path": "weed_images\\yellow_nutsedge_juvenile_3.jpg",
+          "filename": "yellow_nutsedge_juvenile_3.jpg",
+          "category": "weed_yellow_nutsedge",
+          "subcategory": "yellow_nutsedge",
+          "type": "weed",
+          "valid": true,
+          "train_path": "splits\\train\\weed_yellow_nutsedge\\yellow_nutsedge\\yellow_nutsedge_juvenile_3.jpg"
+        }
+      ],
+      "general_fertilization": [
+        {
+          "original_path": "agricultural_ml_datasets\\general_images\\fertilization_citrus_3.jpg",
+          "organized_path": "general_images\\fertilization_citrus_3.jpg",
+          "filename": "fertilization_citrus_3.jpg",
+          "category": "general_fertilization",
+          "subcategory": "fertilization",
+          "type": "general",
+          "valid": true,
+          "train_path": "splits\\train\\general_fertilization\\fertilization\\fertilization_citrus_3.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\general_images\\fertilization_corn_2.jpg",
+          "organized_path": "general_images\\fertilization_corn_2.jpg",
+          "filename": "fertilization_corn_2.jpg",
+          "category": "general_fertilization",
+          "subcategory": "fertilization",
+          "type": "general",
+          "valid": true,
+          "train_path": "splits\\train\\general_fertilization\\fertilization\\fertilization_corn_2.jpg"
+        }
+      ],
+      "general_irrigation": [
+        {
+          "original_path": "agricultural_ml_datasets\\general_images\\irrigation_apple_4.jpg",
+          "organized_path": "general_images\\irrigation_apple_4.jpg",
+          "filename": "irrigation_apple_4.jpg",
+          "category": "general_irrigation",
+          "subcategory": "irrigation",
+          "type": "general",
+          "valid": true,
+          "train_path": "splits\\train\\general_irrigation\\irrigation\\irrigation_apple_4.jpg"
+        }
+      ],
+      "general_pest": [
+        {
+          "original_path": "agricultural_ml_datasets\\general_images\\pest_control_cucumber_1.jpg",
+          "organized_path": "general_images\\pest_control_cucumber_1.jpg",
+          "filename": "pest_control_cucumber_1.jpg",
+          "category": "general_pest",
+          "subcategory": "pest",
+          "type": "general",
+          "valid": true,
+          "train_path": "splits\\train\\general_pest\\pest\\pest_control_cucumber_1.jpg"
+        },
+        {
+          "original_path": "agricultural_ml_datasets\\general_images\\pest_control_rose_5.jpg",
+          "organized_path": "general_images\\pest_control_rose_5.jpg",
+          "filename": "pest_control_rose_5.jpg",
+          "category": "general_pest",
+          "subcategory": "pest",
+          "type": "general",
+          "valid": true,
+          "train_path": "splits\\train\\general_pest\\pest\\pest_control_rose_5.jpg"
+        }
+      ]
+    },
+    "splits": {
+      "train": {
+        "files": [
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\anthracnose_rice_severe_3.jpg",
+            "organized_path": "disease_images\\anthracnose_rice_severe_3.jpg",
+            "filename": "anthracnose_rice_severe_3.jpg",
+            "category": "disease_anthracnose",
+            "subcategory": "anthracnose",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_anthracnose\\anthracnose\\anthracnose_rice_severe_3.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\anthracnose_rose_severe_1.jpg",
+            "organized_path": "disease_images\\anthracnose_rose_severe_1.jpg",
+            "filename": "anthracnose_rose_severe_1.jpg",
+            "category": "disease_anthracnose",
+            "subcategory": "anthracnose",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_anthracnose\\anthracnose\\anthracnose_rose_severe_1.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\bacterial_blight_rice_moderate_1.jpg",
+            "organized_path": "disease_images\\bacterial_blight_rice_moderate_1.jpg",
+            "filename": "bacterial_blight_rice_moderate_1.jpg",
+            "category": "disease_bacterial_blight",
+            "subcategory": "bacterial_blight",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_bacterial_blight\\bacterial_blight\\bacterial_blight_rice_moderate_1.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\bacterial_blight_rice_moderate_3.jpg",
+            "organized_path": "disease_images\\bacterial_blight_rice_moderate_3.jpg",
+            "filename": "bacterial_blight_rice_moderate_3.jpg",
+            "category": "disease_bacterial_blight",
+            "subcategory": "bacterial_blight",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_bacterial_blight\\bacterial_blight\\bacterial_blight_rice_moderate_3.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\bacterial_canker_potato_mild_1.jpg",
+            "organized_path": "disease_images\\bacterial_canker_potato_mild_1.jpg",
+            "filename": "bacterial_canker_potato_mild_1.jpg",
+            "category": "disease_bacterial_canker",
+            "subcategory": "bacterial_canker",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_bacterial_canker\\bacterial_canker\\bacterial_canker_potato_mild_1.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\bacterial_canker_rice_severe_3.jpg",
+            "organized_path": "disease_images\\bacterial_canker_rice_severe_3.jpg",
+            "filename": "bacterial_canker_rice_severe_3.jpg",
+            "category": "disease_bacterial_canker",
+            "subcategory": "bacterial_canker",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_bacterial_canker\\bacterial_canker\\bacterial_canker_rice_severe_3.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\bacterial_spot_rice_severe_2.jpg",
+            "organized_path": "disease_images\\bacterial_spot_rice_severe_2.jpg",
+            "filename": "bacterial_spot_rice_severe_2.jpg",
+            "category": "disease_bacterial_spot",
+            "subcategory": "bacterial_spot",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_bacterial_spot\\bacterial_spot\\bacterial_spot_rice_severe_2.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\bacterial_spot_rose_moderate_1.jpg",
+            "organized_path": "disease_images\\bacterial_spot_rose_moderate_1.jpg",
+            "filename": "bacterial_spot_rose_moderate_1.jpg",
+            "category": "disease_bacterial_spot",
+            "subcategory": "bacterial_spot",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_bacterial_spot\\bacterial_spot\\bacterial_spot_rose_moderate_1.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\bacterial_wilt_rose_mild_1.jpg",
+            "organized_path": "disease_images\\bacterial_wilt_rose_mild_1.jpg",
+            "filename": "bacterial_wilt_rose_mild_1.jpg",
+            "category": "disease_bacterial_wilt",
+            "subcategory": "bacterial_wilt",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_bacterial_wilt\\bacterial_wilt\\bacterial_wilt_rose_mild_1.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\bacterial_wilt_wheat_moderate_2.jpg",
+            "organized_path": "disease_images\\bacterial_wilt_wheat_moderate_2.jpg",
+            "filename": "bacterial_wilt_wheat_moderate_2.jpg",
+            "category": "disease_bacterial_wilt",
+            "subcategory": "bacterial_wilt",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_bacterial_wilt\\bacterial_wilt\\bacterial_wilt_wheat_moderate_2.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\black_rot_bean_moderate_1.jpg",
+            "organized_path": "disease_images\\black_rot_bean_moderate_1.jpg",
+            "filename": "black_rot_bean_moderate_1.jpg",
+            "category": "disease_black",
+            "subcategory": "black",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_black\\black\\black_rot_bean_moderate_1.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\black_rot_rice_severe_2.jpg",
+            "organized_path": "disease_images\\black_rot_rice_severe_2.jpg",
+            "filename": "black_rot_rice_severe_2.jpg",
+            "category": "disease_black",
+            "subcategory": "black",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_black\\black\\black_rot_rice_severe_2.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\blight_bean_severe_3.jpg",
+            "organized_path": "disease_images\\blight_bean_severe_3.jpg",
+            "filename": "blight_bean_severe_3.jpg",
+            "category": "disease_blight",
+            "subcategory": "blight",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_blight\\blight\\blight_bean_severe_3.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\blight_tomato_mild_1.jpg",
+            "organized_path": "disease_images\\blight_tomato_mild_1.jpg",
+            "filename": "blight_tomato_mild_1.jpg",
+            "category": "disease_blight",
+            "subcategory": "blight",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_blight\\blight\\blight_tomato_mild_1.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\downy_mildew_citrus_mild_1.jpg",
+            "organized_path": "disease_images\\downy_mildew_citrus_mild_1.jpg",
+            "filename": "downy_mildew_citrus_mild_1.jpg",
+            "category": "disease_downy",
+            "subcategory": "downy",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_downy\\downy\\downy_mildew_citrus_mild_1.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\downy_mildew_tomato_mild_2.jpg",
+            "organized_path": "disease_images\\downy_mildew_tomato_mild_2.jpg",
+            "filename": "downy_mildew_tomato_mild_2.jpg",
+            "category": "disease_downy",
+            "subcategory": "downy",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_downy\\downy\\downy_mildew_tomato_mild_2.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\fire_blight_pepper_mild_1.jpg",
+            "organized_path": "disease_images\\fire_blight_pepper_mild_1.jpg",
+            "filename": "fire_blight_pepper_mild_1.jpg",
+            "category": "disease_fire",
+            "subcategory": "fire",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_fire\\fire\\fire_blight_pepper_mild_1.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\fire_blight_rose_mild_2.jpg",
+            "organized_path": "disease_images\\fire_blight_rose_mild_2.jpg",
+            "filename": "fire_blight_rose_mild_2.jpg",
+            "category": "disease_fire",
+            "subcategory": "fire",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_fire\\fire\\fire_blight_rose_mild_2.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\fusarium_wilt_grape_mild_3.jpg",
+            "organized_path": "disease_images\\fusarium_wilt_grape_mild_3.jpg",
+            "filename": "fusarium_wilt_grape_mild_3.jpg",
+            "category": "disease_fusarium",
+            "subcategory": "fusarium",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_fusarium\\fusarium\\fusarium_wilt_grape_mild_3.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\fusarium_wilt_rose_severe_1.jpg",
+            "organized_path": "disease_images\\fusarium_wilt_rose_severe_1.jpg",
+            "filename": "fusarium_wilt_rose_severe_1.jpg",
+            "category": "disease_fusarium",
+            "subcategory": "fusarium",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_fusarium\\fusarium\\fusarium_wilt_rose_severe_1.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\iron_deficiency_pepper_severe_3.jpg",
+            "organized_path": "disease_images\\iron_deficiency_pepper_severe_3.jpg",
+            "filename": "iron_deficiency_pepper_severe_3.jpg",
+            "category": "disease_iron_deficiency",
+            "subcategory": "iron_deficiency",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_iron_deficiency\\iron_deficiency\\iron_deficiency_pepper_severe_3.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\iron_deficiency_rice_severe_1.jpg",
+            "organized_path": "disease_images\\iron_deficiency_rice_severe_1.jpg",
+            "filename": "iron_deficiency_rice_severe_1.jpg",
+            "category": "disease_iron_deficiency",
+            "subcategory": "iron_deficiency",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_iron_deficiency\\iron_deficiency\\iron_deficiency_rice_severe_1.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\leaf_spot_apple_moderate_3.jpg",
+            "organized_path": "disease_images\\leaf_spot_apple_moderate_3.jpg",
+            "filename": "leaf_spot_apple_moderate_3.jpg",
+            "category": "disease_leaf",
+            "subcategory": "leaf",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_leaf\\leaf\\leaf_spot_apple_moderate_3.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\leaf_roll_citrus_mild_2.jpg",
+            "organized_path": "disease_images\\leaf_roll_citrus_mild_2.jpg",
+            "filename": "leaf_roll_citrus_mild_2.jpg",
+            "category": "disease_leaf",
+            "subcategory": "leaf",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_leaf\\leaf\\leaf_roll_citrus_mild_2.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\leaf_spot_citrus_mild_2.jpg",
+            "organized_path": "disease_images\\leaf_spot_citrus_mild_2.jpg",
+            "filename": "leaf_spot_citrus_mild_2.jpg",
+            "category": "disease_leaf",
+            "subcategory": "leaf",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_leaf\\leaf\\leaf_spot_citrus_mild_2.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\magnesium_deficiency_potato_severe_1.jpg",
+            "organized_path": "disease_images\\magnesium_deficiency_potato_severe_1.jpg",
+            "filename": "magnesium_deficiency_potato_severe_1.jpg",
+            "category": "disease_magnesium_deficiency",
+            "subcategory": "magnesium_deficiency",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_magnesium_deficiency\\magnesium_deficiency\\magnesium_deficiency_potato_severe_1.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\magnesium_deficiency_wheat_mild_3.jpg",
+            "organized_path": "disease_images\\magnesium_deficiency_wheat_mild_3.jpg",
+            "filename": "magnesium_deficiency_wheat_mild_3.jpg",
+            "category": "disease_magnesium_deficiency",
+            "subcategory": "magnesium_deficiency",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_magnesium_deficiency\\magnesium_deficiency\\magnesium_deficiency_wheat_mild_3.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\mosaic_virus_apple_moderate_2.jpg",
+            "organized_path": "disease_images\\mosaic_virus_apple_moderate_2.jpg",
+            "filename": "mosaic_virus_apple_moderate_2.jpg",
+            "category": "disease_mosaic",
+            "subcategory": "mosaic",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_mosaic\\mosaic\\mosaic_virus_apple_moderate_2.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\mosaic_virus_wheat_severe_1.jpg",
+            "organized_path": "disease_images\\mosaic_virus_wheat_severe_1.jpg",
+            "filename": "mosaic_virus_wheat_severe_1.jpg",
+            "category": "disease_mosaic",
+            "subcategory": "mosaic",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_mosaic\\mosaic\\mosaic_virus_wheat_severe_1.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\nitrogen_deficiency_rose_mild_3.jpg",
+            "organized_path": "disease_images\\nitrogen_deficiency_rose_mild_3.jpg",
+            "filename": "nitrogen_deficiency_rose_mild_3.jpg",
+            "category": "disease_nitrogen_deficiency",
+            "subcategory": "nitrogen_deficiency",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_nitrogen_deficiency\\nitrogen_deficiency\\nitrogen_deficiency_rose_mild_3.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\nitrogen_deficiency_tomato_severe_2.jpg",
+            "organized_path": "disease_images\\nitrogen_deficiency_tomato_severe_2.jpg",
+            "filename": "nitrogen_deficiency_tomato_severe_2.jpg",
+            "category": "disease_nitrogen_deficiency",
+            "subcategory": "nitrogen_deficiency",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_nitrogen_deficiency\\nitrogen_deficiency\\nitrogen_deficiency_tomato_severe_2.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\phosphorus_deficiency_grape_mild_1.jpg",
+            "organized_path": "disease_images\\phosphorus_deficiency_grape_mild_1.jpg",
+            "filename": "phosphorus_deficiency_grape_mild_1.jpg",
+            "category": "disease_phosphorus_deficiency",
+            "subcategory": "phosphorus_deficiency",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_phosphorus_deficiency\\phosphorus_deficiency\\phosphorus_deficiency_grape_mild_1.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\phosphorus_deficiency_grape_severe_2.jpg",
+            "organized_path": "disease_images\\phosphorus_deficiency_grape_severe_2.jpg",
+            "filename": "phosphorus_deficiency_grape_severe_2.jpg",
+            "category": "disease_phosphorus_deficiency",
+            "subcategory": "phosphorus_deficiency",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_phosphorus_deficiency\\phosphorus_deficiency\\phosphorus_deficiency_grape_severe_2.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\potassium_deficiency_rice_mild_1.jpg",
+            "organized_path": "disease_images\\potassium_deficiency_rice_mild_1.jpg",
+            "filename": "potassium_deficiency_rice_mild_1.jpg",
+            "category": "disease_potassium_deficiency",
+            "subcategory": "potassium_deficiency",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_potassium_deficiency\\potassium_deficiency\\potassium_deficiency_rice_mild_1.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\potassium_deficiency_rice_severe_2.jpg",
+            "organized_path": "disease_images\\potassium_deficiency_rice_severe_2.jpg",
+            "filename": "potassium_deficiency_rice_severe_2.jpg",
+            "category": "disease_potassium_deficiency",
+            "subcategory": "potassium_deficiency",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_potassium_deficiency\\potassium_deficiency\\potassium_deficiency_rice_severe_2.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\powdery_mildew_grape_mild_1.jpg",
+            "organized_path": "disease_images\\powdery_mildew_grape_mild_1.jpg",
+            "filename": "powdery_mildew_grape_mild_1.jpg",
+            "category": "disease_powdery",
+            "subcategory": "powdery",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_powdery\\powdery\\powdery_mildew_grape_mild_1.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\powdery_mildew_grape_severe_2.jpg",
+            "organized_path": "disease_images\\powdery_mildew_grape_severe_2.jpg",
+            "filename": "powdery_mildew_grape_severe_2.jpg",
+            "category": "disease_powdery",
+            "subcategory": "powdery",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_powdery\\powdery\\powdery_mildew_grape_severe_2.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\ring_spot_rose_mild_2.jpg",
+            "organized_path": "disease_images\\ring_spot_rose_mild_2.jpg",
+            "filename": "ring_spot_rose_mild_2.jpg",
+            "category": "disease_ring",
+            "subcategory": "ring",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_ring\\ring\\ring_spot_rose_mild_2.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\ring_spot_rose_moderate_3.jpg",
+            "organized_path": "disease_images\\ring_spot_rose_moderate_3.jpg",
+            "filename": "ring_spot_rose_moderate_3.jpg",
+            "category": "disease_ring",
+            "subcategory": "ring",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_ring\\ring\\ring_spot_rose_moderate_3.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\rust_cucumber_moderate_2.jpg",
+            "organized_path": "disease_images\\rust_cucumber_moderate_2.jpg",
+            "filename": "rust_cucumber_moderate_2.jpg",
+            "category": "disease_rust",
+            "subcategory": "rust",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_rust\\rust\\rust_cucumber_moderate_2.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\rust_tomato_severe_3.jpg",
+            "organized_path": "disease_images\\rust_tomato_severe_3.jpg",
+            "filename": "rust_tomato_severe_3.jpg",
+            "category": "disease_rust",
+            "subcategory": "rust",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_rust\\rust\\rust_tomato_severe_3.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\streak_virus_pepper_severe_2.jpg",
+            "organized_path": "disease_images\\streak_virus_pepper_severe_2.jpg",
+            "filename": "streak_virus_pepper_severe_2.jpg",
+            "category": "disease_streak",
+            "subcategory": "streak",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_streak\\streak\\streak_virus_pepper_severe_2.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\streak_virus_rice_severe_1.jpg",
+            "organized_path": "disease_images\\streak_virus_rice_severe_1.jpg",
+            "filename": "streak_virus_rice_severe_1.jpg",
+            "category": "disease_streak",
+            "subcategory": "streak",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_streak\\streak\\streak_virus_rice_severe_1.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\yellow_leaf_curl_rice_moderate_1.jpg",
+            "organized_path": "disease_images\\yellow_leaf_curl_rice_moderate_1.jpg",
+            "filename": "yellow_leaf_curl_rice_moderate_1.jpg",
+            "category": "disease_yellow_leaf",
+            "subcategory": "yellow_leaf",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_yellow_leaf\\yellow_leaf\\yellow_leaf_curl_rice_moderate_1.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\yellow_leaf_curl_wheat_mild_3.jpg",
+            "organized_path": "disease_images\\yellow_leaf_curl_wheat_mild_3.jpg",
+            "filename": "yellow_leaf_curl_wheat_mild_3.jpg",
+            "category": "disease_yellow_leaf",
+            "subcategory": "yellow_leaf",
+            "type": "disease",
+            "valid": true,
+            "train_path": "splits\\train\\disease_yellow_leaf\\yellow_leaf\\yellow_leaf_curl_wheat_mild_3.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\weed_images\\canada_thistle_juvenile_2.jpg",
+            "organized_path": "weed_images\\canada_thistle_juvenile_2.jpg",
+            "filename": "canada_thistle_juvenile_2.jpg",
+            "category": "weed_canada_thistle",
+            "subcategory": "canada_thistle",
+            "type": "weed",
+            "valid": true,
+            "train_path": "splits\\train\\weed_canada_thistle\\canada_thistle\\canada_thistle_juvenile_2.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\weed_images\\canada_thistle_mature_1.jpg",
+            "organized_path": "weed_images\\canada_thistle_mature_1.jpg",
+            "filename": "canada_thistle_mature_1.jpg",
+            "category": "weed_canada_thistle",
+            "subcategory": "canada_thistle",
+            "type": "weed",
+            "valid": true,
+            "train_path": "splits\\train\\weed_canada_thistle\\canada_thistle\\canada_thistle_mature_1.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\weed_images\\chickweed_seedling_1.jpg",
+            "organized_path": "weed_images\\chickweed_seedling_1.jpg",
+            "filename": "chickweed_seedling_1.jpg",
+            "category": "weed_chickweed",
+            "subcategory": "chickweed",
+            "type": "weed",
+            "valid": true,
+            "train_path": "splits\\train\\weed_chickweed\\chickweed\\chickweed_seedling_1.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\weed_images\\chickweed_seedling_3.jpg",
+            "organized_path": "weed_images\\chickweed_seedling_3.jpg",
+            "filename": "chickweed_seedling_3.jpg",
+            "category": "weed_chickweed",
+            "subcategory": "chickweed",
+            "type": "weed",
+            "valid": true,
+            "train_path": "splits\\train\\weed_chickweed\\chickweed\\chickweed_seedling_3.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\weed_images\\crabgrass_mature_3.jpg",
+            "organized_path": "weed_images\\crabgrass_mature_3.jpg",
+            "filename": "crabgrass_mature_3.jpg",
+            "category": "weed_crabgrass",
+            "subcategory": "crabgrass",
+            "type": "weed",
+            "valid": true,
+            "train_path": "splits\\train\\weed_crabgrass\\crabgrass\\crabgrass_mature_3.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\weed_images\\crabgrass_seedling_2.jpg",
+            "organized_path": "weed_images\\crabgrass_seedling_2.jpg",
+            "filename": "crabgrass_seedling_2.jpg",
+            "category": "weed_crabgrass",
+            "subcategory": "crabgrass",
+            "type": "weed",
+            "valid": true,
+            "train_path": "splits\\train\\weed_crabgrass\\crabgrass\\crabgrass_seedling_2.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\weed_images\\dandelion_juvenile_3.jpg",
+            "organized_path": "weed_images\\dandelion_juvenile_3.jpg",
+            "filename": "dandelion_juvenile_3.jpg",
+            "category": "weed_dandelion",
+            "subcategory": "dandelion",
+            "type": "weed",
+            "valid": true,
+            "train_path": "splits\\train\\weed_dandelion\\dandelion\\dandelion_juvenile_3.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\weed_images\\dandelion_mature_1.jpg",
+            "organized_path": "weed_images\\dandelion_mature_1.jpg",
+            "filename": "dandelion_mature_1.jpg",
+            "category": "weed_dandelion",
+            "subcategory": "dandelion",
+            "type": "weed",
+            "valid": true,
+            "train_path": "splits\\train\\weed_dandelion\\dandelion\\dandelion_mature_1.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\weed_images\\field_bindweed_mature_2.jpg",
+            "organized_path": "weed_images\\field_bindweed_mature_2.jpg",
+            "filename": "field_bindweed_mature_2.jpg",
+            "category": "weed_field_bindweed",
+            "subcategory": "field_bindweed",
+            "type": "weed",
+            "valid": true,
+            "train_path": "splits\\train\\weed_field_bindweed\\field_bindweed\\field_bindweed_mature_2.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\weed_images\\field_bindweed_seedling_3.jpg",
+            "organized_path": "weed_images\\field_bindweed_seedling_3.jpg",
+            "filename": "field_bindweed_seedling_3.jpg",
+            "category": "weed_field_bindweed",
+            "subcategory": "field_bindweed",
+            "type": "weed",
+            "valid": true,
+            "train_path": "splits\\train\\weed_field_bindweed\\field_bindweed\\field_bindweed_seedling_3.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\weed_images\\foxtail_seedling_1.jpg",
+            "organized_path": "weed_images\\foxtail_seedling_1.jpg",
+            "filename": "foxtail_seedling_1.jpg",
+            "category": "weed_foxtail",
+            "subcategory": "foxtail",
+            "type": "weed",
+            "valid": true,
+            "train_path": "splits\\train\\weed_foxtail\\foxtail\\foxtail_seedling_1.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\weed_images\\foxtail_seedling_3.jpg",
+            "organized_path": "weed_images\\foxtail_seedling_3.jpg",
+            "filename": "foxtail_seedling_3.jpg",
+            "category": "weed_foxtail",
+            "subcategory": "foxtail",
+            "type": "weed",
+            "valid": true,
+            "train_path": "splits\\train\\weed_foxtail\\foxtail\\foxtail_seedling_3.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\weed_images\\lambsquarters_mature_1.jpg",
+            "organized_path": "weed_images\\lambsquarters_mature_1.jpg",
+            "filename": "lambsquarters_mature_1.jpg",
+            "category": "weed_lambsquarters",
+            "subcategory": "lambsquarters",
+            "type": "weed",
+            "valid": true,
+            "train_path": "splits\\train\\weed_lambsquarters\\lambsquarters\\lambsquarters_mature_1.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\weed_images\\lambsquarters_mature_3.jpg",
+            "organized_path": "weed_images\\lambsquarters_mature_3.jpg",
+            "filename": "lambsquarters_mature_3.jpg",
+            "category": "weed_lambsquarters",
+            "subcategory": "lambsquarters",
+            "type": "weed",
+            "valid": true,
+            "train_path": "splits\\train\\weed_lambsquarters\\lambsquarters\\lambsquarters_mature_3.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\weed_images\\pigweed_juvenile_2.jpg",
+            "organized_path": "weed_images\\pigweed_juvenile_2.jpg",
+            "filename": "pigweed_juvenile_2.jpg",
+            "category": "weed_pigweed",
+            "subcategory": "pigweed",
+            "type": "weed",
+            "valid": true,
+            "train_path": "splits\\train\\weed_pigweed\\pigweed\\pigweed_juvenile_2.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\weed_images\\pigweed_seedling_1.jpg",
+            "organized_path": "weed_images\\pigweed_seedling_1.jpg",
+            "filename": "pigweed_seedling_1.jpg",
+            "category": "weed_pigweed",
+            "subcategory": "pigweed",
+            "type": "weed",
+            "valid": true,
+            "train_path": "splits\\train\\weed_pigweed\\pigweed\\pigweed_seedling_1.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\weed_images\\plantain_juvenile_3.jpg",
+            "organized_path": "weed_images\\plantain_juvenile_3.jpg",
+            "filename": "plantain_juvenile_3.jpg",
+            "category": "weed_plantain",
+            "subcategory": "plantain",
+            "type": "weed",
+            "valid": true,
+            "train_path": "splits\\train\\weed_plantain\\plantain\\plantain_juvenile_3.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\weed_images\\plantain_mature_1.jpg",
+            "organized_path": "weed_images\\plantain_mature_1.jpg",
+            "filename": "plantain_mature_1.jpg",
+            "category": "weed_plantain",
+            "subcategory": "plantain",
+            "type": "weed",
+            "valid": true,
+            "train_path": "splits\\train\\weed_plantain\\plantain\\plantain_mature_1.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\weed_images\\purple_nutsedge_juvenile_1.jpg",
+            "organized_path": "weed_images\\purple_nutsedge_juvenile_1.jpg",
+            "filename": "purple_nutsedge_juvenile_1.jpg",
+            "category": "weed_purple_nutsedge",
+            "subcategory": "purple_nutsedge",
+            "type": "weed",
+            "valid": true,
+            "train_path": "splits\\train\\weed_purple_nutsedge\\purple_nutsedge\\purple_nutsedge_juvenile_1.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\weed_images\\purple_nutsedge_mature_3.jpg",
+            "organized_path": "weed_images\\purple_nutsedge_mature_3.jpg",
+            "filename": "purple_nutsedge_mature_3.jpg",
+            "category": "weed_purple_nutsedge",
+            "subcategory": "purple_nutsedge",
+            "type": "weed",
+            "valid": true,
+            "train_path": "splits\\train\\weed_purple_nutsedge\\purple_nutsedge\\purple_nutsedge_mature_3.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\weed_images\\purslane_mature_2.jpg",
+            "organized_path": "weed_images\\purslane_mature_2.jpg",
+            "filename": "purslane_mature_2.jpg",
+            "category": "weed_purslane",
+            "subcategory": "purslane",
+            "type": "weed",
+            "valid": true,
+            "train_path": "splits\\train\\weed_purslane\\purslane\\purslane_mature_2.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\weed_images\\purslane_mature_3.jpg",
+            "organized_path": "weed_images\\purslane_mature_3.jpg",
+            "filename": "purslane_mature_3.jpg",
+            "category": "weed_purslane",
+            "subcategory": "purslane",
+            "type": "weed",
+            "valid": true,
+            "train_path": "splits\\train\\weed_purslane\\purslane\\purslane_mature_3.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\weed_images\\yellow_nutsedge_juvenile_2.jpg",
+            "organized_path": "weed_images\\yellow_nutsedge_juvenile_2.jpg",
+            "filename": "yellow_nutsedge_juvenile_2.jpg",
+            "category": "weed_yellow_nutsedge",
+            "subcategory": "yellow_nutsedge",
+            "type": "weed",
+            "valid": true,
+            "train_path": "splits\\train\\weed_yellow_nutsedge\\yellow_nutsedge\\yellow_nutsedge_juvenile_2.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\weed_images\\yellow_nutsedge_juvenile_3.jpg",
+            "organized_path": "weed_images\\yellow_nutsedge_juvenile_3.jpg",
+            "filename": "yellow_nutsedge_juvenile_3.jpg",
+            "category": "weed_yellow_nutsedge",
+            "subcategory": "yellow_nutsedge",
+            "type": "weed",
+            "valid": true,
+            "train_path": "splits\\train\\weed_yellow_nutsedge\\yellow_nutsedge\\yellow_nutsedge_juvenile_3.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\general_images\\fertilization_citrus_3.jpg",
+            "organized_path": "general_images\\fertilization_citrus_3.jpg",
+            "filename": "fertilization_citrus_3.jpg",
+            "category": "general_fertilization",
+            "subcategory": "fertilization",
+            "type": "general",
+            "valid": true,
+            "train_path": "splits\\train\\general_fertilization\\fertilization\\fertilization_citrus_3.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\general_images\\fertilization_corn_2.jpg",
+            "organized_path": "general_images\\fertilization_corn_2.jpg",
+            "filename": "fertilization_corn_2.jpg",
+            "category": "general_fertilization",
+            "subcategory": "fertilization",
+            "type": "general",
+            "valid": true,
+            "train_path": "splits\\train\\general_fertilization\\fertilization\\fertilization_corn_2.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\general_images\\irrigation_apple_4.jpg",
+            "organized_path": "general_images\\irrigation_apple_4.jpg",
+            "filename": "irrigation_apple_4.jpg",
+            "category": "general_irrigation",
+            "subcategory": "irrigation",
+            "type": "general",
+            "valid": true,
+            "train_path": "splits\\train\\general_irrigation\\irrigation\\irrigation_apple_4.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\general_images\\pest_control_cucumber_1.jpg",
+            "organized_path": "general_images\\pest_control_cucumber_1.jpg",
+            "filename": "pest_control_cucumber_1.jpg",
+            "category": "general_pest",
+            "subcategory": "pest",
+            "type": "general",
+            "valid": true,
+            "train_path": "splits\\train\\general_pest\\pest\\pest_control_cucumber_1.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\general_images\\pest_control_rose_5.jpg",
+            "organized_path": "general_images\\pest_control_rose_5.jpg",
+            "filename": "pest_control_rose_5.jpg",
+            "category": "general_pest",
+            "subcategory": "pest",
+            "type": "general",
+            "valid": true,
+            "train_path": "splits\\train\\general_pest\\pest\\pest_control_rose_5.jpg"
+          }
+        ],
+        "count": 74,
+        "stats": {
+          "disease_anthracnose": {
+            "anthracnose": 2
+          },
+          "disease_bacterial_blight": {
+            "bacterial_blight": 2
+          },
+          "disease_bacterial_canker": {
+            "bacterial_canker": 2
+          },
+          "disease_bacterial_spot": {
+            "bacterial_spot": 2
+          },
+          "disease_bacterial_wilt": {
+            "bacterial_wilt": 2
+          },
+          "disease_black": {
+            "black": 2
+          },
+          "disease_blight": {
+            "blight": 2
+          },
+          "disease_downy": {
+            "downy": 2
+          },
+          "disease_fire": {
+            "fire": 2
+          },
+          "disease_fusarium": {
+            "fusarium": 2
+          },
+          "disease_iron_deficiency": {
+            "iron_deficiency": 2
+          },
+          "disease_leaf": {
+            "leaf": 3
+          },
+          "disease_magnesium_deficiency": {
+            "magnesium_deficiency": 2
+          },
+          "disease_mosaic": {
+            "mosaic": 2
+          },
+          "disease_nitrogen_deficiency": {
+            "nitrogen_deficiency": 2
+          },
+          "disease_phosphorus_deficiency": {
+            "phosphorus_deficiency": 2
+          },
+          "disease_potassium_deficiency": {
+            "potassium_deficiency": 2
+          },
+          "disease_powdery": {
+            "powdery": 2
+          },
+          "disease_ring": {
+            "ring": 2
+          },
+          "disease_rust": {
+            "rust": 2
+          },
+          "disease_streak": {
+            "streak": 2
+          },
+          "disease_yellow_leaf": {
+            "yellow_leaf": 2
+          },
+          "weed_canada_thistle": {
+            "canada_thistle": 2
+          },
+          "weed_chickweed": {
+            "chickweed": 2
+          },
+          "weed_crabgrass": {
+            "crabgrass": 2
+          },
+          "weed_dandelion": {
+            "dandelion": 2
+          },
+          "weed_field_bindweed": {
+            "field_bindweed": 2
+          },
+          "weed_foxtail": {
+            "foxtail": 2
+          },
+          "weed_lambsquarters": {
+            "lambsquarters": 2
+          },
+          "weed_pigweed": {
+            "pigweed": 2
+          },
+          "weed_plantain": {
+            "plantain": 2
+          },
+          "weed_purple_nutsedge": {
+            "purple_nutsedge": 2
+          },
+          "weed_purslane": {
+            "purslane": 2
+          },
+          "weed_yellow_nutsedge": {
+            "yellow_nutsedge": 2
+          },
+          "general_fertilization": {
+            "fertilization": 2
+          },
+          "general_irrigation": {
+            "irrigation": 1
+          },
+          "general_pest": {
+            "pest": 2
+          }
+        }
+      },
+      "val": {
+        "files": [
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\bacterial_blight_potato_severe_2.jpg",
+            "organized_path": "disease_images\\bacterial_blight_potato_severe_2.jpg",
+            "filename": "bacterial_blight_potato_severe_2.jpg",
+            "category": "disease_bacterial_blight",
+            "subcategory": "bacterial_blight",
+            "type": "disease",
+            "valid": true,
+            "val_path": "splits\\val\\disease_bacterial_blight\\bacterial_blight\\bacterial_blight_potato_severe_2.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\bacterial_canker_grape_moderate_2.jpg",
+            "organized_path": "disease_images\\bacterial_canker_grape_moderate_2.jpg",
+            "filename": "bacterial_canker_grape_moderate_2.jpg",
+            "category": "disease_bacterial_canker",
+            "subcategory": "bacterial_canker",
+            "type": "disease",
+            "valid": true,
+            "val_path": "splits\\val\\disease_bacterial_canker\\bacterial_canker\\bacterial_canker_grape_moderate_2.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\bacterial_spot_bean_moderate_3.jpg",
+            "organized_path": "disease_images\\bacterial_spot_bean_moderate_3.jpg",
+            "filename": "bacterial_spot_bean_moderate_3.jpg",
+            "category": "disease_bacterial_spot",
+            "subcategory": "bacterial_spot",
+            "type": "disease",
+            "valid": true,
+            "val_path": "splits\\val\\disease_bacterial_spot\\bacterial_spot\\bacterial_spot_bean_moderate_3.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\bacterial_wilt_citrus_severe_3.jpg",
+            "organized_path": "disease_images\\bacterial_wilt_citrus_severe_3.jpg",
+            "filename": "bacterial_wilt_citrus_severe_3.jpg",
+            "category": "disease_bacterial_wilt",
+            "subcategory": "bacterial_wilt",
+            "type": "disease",
+            "valid": true,
+            "val_path": "splits\\val\\disease_bacterial_wilt\\bacterial_wilt\\bacterial_wilt_citrus_severe_3.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\downy_mildew_bean_mild_3.jpg",
+            "organized_path": "disease_images\\downy_mildew_bean_mild_3.jpg",
+            "filename": "downy_mildew_bean_mild_3.jpg",
+            "category": "disease_downy",
+            "subcategory": "downy",
+            "type": "disease",
+            "valid": true,
+            "val_path": "splits\\val\\disease_downy\\downy\\downy_mildew_bean_mild_3.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\fire_blight_apple_severe_3.jpg",
+            "organized_path": "disease_images\\fire_blight_apple_severe_3.jpg",
+            "filename": "fire_blight_apple_severe_3.jpg",
+            "category": "disease_fire",
+            "subcategory": "fire",
+            "type": "disease",
+            "valid": true,
+            "val_path": "splits\\val\\disease_fire\\fire\\fire_blight_apple_severe_3.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\fusarium_wilt_apple_mild_2.jpg",
+            "organized_path": "disease_images\\fusarium_wilt_apple_mild_2.jpg",
+            "filename": "fusarium_wilt_apple_mild_2.jpg",
+            "category": "disease_fusarium",
+            "subcategory": "fusarium",
+            "type": "disease",
+            "valid": true,
+            "val_path": "splits\\val\\disease_fusarium\\fusarium\\fusarium_wilt_apple_mild_2.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\iron_deficiency_grape_severe_2.jpg",
+            "organized_path": "disease_images\\iron_deficiency_grape_severe_2.jpg",
+            "filename": "iron_deficiency_grape_severe_2.jpg",
+            "category": "disease_iron_deficiency",
+            "subcategory": "iron_deficiency",
+            "type": "disease",
+            "valid": true,
+            "val_path": "splits\\val\\disease_iron_deficiency\\iron_deficiency\\iron_deficiency_grape_severe_2.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\leaf_roll_rice_mild_3.jpg",
+            "organized_path": "disease_images\\leaf_roll_rice_mild_3.jpg",
+            "filename": "leaf_roll_rice_mild_3.jpg",
+            "category": "disease_leaf",
+            "subcategory": "leaf",
+            "type": "disease",
+            "valid": true,
+            "val_path": "splits\\val\\disease_leaf\\leaf\\leaf_roll_rice_mild_3.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\magnesium_deficiency_pepper_moderate_2.jpg",
+            "organized_path": "disease_images\\magnesium_deficiency_pepper_moderate_2.jpg",
+            "filename": "magnesium_deficiency_pepper_moderate_2.jpg",
+            "category": "disease_magnesium_deficiency",
+            "subcategory": "magnesium_deficiency",
+            "type": "disease",
+            "valid": true,
+            "val_path": "splits\\val\\disease_magnesium_deficiency\\magnesium_deficiency\\magnesium_deficiency_pepper_moderate_2.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\nitrogen_deficiency_grape_mild_1.jpg",
+            "organized_path": "disease_images\\nitrogen_deficiency_grape_mild_1.jpg",
+            "filename": "nitrogen_deficiency_grape_mild_1.jpg",
+            "category": "disease_nitrogen_deficiency",
+            "subcategory": "nitrogen_deficiency",
+            "type": "disease",
+            "valid": true,
+            "val_path": "splits\\val\\disease_nitrogen_deficiency\\nitrogen_deficiency\\nitrogen_deficiency_grape_mild_1.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\phosphorus_deficiency_bean_mild_3.jpg",
+            "organized_path": "disease_images\\phosphorus_deficiency_bean_mild_3.jpg",
+            "filename": "phosphorus_deficiency_bean_mild_3.jpg",
+            "category": "disease_phosphorus_deficiency",
+            "subcategory": "phosphorus_deficiency",
+            "type": "disease",
+            "valid": true,
+            "val_path": "splits\\val\\disease_phosphorus_deficiency\\phosphorus_deficiency\\phosphorus_deficiency_bean_mild_3.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\potassium_deficiency_pepper_severe_3.jpg",
+            "organized_path": "disease_images\\potassium_deficiency_pepper_severe_3.jpg",
+            "filename": "potassium_deficiency_pepper_severe_3.jpg",
+            "category": "disease_potassium_deficiency",
+            "subcategory": "potassium_deficiency",
+            "type": "disease",
+            "valid": true,
+            "val_path": "splits\\val\\disease_potassium_deficiency\\potassium_deficiency\\potassium_deficiency_pepper_severe_3.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\powdery_mildew_bean_moderate_3.jpg",
+            "organized_path": "disease_images\\powdery_mildew_bean_moderate_3.jpg",
+            "filename": "powdery_mildew_bean_moderate_3.jpg",
+            "category": "disease_powdery",
+            "subcategory": "powdery",
+            "type": "disease",
+            "valid": true,
+            "val_path": "splits\\val\\disease_powdery\\powdery\\powdery_mildew_bean_moderate_3.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\ring_spot_corn_moderate_1.jpg",
+            "organized_path": "disease_images\\ring_spot_corn_moderate_1.jpg",
+            "filename": "ring_spot_corn_moderate_1.jpg",
+            "category": "disease_ring",
+            "subcategory": "ring",
+            "type": "disease",
+            "valid": true,
+            "val_path": "splits\\val\\disease_ring\\ring\\ring_spot_corn_moderate_1.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\rust_bean_mild_1.jpg",
+            "organized_path": "disease_images\\rust_bean_mild_1.jpg",
+            "filename": "rust_bean_mild_1.jpg",
+            "category": "disease_rust",
+            "subcategory": "rust",
+            "type": "disease",
+            "valid": true,
+            "val_path": "splits\\val\\disease_rust\\rust\\rust_bean_mild_1.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\streak_virus_pepper_mild_3.jpg",
+            "organized_path": "disease_images\\streak_virus_pepper_mild_3.jpg",
+            "filename": "streak_virus_pepper_mild_3.jpg",
+            "category": "disease_streak",
+            "subcategory": "streak",
+            "type": "disease",
+            "valid": true,
+            "val_path": "splits\\val\\disease_streak\\streak\\streak_virus_pepper_mild_3.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\yellow_leaf_curl_corn_severe_2.jpg",
+            "organized_path": "disease_images\\yellow_leaf_curl_corn_severe_2.jpg",
+            "filename": "yellow_leaf_curl_corn_severe_2.jpg",
+            "category": "disease_yellow_leaf",
+            "subcategory": "yellow_leaf",
+            "type": "disease",
+            "valid": true,
+            "val_path": "splits\\val\\disease_yellow_leaf\\yellow_leaf\\yellow_leaf_curl_corn_severe_2.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\weed_images\\canada_thistle_flowering_3.jpg",
+            "organized_path": "weed_images\\canada_thistle_flowering_3.jpg",
+            "filename": "canada_thistle_flowering_3.jpg",
+            "category": "weed_canada_thistle",
+            "subcategory": "canada_thistle",
+            "type": "weed",
+            "valid": true,
+            "val_path": "splits\\val\\weed_canada_thistle\\canada_thistle\\canada_thistle_flowering_3.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\weed_images\\chickweed_flowering_2.jpg",
+            "organized_path": "weed_images\\chickweed_flowering_2.jpg",
+            "filename": "chickweed_flowering_2.jpg",
+            "category": "weed_chickweed",
+            "subcategory": "chickweed",
+            "type": "weed",
+            "valid": true,
+            "val_path": "splits\\val\\weed_chickweed\\chickweed\\chickweed_flowering_2.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\weed_images\\crabgrass_flowering_1.jpg",
+            "organized_path": "weed_images\\crabgrass_flowering_1.jpg",
+            "filename": "crabgrass_flowering_1.jpg",
+            "category": "weed_crabgrass",
+            "subcategory": "crabgrass",
+            "type": "weed",
+            "valid": true,
+            "val_path": "splits\\val\\weed_crabgrass\\crabgrass\\crabgrass_flowering_1.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\weed_images\\dandelion_juvenile_2.jpg",
+            "organized_path": "weed_images\\dandelion_juvenile_2.jpg",
+            "filename": "dandelion_juvenile_2.jpg",
+            "category": "weed_dandelion",
+            "subcategory": "dandelion",
+            "type": "weed",
+            "valid": true,
+            "val_path": "splits\\val\\weed_dandelion\\dandelion\\dandelion_juvenile_2.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\weed_images\\field_bindweed_juvenile_1.jpg",
+            "organized_path": "weed_images\\field_bindweed_juvenile_1.jpg",
+            "filename": "field_bindweed_juvenile_1.jpg",
+            "category": "weed_field_bindweed",
+            "subcategory": "field_bindweed",
+            "type": "weed",
+            "valid": true,
+            "val_path": "splits\\val\\weed_field_bindweed\\field_bindweed\\field_bindweed_juvenile_1.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\weed_images\\foxtail_mature_2.jpg",
+            "organized_path": "weed_images\\foxtail_mature_2.jpg",
+            "filename": "foxtail_mature_2.jpg",
+            "category": "weed_foxtail",
+            "subcategory": "foxtail",
+            "type": "weed",
+            "valid": true,
+            "val_path": "splits\\val\\weed_foxtail\\foxtail\\foxtail_mature_2.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\weed_images\\lambsquarters_juvenile_2.jpg",
+            "organized_path": "weed_images\\lambsquarters_juvenile_2.jpg",
+            "filename": "lambsquarters_juvenile_2.jpg",
+            "category": "weed_lambsquarters",
+            "subcategory": "lambsquarters",
+            "type": "weed",
+            "valid": true,
+            "val_path": "splits\\val\\weed_lambsquarters\\lambsquarters\\lambsquarters_juvenile_2.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\weed_images\\pigweed_flowering_3.jpg",
+            "organized_path": "weed_images\\pigweed_flowering_3.jpg",
+            "filename": "pigweed_flowering_3.jpg",
+            "category": "weed_pigweed",
+            "subcategory": "pigweed",
+            "type": "weed",
+            "valid": true,
+            "val_path": "splits\\val\\weed_pigweed\\pigweed\\pigweed_flowering_3.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\weed_images\\plantain_juvenile_2.jpg",
+            "organized_path": "weed_images\\plantain_juvenile_2.jpg",
+            "filename": "plantain_juvenile_2.jpg",
+            "category": "weed_plantain",
+            "subcategory": "plantain",
+            "type": "weed",
+            "valid": true,
+            "val_path": "splits\\val\\weed_plantain\\plantain\\plantain_juvenile_2.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\weed_images\\purple_nutsedge_flowering_2.jpg",
+            "organized_path": "weed_images\\purple_nutsedge_flowering_2.jpg",
+            "filename": "purple_nutsedge_flowering_2.jpg",
+            "category": "weed_purple_nutsedge",
+            "subcategory": "purple_nutsedge",
+            "type": "weed",
+            "valid": true,
+            "val_path": "splits\\val\\weed_purple_nutsedge\\purple_nutsedge\\purple_nutsedge_flowering_2.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\weed_images\\purslane_flowering_1.jpg",
+            "organized_path": "weed_images\\purslane_flowering_1.jpg",
+            "filename": "purslane_flowering_1.jpg",
+            "category": "weed_purslane",
+            "subcategory": "purslane",
+            "type": "weed",
+            "valid": true,
+            "val_path": "splits\\val\\weed_purslane\\purslane\\purslane_flowering_1.jpg"
+          },
+          {
+            "original_path": "agricultural_ml_datasets\\weed_images\\yellow_nutsedge_flowering_1.jpg",
+            "organized_path": "weed_images\\yellow_nutsedge_flowering_1.jpg",
+            "filename": "yellow_nutsedge_flowering_1.jpg",
+            "category": "weed_yellow_nutsedge",
+            "subcategory": "yellow_nutsedge",
+            "type": "weed",
+            "valid": true,
+            "val_path": "splits\\val\\weed_yellow_nutsedge\\yellow_nutsedge\\yellow_nutsedge_flowering_1.jpg"
+          }
+        ],
+        "count": 30,
+        "stats": {
+          "disease_bacterial_blight": {
+            "bacterial_blight": 1
+          },
+          "disease_bacterial_canker": {
+            "bacterial_canker": 1
+          },
+          "disease_bacterial_spot": {
+            "bacterial_spot": 1
+          },
+          "disease_bacterial_wilt": {
+            "bacterial_wilt": 1
+          },
+          "disease_downy": {
+            "downy": 1
+          },
+          "disease_fire": {
+            "fire": 1
+          },
+          "disease_fusarium": {
+            "fusarium": 1
+          },
+          "disease_iron_deficiency": {
+            "iron_deficiency": 1
+          },
+          "disease_leaf": {
+            "leaf": 1
+          },
+          "disease_magnesium_deficiency": {
+            "magnesium_deficiency": 1
+          },
+          "disease_nitrogen_deficiency": {
+            "nitrogen_deficiency": 1
+          },
+          "disease_phosphorus_deficiency": {
+            "phosphorus_deficiency": 1
+          },
+          "disease_potassium_deficiency": {
+            "potassium_deficiency": 1
+          },
+          "disease_powdery": {
+            "powdery": 1
+          },
+          "disease_ring": {
+            "ring": 1
+          },
+          "disease_rust": {
+            "rust": 1
+          },
+          "disease_streak": {
+            "streak": 1
+          },
+          "disease_yellow_leaf": {
+            "yellow_leaf": 1
+          },
+          "weed_canada_thistle": {
+            "canada_thistle": 1
+          },
+          "weed_chickweed": {
+            "chickweed": 1
+          },
+          "weed_crabgrass": {
+            "crabgrass": 1
+          },
+          "weed_dandelion": {
+            "dandelion": 1
+          },
+          "weed_field_bindweed": {
+            "field_bindweed": 1
+          },
+          "weed_foxtail": {
+            "foxtail": 1
+          },
+          "weed_lambsquarters": {
+            "lambsquarters": 1
+          },
+          "weed_pigweed": {
+            "pigweed": 1
+          },
+          "weed_plantain": {
+            "plantain": 1
+          },
+          "weed_purple_nutsedge": {
+            "purple_nutsedge": 1
+          },
+          "weed_purslane": {
+            "purslane": 1
+          },
+          "weed_yellow_nutsedge": {
+            "yellow_nutsedge": 1
+          }
+        }
+      },
+      "test": {
+        "files": [
+          {
+            "original_path": "agricultural_ml_datasets\\disease_images\\leaf_spot_potato_moderate_1.jpg",
+            "organized_path": "disease_images\\leaf_spot_potato_moderate_1.jpg",
+            "filename": "leaf_spot_potato_moderate_1.jpg",
+            "category": "disease_leaf",
+            "subcategory": "leaf",
+            "type": "disease",
+            "valid": true,
+            "test_path": "splits\\test\\disease_leaf\\leaf\\leaf_spot_potato_moderate_1.jpg"
+          }
+        ],
+        "count": 1,
+        "stats": {
+          "disease_bacterial_blight": {
+            "bacterial_blight": 0
+          },
+          "disease_bacterial_canker": {
+            "bacterial_canker": 0
+          },
+          "disease_bacterial_spot": {
+            "bacterial_spot": 0
+          },
+          "disease_bacterial_wilt": {
+            "bacterial_wilt": 0
+          },
+          "disease_downy": {
+            "downy": 0
+          },
+          "disease_fire": {
+            "fire": 0
+          },
+          "disease_fusarium": {
+            "fusarium": 0
+          },
+          "disease_iron_deficiency": {
+            "iron_deficiency": 0
+          },
+          "disease_leaf": {
+            "leaf": 1
+          },
+          "disease_magnesium_deficiency": {
+            "magnesium_deficiency": 0
+          },
+          "disease_nitrogen_deficiency": {
+            "nitrogen_deficiency": 0
+          },
+          "disease_phosphorus_deficiency": {
+            "phosphorus_deficiency": 0
+          },
+          "disease_potassium_deficiency": {
+            "potassium_deficiency": 0
+          },
+          "disease_powdery": {
+            "powdery": 0
+          },
+          "disease_ring": {
+            "ring": 0
+          },
+          "disease_rust": {
+            "rust": 0
+          },
+          "disease_streak": {
+            "streak": 0
+          },
+          "disease_yellow_leaf": {
+            "yellow_leaf": 0
+          },
+          "weed_canada_thistle": {
+            "canada_thistle": 0
+          },
+          "weed_chickweed": {
+            "chickweed": 0
+          },
+          "weed_crabgrass": {
+            "crabgrass": 0
+          },
+          "weed_dandelion": {
+            "dandelion": 0
+          },
+          "weed_field_bindweed": {
+            "field_bindweed": 0
+          },
+          "weed_foxtail": {
+            "foxtail": 0
+          },
+          "weed_lambsquarters": {
+            "lambsquarters": 0
+          },
+          "weed_pigweed": {
+            "pigweed": 0
+          },
+          "weed_plantain": {
+            "plantain": 0
+          },
+          "weed_purple_nutsedge": {
+            "purple_nutsedge": 0
+          },
+          "weed_purslane": {
+            "purslane": 0
+          },
+          "weed_yellow_nutsedge": {
+            "yellow_nutsedge": 0
+          }
+        }
+      }
+    },
+    "report": {
+      "dataset_summary": {
+        "total_collected": 110,
+        "valid_images": 105,
+        "invalid_images": 5,
+        "validation_rate": 95.45454545454545
+      },
+      "category_distribution": {
+        "disease_anthracnose": 2,
+        "disease_bacterial_blight": 3,
+        "disease_bacterial_canker": 3,
+        "disease_bacterial_spot": 3,
+        "disease_bacterial_wilt": 3,
+        "disease_black": 2,
+        "disease_blight": 2,
+        "disease_downy": 3,
+        "disease_fire": 3,
+        "disease_fusarium": 3,
+        "disease_iron_deficiency": 3,
+        "disease_leaf": 5,
+        "disease_magnesium_deficiency": 3,
+        "disease_mosaic": 2,
+        "disease_nitrogen_deficiency": 3,
+        "disease_phosphorus_deficiency": 3,
+        "disease_potassium_deficiency": 3,
+        "disease_powdery": 3,
+        "disease_ring": 3,
+        "disease_rust": 3,
+        "disease_streak": 3,
+        "disease_yellow_leaf": 3,
+        "weed_canada_thistle": 3,
+        "weed_chickweed": 3,
+        "weed_crabgrass": 3,
+        "weed_dandelion": 3,
+        "weed_field_bindweed": 3,
+        "weed_foxtail": 3,
+        "weed_lambsquarters": 3,
+        "weed_pigweed": 3,
+        "weed_plantain": 3,
+        "weed_purple_nutsedge": 3,
+        "weed_purslane": 3,
+        "weed_yellow_nutsedge": 3,
+        "general_fertilization": 2,
+        "general_irrigation": 1,
+        "general_pest": 2
+      },
+      "split_distribution": {
+        "train": {
+          "disease_anthracnose": {
+            "anthracnose": 2
+          },
+          "disease_bacterial_blight": {
+            "bacterial_blight": 2
+          },
+          "disease_bacterial_canker": {
+            "bacterial_canker": 2
+          },
+          "disease_bacterial_spot": {
+            "bacterial_spot": 2
+          },
+          "disease_bacterial_wilt": {
+            "bacterial_wilt": 2
+          },
+          "disease_black": {
+            "black": 2
+          },
+          "disease_blight": {
+            "blight": 2
+          },
+          "disease_downy": {
+            "downy": 2
+          },
+          "disease_fire": {
+            "fire": 2
+          },
+          "disease_fusarium": {
+            "fusarium": 2
+          },
+          "disease_iron_deficiency": {
+            "iron_deficiency": 2
+          },
+          "disease_leaf": {
+            "leaf": 3
+          },
+          "disease_magnesium_deficiency": {
+            "magnesium_deficiency": 2
+          },
+          "disease_mosaic": {
+            "mosaic": 2
+          },
+          "disease_nitrogen_deficiency": {
+            "nitrogen_deficiency": 2
+          },
+          "disease_phosphorus_deficiency": {
+            "phosphorus_deficiency": 2
+          },
+          "disease_potassium_deficiency": {
+            "potassium_deficiency": 2
+          },
+          "disease_powdery": {
+            "powdery": 2
+          },
+          "disease_ring": {
+            "ring": 2
+          },
+          "disease_rust": {
+            "rust": 2
+          },
+          "disease_streak": {
+            "streak": 2
+          },
+          "disease_yellow_leaf": {
+            "yellow_leaf": 2
+          },
+          "weed_canada_thistle": {
+            "canada_thistle": 2
+          },
+          "weed_chickweed": {
+            "chickweed": 2
+          },
+          "weed_crabgrass": {
+            "crabgrass": 2
+          },
+          "weed_dandelion": {
+            "dandelion": 2
+          },
+          "weed_field_bindweed": {
+            "field_bindweed": 2
+          },
+          "weed_foxtail": {
+            "foxtail": 2
+          },
+          "weed_lambsquarters": {
+            "lambsquarters": 2
+          },
+          "weed_pigweed": {
+            "pigweed": 2
+          },
+          "weed_plantain": {
+            "plantain": 2
+          },
+          "weed_purple_nutsedge": {
+            "purple_nutsedge": 2
+          },
+          "weed_purslane": {
+            "purslane": 2
+          },
+          "weed_yellow_nutsedge": {
+            "yellow_nutsedge": 2
+          },
+          "general_fertilization": {
+            "fertilization": 2
+          },
+          "general_irrigation": {
+            "irrigation": 1
+          },
+          "general_pest": {
+            "pest": 2
+          }
+        },
+        "val": {
+          "disease_bacterial_blight": {
+            "bacterial_blight": 1
+          },
+          "disease_bacterial_canker": {
+            "bacterial_canker": 1
+          },
+          "disease_bacterial_spot": {
+            "bacterial_spot": 1
+          },
+          "disease_bacterial_wilt": {
+            "bacterial_wilt": 1
+          },
+          "disease_downy": {
+            "downy": 1
+          },
+          "disease_fire": {
+            "fire": 1
+          },
+          "disease_fusarium": {
+            "fusarium": 1
+          },
+          "disease_iron_deficiency": {
+            "iron_deficiency": 1
+          },
+          "disease_leaf": {
+            "leaf": 1
+          },
+          "disease_magnesium_deficiency": {
+            "magnesium_deficiency": 1
+          },
+          "disease_nitrogen_deficiency": {
+            "nitrogen_deficiency": 1
+          },
+          "disease_phosphorus_deficiency": {
+            "phosphorus_deficiency": 1
+          },
+          "disease_potassium_deficiency": {
+            "potassium_deficiency": 1
+          },
+          "disease_powdery": {
+            "powdery": 1
+          },
+          "disease_ring": {
+            "ring": 1
+          },
+          "disease_rust": {
+            "rust": 1
+          },
+          "disease_streak": {
+            "streak": 1
+          },
+          "disease_yellow_leaf": {
+            "yellow_leaf": 1
+          },
+          "weed_canada_thistle": {
+            "canada_thistle": 1
+          },
+          "weed_chickweed": {
+            "chickweed": 1
+          },
+          "weed_crabgrass": {
+            "crabgrass": 1
+          },
+          "weed_dandelion": {
+            "dandelion": 1
+          },
+          "weed_field_bindweed": {
+            "field_bindweed": 1
+          },
+          "weed_foxtail": {
+            "foxtail": 1
+          },
+          "weed_lambsquarters": {
+            "lambsquarters": 1
+          },
+          "weed_pigweed": {
+            "pigweed": 1
+          },
+          "weed_plantain": {
+            "plantain": 1
+          },
+          "weed_purple_nutsedge": {
+            "purple_nutsedge": 1
+          },
+          "weed_purslane": {
+            "purslane": 1
+          },
+          "weed_yellow_nutsedge": {
+            "yellow_nutsedge": 1
+          }
+        },
+        "test": {
+          "disease_bacterial_blight": {
+            "bacterial_blight": 0
+          },
+          "disease_bacterial_canker": {
+            "bacterial_canker": 0
+          },
+          "disease_bacterial_spot": {
+            "bacterial_spot": 0
+          },
+          "disease_bacterial_wilt": {
+            "bacterial_wilt": 0
+          },
+          "disease_downy": {
+            "downy": 0
+          },
+          "disease_fire": {
+            "fire": 0
+          },
+          "disease_fusarium": {
+            "fusarium": 0
+          },
+          "disease_iron_deficiency": {
+            "iron_deficiency": 0
+          },
+          "disease_leaf": {
+            "leaf": 1
+          },
+          "disease_magnesium_deficiency": {
+            "magnesium_deficiency": 0
+          },
+          "disease_nitrogen_deficiency": {
+            "nitrogen_deficiency": 0
+          },
+          "disease_phosphorus_deficiency": {
+            "phosphorus_deficiency": 0
+          },
+          "disease_potassium_deficiency": {
+            "potassium_deficiency": 0
+          },
+          "disease_powdery": {
+            "powdery": 0
+          },
+          "disease_ring": {
+            "ring": 0
+          },
+          "disease_rust": {
+            "rust": 0
+          },
+          "disease_streak": {
+            "streak": 0
+          },
+          "disease_yellow_leaf": {
+            "yellow_leaf": 0
+          },
+          "weed_canada_thistle": {
+            "canada_thistle": 0
+          },
+          "weed_chickweed": {
+            "chickweed": 0
+          },
+          "weed_crabgrass": {
+            "crabgrass": 0
+          },
+          "weed_dandelion": {
+            "dandelion": 0
+          },
+          "weed_field_bindweed": {
+            "field_bindweed": 0
+          },
+          "weed_foxtail": {
+            "foxtail": 0
+          },
+          "weed_lambsquarters": {
+            "lambsquarters": 0
+          },
+          "weed_pigweed": {
+            "pigweed": 0
+          },
+          "weed_plantain": {
+            "plantain": 0
+          },
+          "weed_purple_nutsedge": {
+            "purple_nutsedge": 0
+          },
+          "weed_purslane": {
+            "purslane": 0
+          },
+          "weed_yellow_nutsedge": {
+            "yellow_nutsedge": 0
+          }
+        }
+      },
+      "quality_issues": {
+        "Duplicate image": 5
+      },
+      "recommendations": []
+    }
+  },
+  "augmentation": {
+    "total_augmented": 0,
+    "original_images": 0,
+    "failed_augmentations": 0,
+    "output_dir": "agricultural_ml_datasets\\augmented_datasets"
+  },
+  "pytorch": {
+    "dataset_info": {
+      "num_classes": 37,
+      "class_to_idx": {
+        "anthracnose": 0,
+        "bacterial_blight": 1,
+        "bacterial_canker": 2,
+        "bacterial_spot": 3,
+        "bacterial_wilt": 4,
+        "black": 5,
+        "blight": 6,
+        "canada_thistle": 7,
+        "chickweed": 8,
+        "crabgrass": 9,
+        "dandelion": 10,
+        "downy": 11,
+        "fertilization": 12,
+        "field_bindweed": 13,
+        "fire": 14,
+        "foxtail": 15,
+        "fusarium": 16,
+        "iron_deficiency": 17,
+        "irrigation": 18,
+        "lambsquarters": 19,
+        "leaf": 20,
+        "magnesium_deficiency": 21,
+        "mosaic": 22,
+        "nitrogen_deficiency": 23,
+        "pest": 24,
+        "phosphorus_deficiency": 25,
+        "pigweed": 26,
+        "plantain": 27,
+        "potassium_deficiency": 28,
+        "powdery": 29,
+        "purple_nutsedge": 30,
+        "purslane": 31,
+        "ring": 32,
+        "rust": 33,
+        "streak": 34,
+        "yellow_leaf": 35,
+        "yellow_nutsedge": 36
+      },
+      "idx_to_class": {
+        "0": "anthracnose",
+        "1": "bacterial_blight",
+        "2": "bacterial_canker",
+        "3": "bacterial_spot",
+        "4": "bacterial_wilt",
+        "5": "black",
+        "6": "blight",
+        "7": "canada_thistle",
+        "8": "chickweed",
+        "9": "crabgrass",
+        "10": "dandelion",
+        "11": "downy",
+        "12": "fertilization",
+        "13": "field_bindweed",
+        "14": "fire",
+        "15": "foxtail",
+        "16": "fusarium",
+        "17": "iron_deficiency",
+        "18": "irrigation",
+        "19": "lambsquarters",
+        "20": "leaf",
+        "21": "magnesium_deficiency",
+        "22": "mosaic",
+        "23": "nitrogen_deficiency",
+        "24": "pest",
+        "25": "phosphorus_deficiency",
+        "26": "pigweed",
+        "27": "plantain",
+        "28": "potassium_deficiency",
+        "29": "powdery",
+        "30": "purple_nutsedge",
+        "31": "purslane",
+        "32": "ring",
+        "33": "rust",
+        "34": "streak",
+        "35": "yellow_leaf",
+        "36": "yellow_nutsedge"
+      },
+      "train_size": 74,
+      "val_size": 30,
+      "test_size": 1,
+      "class_weights": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        2.0,
+        1.0,
+        0.6666666865348816,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "image_size": 224,
+      "batch_size": 32
+    },
+    "train_samples": 74,
+    "val_samples": 30,
+    "test_samples": 1,
+    "num_classes": 37,
+    "pytorch_ready": true
+  },
+  "pipeline_summary": {
+    "total_time": 40.55994963645935,
+    "success": true,
+    "final_dataset_ready": true
+  }
+}

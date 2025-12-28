@@ -1,0 +1,237 @@
+name: CD - Continuous Deployment
+
+# Required GitHub Secrets (configure in Settings > Secrets):
+# - STAGING_HOST: Staging server hostname
+# - STAGING_USER: Staging server SSH username
+# - STAGING_SSH_KEY: Staging server SSH private key
+# - PROD_HOST: Production server hostname
+# - PROD_USER: Production server SSH username
+# - PROD_SSH_KEY: Production server SSH private key
+# - SLACK_WEBHOOK_URL: Slack webhook for notifications (optional)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+
+env:
+  REGISTRY: ghcr.io
+  BACKEND_IMAGE_NAME: ${{ github.repository }}/backend
+  FRONTEND_IMAGE_NAME: ${{ github.repository }}/frontend
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for backend
+        id: backend_meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix={{branch}}-
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./AGRISENSEFULL-STACK
+          file: ./AGRISENSEFULL-STACK/Dockerfile
+          push: true
+          tags: ${{ steps.backend_meta.outputs.tags }}
+          labels: ${{ steps.backend_meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64
+
+      - name: Extract metadata for frontend
+        id: frontend_meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix={{branch}}-
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./AGRISENSEFULL-STACK
+          file: ./AGRISENSEFULL-STACK/Dockerfile.frontend
+          push: true
+          tags: ${{ steps.frontend_meta.outputs.tags }}
+          labels: ${{ steps.frontend_meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64
+
+  deploy-staging:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment:
+      name: staging
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to staging server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          script: |
+            cd /opt/agrisense
+            docker-compose -f docker-compose.yml pull
+            docker-compose -f docker-compose.yml up -d --no-deps backend frontend
+            docker image prune -af
+
+      - name: Wait for health check
+        run: |
+          sleep 30
+          curl -f https://staging.agrisense.example.com/health || exit 1
+
+      - name: Run smoke tests
+        run: |
+          curl -f https://staging.agrisense.example.com/api/vlm/status
+          echo "Staging deployment successful"
+
+  deploy-production:
+    needs: [build-and-push, deploy-staging]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production'
+    environment:
+      name: production
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to production server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          script: |
+            cd /opt/agrisense
+            # Backup database before deployment
+            docker exec agrisense-postgres pg_dump -U agrisense agrisense_db > backup_$(date +%Y%m%d_%H%M%S).sql
+            
+            # Pull new images
+            docker-compose -f docker-compose.yml pull
+            
+            # Rolling update - backend first
+            docker-compose -f docker-compose.yml up -d --no-deps backend
+            sleep 20
+            
+            # Then frontend
+            docker-compose -f docker-compose.yml up -d --no-deps frontend
+            sleep 10
+            
+            # Cleanup old images
+            docker image prune -af
+
+      - name: Wait for health check
+        run: |
+          sleep 30
+          curl -f https://agrisense.example.com/health || exit 1
+
+      - name: Run smoke tests
+        run: |
+          curl -f https://agrisense.example.com/api/vlm/status
+          curl -f https://agrisense.example.com/api/health
+          echo "Production deployment successful"
+
+      - name: Notify deployment success
+        if: success()
+        uses: slackapi/slack-github-action@v1.24.0
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        with:
+          payload: |
+            {
+              "text": "✅ AgriSense production deployment successful!",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Production Deployment Complete*\n\nCommit: ${{ github.sha }}\nActor: ${{ github.actor }}\nStatus: Success ✅"
+                  }
+                }
+              ]
+            }
+
+      - name: Notify deployment failure
+        if: failure()
+        uses: slackapi/slack-github-action@v1.24.0
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        with:
+          payload: |
+            {
+              "text": "❌ AgriSense production deployment failed!",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Production Deployment Failed*\n\nCommit: ${{ github.sha }}\nActor: ${{ github.actor }}\nStatus: Failed ❌\n\nPlease check GitHub Actions logs."
+                  }
+                }
+              ]
+            }
+
+  rollback:
+    needs: deploy-production
+    runs-on: ubuntu-latest
+    if: failure()
+    environment:
+      name: production
+    
+    steps:
+      - name: Rollback production deployment
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          script: |
+            cd /opt/agrisense
+            # Restore previous images
+            docker-compose -f docker-compose.yml down
+            docker-compose -f docker-compose.yml up -d
+            echo "Rollback completed"

@@ -1,0 +1,124 @@
+{
+  "disease_detection": {
+    "enabled": true,
+    "confidence_threshold": 0.7,
+    "image_formats": ["jpg", "jpeg", "png", "webp"],
+    "max_image_size": "10MB",
+    "preprocessing": {
+      "resize": [224, 224],
+      "normalize": true,
+      "augmentation": false
+    },
+    "models": {
+      "mobilenet_disease": {
+        "architecture": "mobilenet_v2",
+        "input_size": [224, 224],
+        "num_classes": 38,
+        "model_path": "models/mobilenet_disease"
+      },
+      "vit_disease": {
+        "architecture": "vision_transformer",
+        "input_size": [224, 224],
+        "num_classes": 38,
+        "model_path": "models/vit_disease"
+      },
+      "resnet_disease": {
+        "architecture": "resnet50",
+        "input_size": [224, 224],
+        "num_classes": 38,
+        "model_path": "models/resnet_disease"
+      }
+    }
+  },
+  "weed_management": {
+    "enabled": true,
+    "segmentation_threshold": 0.5,
+    "coverage_analysis": true,
+    "minimum_area_pixels": 100,
+    "image_formats": ["jpg", "jpeg", "png", "webp"],
+    "preprocessing": {
+      "resize": [512, 512],
+      "normalize": true,
+      "augmentation": false
+    },
+    "models": {
+      "weed_segmentation": {
+        "architecture": "unet",
+        "input_size": [512, 512],
+        "num_classes": 2,
+        "model_path": "models/weed_segmentation"
+      },
+      "weed_classification": {
+        "architecture": "efficientnet",
+        "input_size": [224, 224],
+        "num_classes": 15,
+        "model_path": "models/weed_classification"
+      }
+    },
+    "analysis": {
+      "density_grid_size": 64,
+      "high_density_threshold": 0.3,
+      "coverage_assessment": {
+        "minimal": [0, 3],
+        "low": [3, 8],
+        "moderate": [8, 15],
+        "high": [15, 25],
+        "severe": [25, 100]
+      }
+    }
+  },
+  "plant_health_monitoring": {
+    "enabled": true,
+    "health_score_weights": {
+      "disease_impact": 0.6,
+      "weed_impact": 0.4
+    },
+    "alert_thresholds": {
+      "critical": 40,
+      "high": 60,
+      "medium": 80,
+      "low": 100
+    },
+    "monitoring_frequencies": {
+      "critical_health": "daily",
+      "poor_health": "every_2_days",
+      "fair_health": "twice_weekly",
+      "good_health": "weekly",
+      "excellent_health": "bi_weekly"
+    }
+  },
+  "integration": {
+    "enable_weather_data": true,
+    "enable_soil_data": true,
+    "enable_crop_stage_analysis": true,
+    "api_endpoints": {
+      "disease_detection": "/api/disease/detect",
+      "weed_management": "/api/weed/analyze",
+      "plant_health": "/api/health/assess",
+      "batch_analysis": "/api/health/batch"
+    }
+  },
+  "performance": {
+    "batch_processing": {
+      "max_images_per_batch": 10,
+      "parallel_processing": true,
+      "timeout_seconds": 300
+    },
+    "caching": {
+      "enable_model_cache": true,
+      "enable_result_cache": false,
+      "cache_duration_hours": 24
+    }
+  },
+  "data_management": {
+    "save_results": true,
+    "save_processed_images": false,
+    "results_retention_days": 90,
+    "export_formats": ["json", "csv"],
+    "database": {
+      "store_assessments": true,
+      "store_trends": true,
+      "store_recommendations": true
+    }
+  }
+}

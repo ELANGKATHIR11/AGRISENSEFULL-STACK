@@ -1,0 +1,28 @@
+{
+  "total_images": 110,
+  "disease_images": 69,
+  "weed_images": 36,
+  "general_images": 5,
+  "output_directory": "agricultural_ml_datasets",
+  "generated_for_testing": true,
+  "disease": {
+    "total_collected": 69,
+    "disease_count": 23,
+    "samples_per_disease": 3,
+    "output_directory": "agricultural_ml_datasets\\disease_images",
+    "metadata_file": "agricultural_ml_datasets\\disease_images\\disease_metadata.json"
+  },
+  "weed": {
+    "total_collected": 36,
+    "weed_count": 12,
+    "samples_per_weed": 3,
+    "output_directory": "agricultural_ml_datasets\\weed_images",
+    "metadata_file": "agricultural_ml_datasets\\weed_images\\weed_metadata.json"
+  },
+  "general": {
+    "total_collected": 5,
+    "categories": 8,
+    "output_directory": "agricultural_ml_datasets\\general_images",
+    "metadata_file": "agricultural_ml_datasets\\general_images\\metadata.json"
+  }
+}

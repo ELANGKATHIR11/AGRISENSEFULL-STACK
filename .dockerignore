@@ -1,0 +1,72 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+env/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Tests
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+
+# Data files
+*.db
+*.db-journal
+*.csv
+datasets/raw/*
+datasets/enhanced/*
+!datasets/raw/.gitkeep
+!datasets/enhanced/.gitkeep
+
+# ML models (keep structure, ignore weights)
+ml_models/**/artifacts/*.h5
+ml_models/**/artifacts/*.pt
+ml_models/**/artifacts/*.pkl
+ml_models/**/artifacts/*.joblib
+
+# Secrets
+.env
+.env.local
+*.pem
+*.key
+secrets/
+
+# Build artifacts
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# Documentation
+docs/_build/
+
+# Temporary files
+*.tmp
+*.bak
+*.swp

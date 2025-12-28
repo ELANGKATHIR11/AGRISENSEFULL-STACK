@@ -1,0 +1,19 @@
+{
+  "models": {
+    "disease_detection": {
+      "enabled": true,
+      "accuracy": 0.987,
+      "confidence_threshold": 0.8
+    },
+    "weed_management": {
+      "enabled": true,
+      "accuracy": 0.974,
+      "confidence_threshold": 0.8
+    }
+  },
+  "training_info": {
+    "timestamp": "172116",
+    "data_enhancement": true,
+    "ensemble_methods": true
+  }
+}

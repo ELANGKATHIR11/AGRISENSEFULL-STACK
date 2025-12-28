@@ -1,0 +1,313 @@
+{
+  "classes": {
+    "apple": [
+      "apple_scab",
+      "apple_black_rot",
+      "apple_cedar_rust",
+      "apple_healthy"
+    ],
+    "blueberry": [
+      "blueberry_healthy"
+    ],
+    "cherry": [
+      "cherry_powdery_mildew",
+      "cherry_healthy"
+    ],
+    "corn": [
+      "corn_cercospora_leaf_spot",
+      "corn_common_rust",
+      "corn_northern_leaf_blight",
+      "corn_healthy"
+    ],
+    "grape": [
+      "grape_black_rot",
+      "grape_esca",
+      "grape_leaf_blight",
+      "grape_healthy"
+    ],
+    "orange": [
+      "orange_haunglongbing",
+      "orange_healthy"
+    ],
+    "peach": [
+      "peach_bacterial_spot",
+      "peach_healthy"
+    ],
+    "pepper": [
+      "pepper_bacterial_spot",
+      "pepper_healthy"
+    ],
+    "potato": [
+      "potato_early_blight",
+      "potato_late_blight",
+      "potato_healthy"
+    ],
+    "raspberry": [
+      "raspberry_healthy"
+    ],
+    "soybean": [
+      "soybean_healthy"
+    ],
+    "squash": [
+      "squash_powdery_mildew",
+      "squash_healthy"
+    ],
+    "strawberry": [
+      "strawberry_leaf_scorch",
+      "strawberry_healthy"
+    ],
+    "tomato": [
+      "tomato_bacterial_spot",
+      "tomato_early_blight",
+      "tomato_late_blight",
+      "tomato_leaf_mold",
+      "tomato_septoria_leaf_spot",
+      "tomato_spider_mites",
+      "tomato_target_spot",
+      "tomato_yellow_leaf_curl_virus",
+      "tomato_mosaic_virus",
+      "tomato_healthy"
+    ]
+  },
+  "treatments": {
+    "apple_scab": {
+      "immediate": [
+        "Remove infected leaves and debris",
+        "Improve air circulation around trees",
+        "Avoid overhead watering"
+      ],
+      "chemical": [
+        "Apply fungicide with captan or myclobutanil",
+        "Use preventive sprays during wet periods",
+        "Copper-based fungicides for organic control"
+      ],
+      "organic": [
+        "Neem oil applications",
+        "Baking soda spray (1 tsp per quart water)",
+        "Compost tea foliar applications"
+      ],
+      "prevention": [
+        "Plant resistant varieties",
+        "Proper pruning for air circulation",
+        "Fall cleanup of infected debris",
+        "Avoid wetting foliage during watering"
+      ]
+    },
+    "apple_black_rot": {
+      "immediate": [
+        "Prune out infected branches",
+        "Remove mummified fruits",
+        "Clean up fallen debris"
+      ],
+      "chemical": [
+        "Apply fungicide with thiophanate-methyl",
+        "Use protective fungicides during bloom",
+        "Copper fungicides for control"
+      ],
+      "organic": [
+        "Bordeaux mixture applications",
+        "Lime sulfur dormant spray",
+        "Beneficial microorganism inoculants"
+      ],
+      "prevention": [
+        "Proper sanitation practices",
+        "Avoid tree stress through proper care",
+        "Regular inspection and early intervention"
+      ]
+    },
+    "tomato_early_blight": {
+      "immediate": [
+        "Remove affected lower leaves",
+        "Improve plant spacing for air circulation",
+        "Mulch around plants to prevent soil splash"
+      ],
+      "chemical": [
+        "Apply fungicide with chlorothalonil",
+        "Use mancozeb-based products",
+        "Rotate fungicide classes to prevent resistance"
+      ],
+      "organic": [
+        "Copper fungicide applications",
+        "Bacillus subtilis biological control",
+        "Compost tea and beneficial microbes"
+      ],
+      "prevention": [
+        "Crop rotation (3-4 year cycle)",
+        "Resistant or tolerant varieties",
+        "Proper plant nutrition and care",
+        "Drip irrigation to keep foliage dry"
+      ]
+    },
+    "tomato_late_blight": {
+      "immediate": [
+        "Remove infected plants immediately",
+        "Destroy affected plant material",
+        "Improve air circulation",
+        "Reduce humidity around plants"
+      ],
+      "chemical": [
+        "Apply fungicide with copper compounds",
+        "Use mefenoxam for soil treatment",
+        "Preventive sprays during favorable conditions"
+      ],
+      "organic": [
+        "Copper sulfate applications",
+        "Plant extracts (garlic, neem)",
+        "Biological control agents"
+      ],
+      "prevention": [
+        "Choose resistant varieties",
+        "Avoid overhead irrigation",
+        "Proper plant spacing",
+        "Monitor weather conditions closely"
+      ]
+    },
+    "corn_common_rust": {
+      "immediate": [
+        "Monitor disease development",
+        "Assess economic threshold",
+        "Consider environmental conditions"
+      ],
+      "chemical": [
+        "Apply fungicide if economic threshold exceeded",
+        "Use triazole fungicides",
+        "Time applications based on disease pressure"
+      ],
+      "organic": [
+        "Sulfur-based fungicides",
+        "Plant resistance inducers",
+        "Beneficial microorganism applications"
+      ],
+      "prevention": [
+        "Plant resistant hybrids",
+        "Crop rotation practices",
+        "Avoid late plantings in high-risk areas"
+      ]
+    },
+    "potato_late_blight": {
+      "immediate": [
+        "Destroy infected plants",
+        "Remove volunteer potatoes",
+        "Monitor weather conditions"
+      ],
+      "chemical": [
+        "Apply protectant fungicides",
+        "Use systemic fungicides when needed",
+        "Follow resistance management strategies"
+      ],
+      "organic": [
+        "Copper-based fungicides",
+        "Biological control products",
+        "Plant defense activators"
+      ],
+      "prevention": [
+        "Use certified disease-free seed",
+        "Plant resistant varieties",
+        "Proper hill formation and drainage",
+        "Monitor and destroy infected volunteers"
+      ]
+    },
+    "bacterial_spot": {
+      "immediate": [
+        "Remove infected plant parts",
+        "Improve air circulation",
+        "Avoid overhead watering",
+        "Disinfect tools between plants"
+      ],
+      "chemical": [
+        "Copper-based bactericides",
+        "Streptomycin applications where legal",
+        "Preventive copper sprays"
+      ],
+      "organic": [
+        "Copper sulfate treatments",
+        "Bacillus-based biological controls",
+        "Plant extracts and essential oils"
+      ],
+      "prevention": [
+        "Use pathogen-free seeds and transplants",
+        "Rotate crops for 2-3 years",
+        "Avoid working in wet fields",
+        "Control weeds that harbor bacteria"
+      ]
+    },
+    "powdery_mildew": {
+      "immediate": [
+        "Improve air circulation",
+        "Reduce humidity around plants",
+        "Remove heavily infected leaves"
+      ],
+      "chemical": [
+        "Apply fungicides with myclobutanil",
+        "Use sulfur-based products",
+        "Systemic fungicides for severe infections"
+      ],
+      "organic": [
+        "Baking soda spray solutions",
+        "Milk spray (1:10 ratio with water)",
+        "Neem oil applications",
+        "Sulfur dust or spray"
+      ],
+      "prevention": [
+        "Plant resistant varieties",
+        "Proper plant spacing",
+        "Avoid overhead watering",
+        "Morning watering to allow drying"
+      ]
+    }
+  },
+  "severity_indicators": {
+    "low": {
+      "symptoms": ["Few isolated spots", "Limited leaf damage", "Early stage infection"],
+      "action_threshold": "Monitor and consider preventive measures"
+    },
+    "medium": {
+      "symptoms": ["Multiple lesions", "Some leaf yellowing", "Spreading to multiple plants"],
+      "action_threshold": "Begin treatment protocol"
+    },
+    "high": {
+      "symptoms": ["Extensive leaf damage", "Fruit/yield impact", "Rapid spread"],
+      "action_threshold": "Immediate intervention required"
+    },
+    "critical": {
+      "symptoms": ["Severe defoliation", "Plant death", "Field-wide spread"],
+      "action_threshold": "Emergency management protocol"
+    }
+  },
+  "environmental_factors": {
+    "favorable_conditions": {
+      "bacterial_diseases": {
+        "temperature_range": [25, 30],
+        "humidity": "> 85%",
+        "moisture": "Free water on leaves",
+        "wind": "Moderate (spreads bacteria)"
+      },
+      "fungal_diseases": {
+        "temperature_range": [20, 25],
+        "humidity": "> 80%",
+        "moisture": "High humidity or leaf wetness",
+        "air_circulation": "Poor"
+      },
+      "viral_diseases": {
+        "vectors": "Aphids, whiteflies, thrips",
+        "plant_stress": "Drought, nutrient deficiency",
+        "weed_hosts": "Alternative virus hosts nearby"
+      }
+    }
+  },
+  "resistance_management": {
+    "fungicide_rotation": {
+      "group_1": "Benzimidazoles",
+      "group_2": "Triazoles", 
+      "group_3": "Strobilurins",
+      "group_4": "Copper compounds",
+      "rotation_strategy": "Never use same group consecutively"
+    },
+    "chemical_guidelines": {
+      "max_applications_per_season": 3,
+      "minimum_interval_days": 14,
+      "tank_mixing": "Combine different modes of action",
+      "resistance_monitoring": "Track efficacy annually"
+    }
+  }
+}

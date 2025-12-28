@@ -1,0 +1,220 @@
+# Celery Worker and Beat Configuration
+# Docker Compose services for background task processing
+
+version: '3.8'
+
+services:
+  # Redis broker for Celery
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    environment:
+      - REDIS_REPLICATION_MODE=master
+    networks:
+      - agrisense-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Celery Worker - Data Processing
+  celery-worker-data:
+    build:
+      context: .
+      dockerfile: Dockerfile.celery
+    restart: unless-stopped
+    command: celery -A agrisense_app.backend.celery_config worker --loglevel=info --queues=data_processing --concurrency=2
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - AGRISENSE_DISABLE_ML=0
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - ./agrisense_app:/app/agrisense_app
+      - ./data:/app/data
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - agrisense-network
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+
+  # Celery Worker - ML Tasks
+  celery-worker-ml:
+    build:
+      context: .
+      dockerfile: Dockerfile.celery
+    restart: unless-stopped
+    command: celery -A agrisense_app.backend.celery_config worker --loglevel=info --queues=ml_inference --concurrency=1
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - AGRISENSE_DISABLE_ML=0
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - ./agrisense_app:/app/agrisense_app
+      - ./data:/app/data
+      - ./models:/app/models
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - agrisense-network
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+
+  # Celery Worker - Reports
+  celery-worker-reports:
+    build:
+      context: .
+      dockerfile: Dockerfile.celery
+    restart: unless-stopped
+    command: celery -A agrisense_app.backend.celery_config worker --loglevel=info --queues=reports --concurrency=2
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - ./agrisense_app:/app/agrisense_app
+      - ./reports:/app/reports
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - agrisense-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  # Celery Worker - Notifications
+  celery-worker-notifications:
+    build:
+      context: .
+      dockerfile: Dockerfile.celery
+    restart: unless-stopped
+    command: celery -A agrisense_app.backend.celery_config worker --loglevel=info --queues=notifications --concurrency=4
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - REDIS_URL=redis://redis:6379/0
+      - SMTP_SERVER=${SMTP_SERVER:-localhost}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USERNAME=${SMTP_USERNAME:-}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
+      - SENDER_EMAIL=${SENDER_EMAIL:-noreply@agrisense.com}
+    volumes:
+      - ./agrisense_app:/app/agrisense_app
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - agrisense-network
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+
+  # Celery Worker - Scheduled Tasks
+  celery-worker-scheduled:
+    build:
+      context: .
+      dockerfile: Dockerfile.celery
+    restart: unless-stopped
+    command: celery -A agrisense_app.backend.celery_config worker --loglevel=info --queues=scheduled --concurrency=1
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - ./agrisense_app:/app/agrisense_app
+      - ./backups:/app/backups
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - agrisense-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  # Celery Beat Scheduler
+  celery-beat:
+    build:
+      context: .
+      dockerfile: Dockerfile.celery
+    restart: unless-stopped
+    command: celery -A agrisense_app.backend.celery_config beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - ./agrisense_app:/app/agrisense_app
+      - ./celery-schedule:/app/celery-schedule
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - agrisense-network
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+
+  # Flower - Celery Monitoring
+  flower:
+    build:
+      context: .
+      dockerfile: Dockerfile.celery
+    restart: unless-stopped
+    command: celery -A agrisense_app.backend.celery_config flower --port=5555
+    ports:
+      - "5555:5555"
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - FLOWER_BASIC_AUTH=${FLOWER_USER:-admin}:${FLOWER_PASSWORD:-admin123}
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - agrisense-network
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+
+networks:
+  agrisense-network:
+    external: true
+
+volumes:
+  redis_data:
+    driver: local

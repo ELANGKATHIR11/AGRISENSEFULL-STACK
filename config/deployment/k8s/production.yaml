@@ -1,0 +1,655 @@
+# Kubernetes Deployment Configuration for AgriSense
+# Production-ready setup with horizontal pod autoscaling
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: agrisense-production
+  labels:
+    name: agrisense-production
+    env: production
+
+---
+# ConfigMap for application configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: agrisense-config
+  namespace: agrisense-production
+data:
+  ENVIRONMENT: "production"
+  LOG_LEVEL: "INFO"
+  REDIS_URL: "redis://redis-service:6379/0"
+  CELERY_BROKER_URL: "redis://redis-service:6379/0"
+  CELERY_RESULT_BACKEND: "redis://redis-service:6379/0"
+  PROMETHEUS_MULTIPROC_DIR: "/tmp/prometheus_multiproc"
+  WORKERS: "4"
+  MAX_REQUESTS: "1000"
+  MAX_REQUESTS_JITTER: "100"
+
+---
+# Secret for sensitive configuration
+apiVersion: v1
+kind: Secret
+metadata:
+  name: agrisense-secrets
+  namespace: agrisense-production
+type: Opaque
+data:
+  # Base64 encoded values (replace with actual values)
+  DATABASE_URL: cG9zdGdyZXNxbDovL3VzZXI6cGFzc0BkYi9hZ3JpZGI=
+  JWT_SECRET_KEY: eW91ci1qd3Qtc2VjcmV0LWtleS1oZXJl
+  AGRISENSE_ADMIN_TOKEN: YWRtaW4tdG9rZW4taGVyZQ==
+  SMTP_PASSWORD: c210cC1wYXNzd29yZC1oZXJl
+  OPENWEATHER_API_KEY: d2VhdGhlci1hcGkta2V5LWhlcmU=
+
+---
+# Redis Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: agrisense-production
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        ports:
+        - containerPort: 6379
+        command:
+        - redis-server
+        - --appendonly yes
+        - --maxmemory 1gb
+        - --maxmemory-policy allkeys-lru
+        volumeMounts:
+        - name: redis-data
+          mountPath: /data
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: redis-data
+        persistentVolumeClaim:
+          claimName: redis-pvc
+
+---
+# Redis Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-service
+  namespace: agrisense-production
+spec:
+  selector:
+    app: redis
+  ports:
+  - port: 6379
+    targetPort: 6379
+  type: ClusterIP
+
+---
+# Redis PVC
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-pvc
+  namespace: agrisense-production
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: fast-ssd
+
+---
+# Main Backend Deployment (Blue)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agrisense-backend-blue
+  namespace: agrisense-production
+  labels:
+    app: agrisense-backend
+    version: blue
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: agrisense-backend
+      version: blue
+  template:
+    metadata:
+      labels:
+        app: agrisense-backend
+        version: blue
+    spec:
+      containers:
+      - name: agrisense
+        image: ghcr.io/your-org/agrisense:latest
+        ports:
+        - containerPort: 8004
+        env:
+        - name: PORT
+          value: "8004"
+        - name: HOST
+          value: "0.0.0.0"
+        envFrom:
+        - configMapRef:
+            name: agrisense-config
+        - secretRef:
+            name: agrisense-secrets
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8004
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8004
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+        volumeMounts:
+        - name: app-data
+          mountPath: /app/data
+        - name: tmp-prometheus
+          mountPath: /tmp/prometheus_multiproc
+      volumes:
+      - name: app-data
+        persistentVolumeClaim:
+          claimName: app-data-pvc
+      - name: tmp-prometheus
+        emptyDir: {}
+
+---
+# Main Backend Deployment (Green)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agrisense-backend-green
+  namespace: agrisense-production
+  labels:
+    app: agrisense-backend
+    version: green
+spec:
+  replicas: 0  # Initially scaled to 0
+  selector:
+    matchLabels:
+      app: agrisense-backend
+      version: green
+  template:
+    metadata:
+      labels:
+        app: agrisense-backend
+        version: green
+    spec:
+      containers:
+      - name: agrisense
+        image: ghcr.io/your-org/agrisense:latest
+        ports:
+        - containerPort: 8004
+        env:
+        - name: PORT
+          value: "8004"
+        - name: HOST
+          value: "0.0.0.0"
+        envFrom:
+        - configMapRef:
+            name: agrisense-config
+        - secretRef:
+            name: agrisense-secrets
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8004
+          initialDelaySeconds: 60
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8004
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        volumeMounts:
+        - name: app-data
+          mountPath: /app/data
+        - name: tmp-prometheus
+          mountPath: /tmp/prometheus_multiproc
+      volumes:
+      - name: app-data
+        persistentVolumeClaim:
+          claimName: app-data-pvc
+      - name: tmp-prometheus
+        emptyDir: {}
+
+---
+# Backend Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: agrisense-backend-service
+  namespace: agrisense-production
+spec:
+  selector:
+    app: agrisense-backend
+    version: blue  # Initially points to blue
+  ports:
+  - port: 80
+    targetPort: 8004
+    protocol: TCP
+  type: ClusterIP
+
+---
+# Celery Worker Deployment - Data Processing
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery-worker-data
+  namespace: agrisense-production
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: celery-worker
+      queue: data-processing
+  template:
+    metadata:
+      labels:
+        app: celery-worker
+        queue: data-processing
+    spec:
+      containers:
+      - name: celery-worker
+        image: ghcr.io/your-org/agrisense-celery:latest
+        command:
+        - celery
+        - -A
+        - agrisense_app.backend.celery_config
+        - worker
+        - --loglevel=info
+        - --queues=data_processing
+        - --concurrency=2
+        envFrom:
+        - configMapRef:
+            name: agrisense-config
+        - secretRef:
+            name: agrisense-secrets
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        volumeMounts:
+        - name: app-data
+          mountPath: /app/data
+
+---
+# Celery Worker Deployment - ML Tasks
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery-worker-ml
+  namespace: agrisense-production
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: celery-worker
+      queue: ml-inference
+  template:
+    metadata:
+      labels:
+        app: celery-worker
+        queue: ml-inference
+    spec:
+      containers:
+      - name: celery-worker
+        image: ghcr.io/your-org/agrisense-celery:latest
+        command:
+        - celery
+        - -A
+        - agrisense_app.backend.celery_config
+        - worker
+        - --loglevel=info
+        - --queues=ml_inference
+        - --concurrency=1
+        env:
+        - name: AGRISENSE_DISABLE_ML
+          value: "0"
+        envFrom:
+        - configMapRef:
+            name: agrisense-config
+        - secretRef:
+            name: agrisense-secrets
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1"
+        volumeMounts:
+        - name: app-data
+          mountPath: /app/data
+        - name: models
+          mountPath: /app/models
+
+---
+# Celery Beat Scheduler
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery-beat
+  namespace: agrisense-production
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: celery-beat
+  template:
+    metadata:
+      labels:
+        app: celery-beat
+    spec:
+      containers:
+      - name: celery-beat
+        image: ghcr.io/your-org/agrisense-celery:latest
+        command:
+        - celery
+        - -A
+        - agrisense_app.backend.celery_config
+        - beat
+        - --loglevel=info
+        envFrom:
+        - configMapRef:
+            name: agrisense-config
+        - secretRef:
+            name: agrisense-secrets
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "250m"
+        volumeMounts:
+        - name: celery-schedule
+          mountPath: /app/celery-schedule
+      volumes:
+      - name: celery-schedule
+        persistentVolumeClaim:
+          claimName: celery-schedule-pvc
+
+---
+# Flower Monitoring
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flower
+  namespace: agrisense-production
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flower
+  template:
+    metadata:
+      labels:
+        app: flower
+    spec:
+      containers:
+      - name: flower
+        image: ghcr.io/your-org/agrisense-celery:latest
+        command:
+        - celery
+        - -A
+        - agrisense_app.backend.celery_config
+        - flower
+        - --port=5555
+        ports:
+        - containerPort: 5555
+        env:
+        - name: FLOWER_BASIC_AUTH
+          value: "admin:admin123"
+        envFrom:
+        - configMapRef:
+            name: agrisense-config
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "250m"
+
+---
+# Flower Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: flower-service
+  namespace: agrisense-production
+spec:
+  selector:
+    app: flower
+  ports:
+  - port: 5555
+    targetPort: 5555
+  type: ClusterIP
+
+---
+# Persistent Volume Claims
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: app-data-pvc
+  namespace: agrisense-production
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: fast-ssd
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: celery-schedule-pvc
+  namespace: agrisense-production
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: standard
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: models-pvc
+  namespace: agrisense-production
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: fast-ssd
+
+---
+# Horizontal Pod Autoscaler for Backend
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: agrisense-backend-hpa
+  namespace: agrisense-production
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: agrisense-backend-blue
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+
+---
+# Horizontal Pod Autoscaler for Celery Workers
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: celery-worker-data-hpa
+  namespace: agrisense-production
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: celery-worker-data
+  minReplicas: 2
+  maxReplicas: 8
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 75
+
+---
+# Ingress Configuration
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: agrisense-ingress
+  namespace: agrisense-production
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+spec:
+  tls:
+  - hosts:
+    - agrisense.com
+    - www.agrisense.com
+    secretName: agrisense-tls
+  rules:
+  - host: agrisense.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: agrisense-backend-service
+            port:
+              number: 80
+  - host: www.agrisense.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: agrisense-backend-service
+            port:
+              number: 80
+
+---
+# Network Policy for Security
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: agrisense-network-policy
+  namespace: agrisense-production
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+  egress:
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 53
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 80

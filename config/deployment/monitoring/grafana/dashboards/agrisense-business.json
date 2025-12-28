@@ -1,0 +1,182 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "AgriSense - Business Metrics",
+    "tags": ["agrisense", "business"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Sensor Readings Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(agrisense_sensor_readings_total[5m])",
+            "legendFormat": "{{sensor_type}} ({{source}})",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Readings/sec",
+            "min": 0
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "Total Sensor Readings",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(agrisense_sensor_readings_total)",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "color": {
+              "mode": "value"
+            }
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "Recommendations Generated",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(agrisense_recommendations_generated_total)",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "color": {
+              "mode": "value"
+            }
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0}
+      },
+      {
+        "id": 4,
+        "title": "Irrigation Events",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(agrisense_irrigation_events_total[5m])",
+            "legendFormat": "{{trigger_type}}",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Events/sec",
+            "min": 0
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+      },
+      {
+        "id": 5,
+        "title": "Alert Summary",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(agrisense_alerts_generated_total[5m])",
+            "legendFormat": "{{alert_type}} ({{severity}})",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Alerts/sec",
+            "min": 0
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+      },
+      {
+        "id": 6,
+        "title": "ML Model Performance",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(agrisense_ml_inference_duration_seconds_bucket[5m]))",
+            "legendFormat": "95th percentile - {{model_name}}",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.50, rate(agrisense_ml_inference_duration_seconds_bucket[5m]))",
+            "legendFormat": "50th percentile - {{model_name}}",
+            "refId": "B"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Seconds",
+            "min": 0
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16}
+      },
+      {
+        "id": 7,
+        "title": "ML Prediction Success Rate",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rate(agrisense_ml_predictions_total{status=\"success\"}[5m]) / rate(agrisense_ml_predictions_total[5m]) * 100",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 90},
+                {"color": "green", "value": 95}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 16}
+      },
+      {
+        "id": 8,
+        "title": "Database Query Performance",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(agrisense_db_query_duration_seconds_bucket[5m]))",
+            "legendFormat": "95th percentile - {{operation}}",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Seconds",
+            "min": 0
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 18, "y": 16}
+      }
+    ],
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "refresh": "1m"
+  }
+}

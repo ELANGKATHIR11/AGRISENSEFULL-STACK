@@ -1,0 +1,13 @@
+# Optional heavy ML dependencies for Vision-Language and NLM features.
+# Install these only when you plan to run ML features locally or on a GPU-enabled runner.
+tensorflow==2.16.1
+torch>=2.0.0
+torchvision>=0.15.0
+sentence-transformers>=2.2.0
+transformers>=4.41.1
+opencv-python>=4.5.0
+Pillow>=8.3.0
+
+# Optional extras (install as needed):
+# faiss-cpu
+# accelerate

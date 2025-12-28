@@ -1,0 +1,99 @@
+{
+    "name": "AgriSense: A Smart Agriculture Solution for Sustainable Farming",
+    "short_name": "AgriSense",
+    "description": "A Smart Agriculture Solution for Sustainable Farming - AI-powered platform for precision farming, crop optimization, disease detection, and sustainable water management",
+    "start_url": "/",
+    "display": "standalone",
+    "orientation": "portrait-primary",
+    "background_color": "#f0fdf4",
+    "theme_color": "#14532d",
+    "categories": ["agriculture", "productivity", "utilities"],
+    "lang": "en-US",
+    "scope": "/",
+    "icons": [
+        {
+            "src": "/logo-agrisense-mark-v2.svg",
+            "type": "image/svg+xml",
+            "sizes": "any",
+            "purpose": "any"
+        },
+        {
+            "src": "/icons/icon-128.png",
+            "type": "image/png",
+            "sizes": "128x128",
+            "purpose": "maskable"
+        },
+        {
+            "src": "/icons/icon-32.png",
+            "type": "image/png",
+            "sizes": "32x32"
+        },
+        {
+            "src": "icons/icon-64.png",
+            "type": "image/png",
+            "sizes": "64x64"
+        },
+        {
+            "src": "icons/icon-128.png",
+            "type": "image/png",
+            "sizes": "128x128"
+        },
+        {
+            "src": "icons/icon-256.png",
+            "type": "image/png",
+            "sizes": "256x256"
+        },
+        {
+            "src": "icons/icon-512.png",
+            "type": "image/png",
+            "sizes": "512x512"
+        }
+    ],
+    "screenshots": [
+        {
+            "src": "screenshots/dashboard-wide.png",
+            "type": "image/png",
+            "sizes": "1280x720",
+            "form_factor": "wide",
+            "label": "AgriSense Dashboard - Desktop View"
+        },
+        {
+            "src": "screenshots/dashboard-mobile.png", 
+            "type": "image/png",
+            "sizes": "390x844",
+            "form_factor": "narrow",
+            "label": "AgriSense Dashboard - Mobile View"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Dashboard",
+            "short_name": "Dashboard",
+            "description": "View farm metrics and system status",
+            "url": "/",
+            "icons": [{"src": "/icons/icon-64.png", "sizes": "64x64"}]
+        },
+        {
+            "name": "Irrigation Control",
+            "short_name": "Water",
+            "description": "Manage irrigation and water systems",
+            "url": "/irrigation",
+            "icons": [{"src": "/icons/icon-64.png", "sizes": "64x64"}]
+        },
+        {
+            "name": "Crop Database",
+            "short_name": "Crops",
+            "description": "Browse crop information and recommendations",
+            "url": "/crops",
+            "icons": [{"src": "/icons/icon-64.png", "sizes": "64x64"}]
+        },
+        {
+            "name": "AI Chat",
+            "short_name": "Chat",
+            "description": "Ask farming questions to AI assistant",
+            "url": "/chat",
+            "icons": [{"src": "/icons/icon-64.png", "sizes": "64x64"}]
+        }
+    ],
+    "prefer_related_applications": false
+}

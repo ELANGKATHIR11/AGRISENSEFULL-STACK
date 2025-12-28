@@ -1,0 +1,9 @@
+{
+  "class_name": "tomato_early_blight",
+  "description": "Sample tomato_early_blight for training",
+  "image_count": 0,
+  "data_sources": [
+    "manual_collection"
+  ],
+  "last_updated": "2025-09-14"
+}

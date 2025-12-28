@@ -1,0 +1,217 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly security scan
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      
+      - name: Install security tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install pip-audit safety
+      
+      - name: Run pip-audit
+        continue-on-error: true
+        run: |
+          pip-audit --requirement agrisense_app/backend/requirements.txt --format json > security-audit.json || true
+      
+      - name: Run safety check
+        continue-on-error: true
+        run: |
+          safety check --json > safety-check.json || true
+      
+      - name: Upload security reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-reports
+          path: |
+            security-audit.json
+            safety-check.json
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      
+      - name: Install linting tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install black flake8 mypy pylint isort
+      
+      - name: Run black
+        run: black --check agrisense_app/backend
+      
+      - name: Run flake8
+        run: flake8 agrisense_app/backend --max-line-length=120 --extend-ignore=E203,W503
+      
+      - name: Run isort
+        run: isort --check-only agrisense_app/backend
+
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      
+      - name: Create venv and install deps
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+          pip install -U pip
+          pip install -r agrisense_app/backend/requirements.txt
+          pip install -r agrisense_app/backend/requirements-dev.txt
+      
+      - name: Run unit tests with coverage
+        env:
+          AGRISENSE_DISABLE_ML: '1'
+        run: |
+          . .venv/bin/activate
+          pytest --cov=agrisense_app.backend --cov-report=xml --cov-report=html -v
+      
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          flags: backend
+          name: backend-coverage
+      
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: htmlcov/
+
+  integration-tests:
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      
+      - name: Install dependencies
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+          pip install -U pip
+          pip install -r agrisense_app/backend/requirements.txt
+          pip install -r agrisense_app/backend/requirements-dev.txt
+      
+      - name: Generate demo chatbot artifacts
+        run: |
+          . .venv/bin/activate
+          python scripts/generate_stub_chatbot_artifacts.py || true
+      
+      - name: Start backend for integration tests
+        run: |
+          . .venv/bin/activate
+          nohup python -m uvicorn agrisense_app.backend.main:app --port 8004 &
+          sleep 10
+      
+      - name: Run integration tests
+        env:
+          AGRISENSE_DISABLE_ML: '1'
+        run: |
+          . .venv/bin/activate
+          pytest tests/ scripts/ -m integration -v
+  
+  frontend-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Install frontend dependencies
+        working-directory: agrisense_app/frontend/farm-fortune-frontend-main
+        run: npm ci
+      
+      - name: Run npm audit
+        working-directory: agrisense_app/frontend/farm-fortune-frontend-main
+        run: npm audit --production --audit-level=moderate
+      
+      - name: Run linting
+        working-directory: agrisense_app/frontend/farm-fortune-frontend-main
+        run: npm run lint:ci || true
+      
+      - name: Build frontend
+        working-directory: agrisense_app/frontend/farm-fortune-frontend-main
+        run: npm run build
+  
+  performance-tests:
+    runs-on: ubuntu-latest
+    needs: integration-tests
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      
+      - name: Install dependencies
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+          pip install -U pip
+          pip install -r agrisense_app/backend/requirements.txt
+          pip install locust
+      
+      - name: Start backend
+        run: |
+          . .venv/bin/activate
+          nohup python -m uvicorn agrisense_app.backend.main:app --port 8004 &
+          sleep 10
+      
+      - name: Run performance tests
+        run: |
+          . .venv/bin/activate
+          locust -f locustfile.py --host=http://localhost:8004 \\
+            --users 50 --spawn-rate 5 --run-time 2m --headless \\
+            --html performance_report.html
+      
+      - name: Upload performance report
+        uses: actions/upload-artifact@v3
+        with:
+          name: performance-report
+          path: performance_report.html

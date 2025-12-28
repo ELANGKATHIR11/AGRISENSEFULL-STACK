@@ -1,0 +1,350 @@
+{
+  "dataset_summary": {
+    "total_collected": 110,
+    "valid_images": 105,
+    "invalid_images": 5,
+    "validation_rate": 95.45454545454545
+  },
+  "category_distribution": {
+    "disease_anthracnose": 2,
+    "disease_bacterial_blight": 3,
+    "disease_bacterial_canker": 3,
+    "disease_bacterial_spot": 3,
+    "disease_bacterial_wilt": 3,
+    "disease_black": 2,
+    "disease_blight": 2,
+    "disease_downy": 3,
+    "disease_fire": 3,
+    "disease_fusarium": 3,
+    "disease_iron_deficiency": 3,
+    "disease_leaf": 5,
+    "disease_magnesium_deficiency": 3,
+    "disease_mosaic": 2,
+    "disease_nitrogen_deficiency": 3,
+    "disease_phosphorus_deficiency": 3,
+    "disease_potassium_deficiency": 3,
+    "disease_powdery": 3,
+    "disease_ring": 3,
+    "disease_rust": 3,
+    "disease_streak": 3,
+    "disease_yellow_leaf": 3,
+    "weed_canada_thistle": 3,
+    "weed_chickweed": 3,
+    "weed_crabgrass": 3,
+    "weed_dandelion": 3,
+    "weed_field_bindweed": 3,
+    "weed_foxtail": 3,
+    "weed_lambsquarters": 3,
+    "weed_pigweed": 3,
+    "weed_plantain": 3,
+    "weed_purple_nutsedge": 3,
+    "weed_purslane": 3,
+    "weed_yellow_nutsedge": 3,
+    "general_fertilization": 2,
+    "general_irrigation": 1,
+    "general_pest": 2
+  },
+  "split_distribution": {
+    "train": {
+      "disease_anthracnose": {
+        "anthracnose": 2
+      },
+      "disease_bacterial_blight": {
+        "bacterial_blight": 2
+      },
+      "disease_bacterial_canker": {
+        "bacterial_canker": 2
+      },
+      "disease_bacterial_spot": {
+        "bacterial_spot": 2
+      },
+      "disease_bacterial_wilt": {
+        "bacterial_wilt": 2
+      },
+      "disease_black": {
+        "black": 2
+      },
+      "disease_blight": {
+        "blight": 2
+      },
+      "disease_downy": {
+        "downy": 2
+      },
+      "disease_fire": {
+        "fire": 2
+      },
+      "disease_fusarium": {
+        "fusarium": 2
+      },
+      "disease_iron_deficiency": {
+        "iron_deficiency": 2
+      },
+      "disease_leaf": {
+        "leaf": 3
+      },
+      "disease_magnesium_deficiency": {
+        "magnesium_deficiency": 2
+      },
+      "disease_mosaic": {
+        "mosaic": 2
+      },
+      "disease_nitrogen_deficiency": {
+        "nitrogen_deficiency": 2
+      },
+      "disease_phosphorus_deficiency": {
+        "phosphorus_deficiency": 2
+      },
+      "disease_potassium_deficiency": {
+        "potassium_deficiency": 2
+      },
+      "disease_powdery": {
+        "powdery": 2
+      },
+      "disease_ring": {
+        "ring": 2
+      },
+      "disease_rust": {
+        "rust": 2
+      },
+      "disease_streak": {
+        "streak": 2
+      },
+      "disease_yellow_leaf": {
+        "yellow_leaf": 2
+      },
+      "weed_canada_thistle": {
+        "canada_thistle": 2
+      },
+      "weed_chickweed": {
+        "chickweed": 2
+      },
+      "weed_crabgrass": {
+        "crabgrass": 2
+      },
+      "weed_dandelion": {
+        "dandelion": 2
+      },
+      "weed_field_bindweed": {
+        "field_bindweed": 2
+      },
+      "weed_foxtail": {
+        "foxtail": 2
+      },
+      "weed_lambsquarters": {
+        "lambsquarters": 2
+      },
+      "weed_pigweed": {
+        "pigweed": 2
+      },
+      "weed_plantain": {
+        "plantain": 2
+      },
+      "weed_purple_nutsedge": {
+        "purple_nutsedge": 2
+      },
+      "weed_purslane": {
+        "purslane": 2
+      },
+      "weed_yellow_nutsedge": {
+        "yellow_nutsedge": 2
+      },
+      "general_fertilization": {
+        "fertilization": 2
+      },
+      "general_irrigation": {
+        "irrigation": 1
+      },
+      "general_pest": {
+        "pest": 2
+      }
+    },
+    "val": {
+      "disease_bacterial_blight": {
+        "bacterial_blight": 1
+      },
+      "disease_bacterial_canker": {
+        "bacterial_canker": 1
+      },
+      "disease_bacterial_spot": {
+        "bacterial_spot": 1
+      },
+      "disease_bacterial_wilt": {
+        "bacterial_wilt": 1
+      },
+      "disease_downy": {
+        "downy": 1
+      },
+      "disease_fire": {
+        "fire": 1
+      },
+      "disease_fusarium": {
+        "fusarium": 1
+      },
+      "disease_iron_deficiency": {
+        "iron_deficiency": 1
+      },
+      "disease_leaf": {
+        "leaf": 1
+      },
+      "disease_magnesium_deficiency": {
+        "magnesium_deficiency": 1
+      },
+      "disease_nitrogen_deficiency": {
+        "nitrogen_deficiency": 1
+      },
+      "disease_phosphorus_deficiency": {
+        "phosphorus_deficiency": 1
+      },
+      "disease_potassium_deficiency": {
+        "potassium_deficiency": 1
+      },
+      "disease_powdery": {
+        "powdery": 1
+      },
+      "disease_ring": {
+        "ring": 1
+      },
+      "disease_rust": {
+        "rust": 1
+      },
+      "disease_streak": {
+        "streak": 1
+      },
+      "disease_yellow_leaf": {
+        "yellow_leaf": 1
+      },
+      "weed_canada_thistle": {
+        "canada_thistle": 1
+      },
+      "weed_chickweed": {
+        "chickweed": 1
+      },
+      "weed_crabgrass": {
+        "crabgrass": 1
+      },
+      "weed_dandelion": {
+        "dandelion": 1
+      },
+      "weed_field_bindweed": {
+        "field_bindweed": 1
+      },
+      "weed_foxtail": {
+        "foxtail": 1
+      },
+      "weed_lambsquarters": {
+        "lambsquarters": 1
+      },
+      "weed_pigweed": {
+        "pigweed": 1
+      },
+      "weed_plantain": {
+        "plantain": 1
+      },
+      "weed_purple_nutsedge": {
+        "purple_nutsedge": 1
+      },
+      "weed_purslane": {
+        "purslane": 1
+      },
+      "weed_yellow_nutsedge": {
+        "yellow_nutsedge": 1
+      }
+    },
+    "test": {
+      "disease_bacterial_blight": {
+        "bacterial_blight": 0
+      },
+      "disease_bacterial_canker": {
+        "bacterial_canker": 0
+      },
+      "disease_bacterial_spot": {
+        "bacterial_spot": 0
+      },
+      "disease_bacterial_wilt": {
+        "bacterial_wilt": 0
+      },
+      "disease_downy": {
+        "downy": 0
+      },
+      "disease_fire": {
+        "fire": 0
+      },
+      "disease_fusarium": {
+        "fusarium": 0
+      },
+      "disease_iron_deficiency": {
+        "iron_deficiency": 0
+      },
+      "disease_leaf": {
+        "leaf": 1
+      },
+      "disease_magnesium_deficiency": {
+        "magnesium_deficiency": 0
+      },
+      "disease_nitrogen_deficiency": {
+        "nitrogen_deficiency": 0
+      },
+      "disease_phosphorus_deficiency": {
+        "phosphorus_deficiency": 0
+      },
+      "disease_potassium_deficiency": {
+        "potassium_deficiency": 0
+      },
+      "disease_powdery": {
+        "powdery": 0
+      },
+      "disease_ring": {
+        "ring": 0
+      },
+      "disease_rust": {
+        "rust": 0
+      },
+      "disease_streak": {
+        "streak": 0
+      },
+      "disease_yellow_leaf": {
+        "yellow_leaf": 0
+      },
+      "weed_canada_thistle": {
+        "canada_thistle": 0
+      },
+      "weed_chickweed": {
+        "chickweed": 0
+      },
+      "weed_crabgrass": {
+        "crabgrass": 0
+      },
+      "weed_dandelion": {
+        "dandelion": 0
+      },
+      "weed_field_bindweed": {
+        "field_bindweed": 0
+      },
+      "weed_foxtail": {
+        "foxtail": 0
+      },
+      "weed_lambsquarters": {
+        "lambsquarters": 0
+      },
+      "weed_pigweed": {
+        "pigweed": 0
+      },
+      "weed_plantain": {
+        "plantain": 0
+      },
+      "weed_purple_nutsedge": {
+        "purple_nutsedge": 0
+      },
+      "weed_purslane": {
+        "purslane": 0
+      },
+      "weed_yellow_nutsedge": {
+        "yellow_nutsedge": 0
+      }
+    }
+  },
+  "quality_issues": {
+    "Duplicate image": 5
+  },
+  "recommendations": []
+}

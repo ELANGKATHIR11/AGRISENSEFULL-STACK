@@ -1,0 +1,130 @@
+{
+  "dandelion": {
+    "scientific_name": "Sample dandelion",
+    "type": "broadleaf",
+    "season": "cool_season",
+    "control_methods": [
+      "herbicide",
+      "mechanical",
+      "cultural"
+    ],
+    "herbicides": [
+      "2,4-D",
+      "glyphosate",
+      "dicamba"
+    ],
+    "growth_habit": "perennial"
+  },
+  "crabgrass": {
+    "scientific_name": "Sample crabgrass",
+    "type": "grass",
+    "season": "cool_season",
+    "control_methods": [
+      "herbicide",
+      "mechanical",
+      "cultural"
+    ],
+    "herbicides": [
+      "2,4-D",
+      "glyphosate",
+      "dicamba"
+    ],
+    "growth_habit": "annual"
+  },
+  "clover": {
+    "scientific_name": "Sample clover",
+    "type": "broadleaf",
+    "season": "cool_season",
+    "control_methods": [
+      "herbicide",
+      "mechanical",
+      "cultural"
+    ],
+    "herbicides": [
+      "2,4-D",
+      "glyphosate",
+      "dicamba"
+    ],
+    "growth_habit": "perennial"
+  },
+  "chickweed": {
+    "scientific_name": "Sample chickweed",
+    "type": "broadleaf",
+    "season": "cool_season",
+    "control_methods": [
+      "herbicide",
+      "mechanical",
+      "cultural"
+    ],
+    "herbicides": [
+      "2,4-D",
+      "glyphosate",
+      "dicamba"
+    ],
+    "growth_habit": "annual"
+  },
+  "plantain": {
+    "scientific_name": "Sample plantain",
+    "type": "grass",
+    "season": "cool_season",
+    "control_methods": [
+      "herbicide",
+      "mechanical",
+      "cultural"
+    ],
+    "herbicides": [
+      "2,4-D",
+      "glyphosate",
+      "dicamba"
+    ],
+    "growth_habit": "annual"
+  },
+  "lambsquarters": {
+    "scientific_name": "Sample lambsquarters",
+    "type": "grass",
+    "season": "cool_season",
+    "control_methods": [
+      "herbicide",
+      "mechanical",
+      "cultural"
+    ],
+    "herbicides": [
+      "2,4-D",
+      "glyphosate",
+      "dicamba"
+    ],
+    "growth_habit": "annual"
+  },
+  "pigweed": {
+    "scientific_name": "Sample pigweed",
+    "type": "grass",
+    "season": "cool_season",
+    "control_methods": [
+      "herbicide",
+      "mechanical",
+      "cultural"
+    ],
+    "herbicides": [
+      "2,4-D",
+      "glyphosate",
+      "dicamba"
+    ],
+    "growth_habit": "annual"
+  },
+  "foxtail": {
+    "scientific_name": "Sample foxtail",
+    "type": "grass",
+    "season": "cool_season",
+    "control_methods": [
+      "herbicide",
+      "mechanical",
+      "cultural"
+    ],
+    "herbicides": [
+      "2,4-D",
+      "glyphosate",
+      "dicamba"
+    ],
+    "growth_habit": "annual"
+  }
+}

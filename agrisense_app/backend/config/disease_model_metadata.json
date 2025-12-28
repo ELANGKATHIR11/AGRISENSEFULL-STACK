@@ -1,0 +1,21 @@
+{
+  "model_type": "RandomForestClassifier",
+  "classes": [
+    "tomato_early_blight",
+    "tomato_late_blight",
+    "corn_rust",
+    "wheat_rust",
+    "potato_blight",
+    "apple_scab",
+    "grape_downy_mildew",
+    "rice_blast"
+  ],
+  "n_classes": 8,
+  "train_accuracy": 0.9925,
+  "test_accuracy": 0.33,
+  "n_features": 20,
+  "n_samples": 2000,
+  "trained_date": "2025-09-14T13:36:52.954627",
+  "model_file": "disease_model_enhanced.joblib",
+  "encoder_file": "disease_encoder_enhanced.joblib"
+}

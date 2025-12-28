@@ -1,0 +1,61 @@
+# ===== Core Web Framework =====
+# Optimized for Python 3.12.10 - December 2025
+# CLEANED UP - Removed unused dependencies (Dec 24, 2025)
+fastapi>=0.115.6
+uvicorn[standard]>=0.34.0
+pydantic>=2.10.5
+python-multipart>=0.0.20
+# SECURITY: starlette 0.49.3+ fixes GHSA-7f5h-v6xp-fcq8
+starlette>=0.49.3
+
+# ===== Data Processing =====
+# CONSTRAINT: numpy<2.3.0 for opencv-python 4.12.0.88 compatibility
+numpy>=2.2.1,<2.3.0
+pandas>=2.2.3
+
+# ===== Machine Learning Core =====
+scikit-learn>=1.6.1
+joblib>=1.4.2
+
+# ===== Deep Learning (PyTorch) =====
+torch==2.5.1
+torchvision==0.20.1
+sentence-transformers>=3.3.1
+
+# ===== Computer Vision =====
+opencv-python>=4.10.0.84
+Pillow>=11.1.0
+
+# ===== NLP & Retrieval =====
+rank-bm25>=0.2.2
+transformers>=4.47.1
+# CONSTRAINT: huggingface-hub must remain at 0.36.x for transformers compatibility
+# Latest 1.2.0 has breaking changes
+huggingface-hub>=0.36.0,<0.37.0
+
+# ===== IoT & Communication (Optional) =====
+paho-mqtt>=2.1.0
+
+# ===== Database (SQLite) =====
+sqlalchemy>=2.0.36
+
+# ===== Authentication & Security =====
+# SECURITY: Using PyJWT instead of python-jose to avoid ecdsa CVE-2024-23342
+PyJWT>=2.10.0
+passlib[bcrypt]>=1.7.4
+# CONSTRAINT: fastapi-users 15.0.1 requires pwdlib==0.2.1
+fastapi-users[sqlalchemy]>=15.0.1
+pwdlib[argon2,bcrypt]==0.2.1
+
+# ===== API Integration =====
+openai>=1.59.7
+requests>=2.32.3
+slowapi>=0.1.9
+
+# ===== Database Migrations =====
+alembic>=1.14.0
+
+# ===== Monitoring & Metrics =====
+prometheus-client>=0.21.1
+psutil>=6.1.1
+sentry-sdk>=2.0.0

@@ -1,0 +1,28 @@
+{
+  "general": {
+    "total_collected": 0,
+    "disease_images": 0,
+    "weed_images": 0,
+    "failed_downloads": 39,
+    "duration_seconds": 38.342116594314575,
+    "output_directory": "agricultural_ml_datasets\\general_images"
+  },
+  "diseases": {
+    "total_collected": 0,
+    "unique_diseases": 0,
+    "unique_crops": 0,
+    "duration": 0.7720355987548828,
+    "output_dir": "agricultural_ml_datasets\\disease_images"
+  },
+  "weeds": {
+    "total_collected": 0,
+    "unique_weeds": 0,
+    "unique_families": 0,
+    "growth_stages": 0,
+    "duration": 0.594301700592041,
+    "output_dir": "agricultural_ml_datasets\\weed_images"
+  },
+  "total_images": 0,
+  "total_time": 38.346237659454346,
+  "collection_complete": true
+}

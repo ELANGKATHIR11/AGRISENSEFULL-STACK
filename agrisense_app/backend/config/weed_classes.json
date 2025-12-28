@@ -1,0 +1,344 @@
+{
+  "classes": {
+    "broadleaf_weeds": [
+      "dandelion",
+      "clover",
+      "plantain",
+      "chickweed",
+      "purslane",
+      "lambsquarters",
+      "pigweed",
+      "velvetleaf",
+      "cocklebur",
+      "sunflower",
+      "ragweed",
+      "bindweed"
+    ],
+    "grassy_weeds": [
+      "crabgrass",
+      "bermuda_grass",
+      "foxtail",
+      "quackgrass",
+      "barnyardgrass",
+      "fall_panicum",
+      "giant_foxtail",
+      "wild_oats",
+      "johnson_grass",
+      "goosegrass"
+    ],
+    "sedges": [
+      "yellow_nutsedge",
+      "purple_nutsedge",
+      "annual_sedge",
+      "green_kyllinga"
+    ],
+    "perennial_weeds": [
+      "canada_thistle",
+      "field_bindweed",
+      "perennial_ryegrass",
+      "white_clover",
+      "curly_dock"
+    ]
+  },
+  "control_methods": {
+    "dandelion": {
+      "mechanical": [
+        "Hand pulling (most effective on young plants)",
+        "Deep cultivation to cut taproot",
+        "Mowing before seed set"
+      ],
+      "biological": [
+        "Maintain dense competitive turf",
+        "Promote beneficial insects",
+        "Encourage natural predators"
+      ],
+      "chemical": [
+        "2,4-D selective herbicide",
+        "Dicamba for tough infestations",
+        "Glyphosate for spot treatment"
+      ],
+      "prevention": [
+        "Maintain healthy soil pH (6.0-7.0)",
+        "Proper fertilization program",
+        "Overseed thin areas in fall",
+        "Regular mowing to prevent seed production"
+      ],
+      "timing": {
+        "best_control": "Fall application when carbohydrates move to roots",
+        "mechanical": "Spring before flowering",
+        "chemical": "Active growth periods"
+      }
+    },
+    "crabgrass": {
+      "mechanical": [
+        "Hand pulling small patches",
+        "Cultivation before crop planting",
+        "High mowing to shade out seedlings"
+      ],
+      "biological": [
+        "Dense crop canopy competition",
+        "Cover crop establishment",
+        "Beneficial allelopathic plants"
+      ],
+      "chemical": [
+        "Pre-emergent herbicides (pendimethalin, prodiamine)",
+        "Post-emergent options (quinclorac, fenoxaprop)",
+        "Glyphosate for non-selective control"
+      ],
+      "prevention": [
+        "Fall overseeding for thick turf",
+        "Proper soil moisture management",
+        "Avoid soil compaction",
+        "Apply pre-emergent before soil reaches 55°F"
+      ],
+      "timing": {
+        "pre_emergent": "Early spring before germination",
+        "post_emergent": "Young seedling stage",
+        "mechanical": "Before seed head formation"
+      }
+    },
+    "clover": {
+      "mechanical": [
+        "Hand removal in small areas",
+        "Frequent mowing to weaken plants",
+        "Cultivation between crop rows"
+      ],
+      "biological": [
+        "Grass competition enhancement",
+        "Nitrogen fertilization to reduce advantage",
+        "Beneficial microorganism inoculation"
+      ],
+      "chemical": [
+        "2,4-D for broadleaf control",
+        "MCPP for selective control",
+        "Triclopyr for difficult areas"
+      ],
+      "prevention": [
+        "Maintain adequate soil nitrogen",
+        "Improve soil pH if too acidic",
+        "Ensure proper drainage",
+        "Regular fertilization program"
+      ],
+      "timing": {
+        "chemical": "Active growth in spring/fall",
+        "mechanical": "Before flowering",
+        "biological": "Continuous through season"
+      }
+    },
+    "pigweed": {
+      "mechanical": [
+        "Cultivation and hoeing",
+        "Hand pulling before seed set",
+        "Mowing to prevent reproduction"
+      ],
+      "biological": [
+        "Crop rotation with competitive crops",
+        "Cover crop suppression",
+        "Mulching to prevent emergence"
+      ],
+      "chemical": [
+        "Atrazine in corn production",
+        "2,4-D for broadleaf control",
+        "Glufosinate for burn-down"
+      ],
+      "prevention": [
+        "Clean cultivation practices",
+        "Crop rotation planning",
+        "Equipment sanitation",
+        "Field border management"
+      ],
+      "timing": {
+        "cultivation": "Early season before 6 inches tall",
+        "chemical": "Small seedling stage",
+        "prevention": "Throughout growing season"
+      }
+    },
+    "foxtail": {
+      "mechanical": [
+        "Cultivation before crop emergence",
+        "Rotary hoeing in crop",
+        "Hand removal in small areas"
+      ],
+      "biological": [
+        "Competitive crop varieties",
+        "Cover crop establishment",
+        "Allelopathic crop selection"
+      ],
+      "chemical": [
+        "Acetochlor for pre-emergent control",
+        "Nicosulfuron for post-emergent",
+        "Glyphosate for non-selective control"
+      ],
+      "prevention": [
+        "Crop rotation with perennial forages",
+        "Clean seed sources",
+        "Equipment cleaning",
+        "Field sanitation practices"
+      ],
+      "timing": {
+        "pre_emergent": "Before soil temperature reaches 65°F",
+        "post_emergent": "1-3 leaf stage",
+        "cultivation": "Seedling stage"
+      }
+    },
+    "bindweed": {
+      "mechanical": [
+        "Repeated cultivation to exhaust root system",
+        "Hand pulling with root removal",
+        "Mowing to prevent seed production"
+      ],
+      "biological": [
+        "Competitive perennial grasses",
+        "Bindweed mite introduction",
+        "Sheep grazing management"
+      ],
+      "chemical": [
+        "Glyphosate for systemic control",
+        "2,4-D for repeated applications",
+        "Dicamba for tough infestations"
+      ],
+      "prevention": [
+        "Prevent soil disturbance",
+        "Maintain competitive vegetation",
+        "Monitor and treat early infestations",
+        "Equipment cleaning"
+      ],
+      "timing": {
+        "chemical": "Bud to early bloom stage",
+        "mechanical": "Repeated throughout season",
+        "biological": "Establish long-term competition"
+      }
+    },
+    "yellow_nutsedge": {
+      "mechanical": [
+        "Cultivation to exhaust tubers",
+        "Hand pulling with tuber removal",
+        "Flooding for extended periods"
+      ],
+      "biological": [
+        "Competitive crop establishment",
+        "Cover crop systems",
+        "Beneficial microorganism enhancement"
+      ],
+      "chemical": [
+        "Halosulfuron for selective control",
+        "Bentazon in legume crops",
+        "Glyphosate for non-selective areas"
+      ],
+      "prevention": [
+        "Improve soil drainage",
+        "Avoid field trafficking when wet",
+        "Equipment sanitation",
+        "Crop rotation planning"
+      ],
+      "timing": {
+        "chemical": "6-8 leaf stage before tuber formation",
+        "mechanical": "Throughout growing season",
+        "drainage": "Off-season improvement"
+      }
+    }
+  },
+  "integrated_management": {
+    "crop_rotation_effects": {
+      "corn_soybean": "Reduces grass weed pressure",
+      "small_grains": "Helps control broadleaf weeds",
+      "perennial_forages": "Excellent for perennial weed control",
+      "cover_crops": "Suppress annual weed emergence"
+    },
+    "cultural_practices": {
+      "planting_date": "Early planting gives crop advantage",
+      "seeding_rate": "Higher rates increase competition",
+      "row_spacing": "Narrow rows reduce weed light",
+      "fertilizer_placement": "Band application favors crop"
+    },
+    "economic_thresholds": {
+      "annual_weeds": {
+        "early_season": "5-10% crop yield loss acceptable",
+        "mid_season": "10-15% coverage before treatment",
+        "late_season": "Focus on preventing seed production"
+      },
+      "perennial_weeds": {
+        "establishment": "Treat any new infestations",
+        "maintenance": "Prevent spread and reproduction",
+        "eradication": "Long-term commitment required"
+      }
+    }
+  },
+  "herbicide_resistance": {
+    "resistant_species": {
+      "glyphosate_resistant": [
+        "palmer_amaranth",
+        "waterhemp",
+        "giant_ragweed",
+        "kochia"
+      ],
+      "triazine_resistant": [
+        "lambsquarters",
+        "redroot_pigweed",
+        "common_waterhemp"
+      ],
+      "ala_resistant": [
+        "eastern_black_nightshade",
+        "common_cocklebur"
+      ]
+    },
+    "management_strategies": {
+      "mode_of_action_rotation": "Use different herbicide families",
+      "tank_mixing": "Combine multiple modes of action",
+      "mechanical_integration": "Include cultivation practices",
+      "cover_crops": "Suppress resistant weed emergence",
+      "monitoring": "Regular field scouting and documentation"
+    }
+  },
+  "seasonal_timing": {
+    "spring": {
+      "tasks": [
+        "Apply pre-emergent herbicides",
+        "Begin mechanical cultivation",
+        "Scout for early emerging weeds",
+        "Plan integrated strategy"
+      ]
+    },
+    "summer": {
+      "tasks": [
+        "Post-emergent herbicide applications",
+        "Mechanical cultivation as needed",
+        "Monitor herbicide effectiveness",
+        "Prevent seed production"
+      ]
+    },
+    "fall": {
+      "tasks": [
+        "Control perennial weeds",
+        "Establish cover crops",
+        "Clean up field borders",
+        "Plan next year's strategy"
+      ]
+    },
+    "winter": {
+      "tasks": [
+        "Equipment maintenance",
+        "Plan crop rotation",
+        "Review previous year results",
+        "Prepare for spring operations"
+      ]
+    }
+  },
+  "environmental_considerations": {
+    "water_quality": {
+      "buffer_zones": "Maintain around water bodies",
+      "application_timing": "Avoid before heavy rainfall",
+      "product_selection": "Choose low-leaching formulations"
+    },
+    "beneficial_organisms": {
+      "pollinator_protection": "Avoid applications during bloom",
+      "natural_enemies": "Preserve habitat areas",
+      "soil_organisms": "Minimize soil-active herbicides"
+    },
+    "drift_management": {
+      "weather_conditions": "Apply during calm conditions",
+      "nozzle_selection": "Use drift-reducing nozzles",
+      "sensitive_crops": "Maintain adequate distances"
+    }
+  }
+}

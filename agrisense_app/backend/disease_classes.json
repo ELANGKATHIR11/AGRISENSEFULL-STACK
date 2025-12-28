@@ -1,0 +1,31 @@
+{
+  "classes": {
+    "tomato": [
+      "healthy",
+      "bacterial_spot",
+      "early_blight",
+      "late_blight",
+      "powdery_mildew",
+      "rust",
+      "septoria"
+    ],
+    "wheat": [
+      "healthy",
+      "rust",
+      "fusarium",
+      "blight"
+    ]
+  },
+  "treatments": {
+    "bacterial_spot": {
+      "immediate": ["Remove affected leaves", "Improve air circulation"],
+      "chemical": ["Copper-based bactericide"],
+      "organic": ["Neem oil"]
+    },
+    "late_blight": {
+      "immediate": ["Isolate infected plants", "Remove debris"],
+      "chemical": ["Chlorothalonil", "Copper-based fungicide"],
+      "organic": ["Remove severely affected tissue"]
+    }
+  }
+}

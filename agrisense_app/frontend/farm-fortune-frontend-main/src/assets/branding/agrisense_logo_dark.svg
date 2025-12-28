@@ -1,0 +1,53 @@
+<!-- AgriSense Dark Mode Logo -->
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="120" viewBox="0 0 420 120" role="img" aria-label="AgriSense Dark Logo">
+  <rect width="420" height="120" fill="#0a0f0d" rx="16" />
+  <defs>
+    <linearGradient id="leafDark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1b6e3f" />
+      <stop offset="100%" stop-color="#2e9d62" />
+    </linearGradient>
+    <linearGradient id="aiDark" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#22d3ee" />
+      <stop offset="100%" stop-color="#0ea5e9" />
+    </linearGradient>
+    <linearGradient id="iotDark" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fb923c" />
+      <stop offset="100%" stop-color="#f59e0b" />
+    </linearGradient>
+    <linearGradient id="waterDark" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+    <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#22d3ee" flood-opacity="0.35" />
+    </filter>
+  </defs>
+
+  <g transform="translate(20 20)" filter="url(#softGlow)">
+    <circle cx="40" cy="40" r="38" fill="none" stroke="#2e9d62" stroke-width="4" stroke-dasharray="12 6" />
+    <path d="M40 16 C30 24 24 36 24 48 c0 10 6 18 16 24 c10 -6 16 -14 16 -24 C56 36 50 24 40 16 z" fill="url(#leafDark)" stroke="#14532d" stroke-width="1.5" />
+    <path d="M40 22 C36 30 32 36 32 44 a8 8 0 0 0 16 0 c0 -8 -4 -14 -8 -22 z" fill="url(#waterDark)" opacity="0.9" />
+    <g stroke="url(#aiDark)" stroke-width="2" stroke-linecap="round">
+      <circle cx="52" cy="30" r="4" fill="#0a0f0d" stroke="#22d3ee" />
+      <circle cx="60" cy="46" r="4" fill="#0a0f0d" stroke="#22d3ee" />
+      <circle cx="48" cy="60" r="4" fill="#0a0f0d" stroke="#22d3ee" />
+      <circle cx="32" cy="62" r="4" fill="#0a0f0d" stroke="#22d3ee" />
+      <line x1="52" y1="30" x2="60" y2="46" />
+      <line x1="60" y1="46" x2="48" y2="60" />
+      <line x1="48" y1="60" x2="32" y2="62" />
+      <line x1="32" y1="62" x2="52" y2="30" />
+    </g>
+    <g stroke="url(#iotDark)" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.9">
+      <path d="M68 40 q10 0 15 8" />
+      <path d="M68 34 q16 0 24 12" />
+      <path d="M68 28 q22 0 32 16" />
+    </g>
+  </g>
+
+  <g transform="translate(140 35)">
+    <text x="0" y="28" font-family="'Segoe UI', system-ui, -apple-system, sans-serif" font-size="48" font-weight="700" letter-spacing="1" fill="#f0fdf4">Agri</text>
+    <text x="140" y="28" font-family="'Segoe UI', system-ui, -apple-system, sans-serif" font-size="48" font-weight="600" fill="url(#aiDark)">Sense</text>
+    <rect x="0" y="40" width="255" height="4" rx="2" fill="url(#aiDark)" opacity="0.35" />
+    <text x="2" y="62" font-family="'Segoe UI', system-ui, -apple-system, sans-serif" font-size="16" font-weight="500" fill="#94f7c2" letter-spacing="2">SMART  FARMING  INTELLIGENCE</text>
+  </g>
+</svg>

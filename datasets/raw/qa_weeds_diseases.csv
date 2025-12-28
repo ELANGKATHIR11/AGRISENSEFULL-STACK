@@ -1,0 +1,104 @@
+question,answer
+What is the recommended action when weed density is below 5 plants/m2?,Monitor the field; no immediate control required.
+Which herbicide is commonly used for broadcast spray against broadleaf weeds?,"Glyphosate or 2,4-D are often used depending on crop tolerances."
+When should manual removal be preferred over herbicide use?,"When weed patches are small, near sensitive crops, or when herbicide resistance is a concern."
+How does NDVI help in weed management?,Areas with lower NDVI compared to crop baseline can indicate weed infestations or poor crop vigor.
+What growth stage of crops is most sensitive to herbicide application?,Early vegetative stages are most sensitive; always follow label instructions.
+What environmental factors increase the risk of fungal diseases?,"High humidity, leaf wetness, and moderate-to-warm temperatures increase fungal disease risk."
+"Which disease is common in rice under warm, wet conditions?","Blast (Magnaporthe oryzae) is common under warm, wet conditions."
+What is a typical sign of late blight on potato leaves?,Water-soaked lesions that rapidly expand and a white sporulation under humid conditions.
+How to reduce disease spread between fields?,"Sanitize tools, avoid moving wet plant material, rotate crops, and limit splash dispersal."
+What threshold of lesion count per leaf might indicate treatment?,"This depends on crop/disease, but more than a few lesions per leaf with rising severity often triggers treatment."
+Can drones help in weed management?,"Yes — drones can map weed patches, spray targeted areas, and collect multispectral imagery."
+What is the role of leaf wetness in disease models?,Leaf wetness duration is a strong predictor for spore germination and infection events.
+What is an integrated weed management strategy?,"Combining cultural, mechanical, biological, and chemical methods to reduce weed pressure sustainably."
+How often should I scout fields for weeds during the season?,At least weekly during active growth; increase frequency after weather events.
+Which sensor is useful for early disease detection?,"Multispectral sensors (NDVI, Red-edge) and thermal cameras can detect stress before symptoms appear."
+Why rotate herbicide modes of action?,To prevent or slow development of herbicide-resistant weed populations.
+What is the safe dosage unit commonly used for herbicides in datasets?,ml per hectare (ml/ha) or g per hectare (g/ha) are common standardized units.
+When is fungicide application more effective: preventive or curative?,Preventive applications (before infection) are generally more effective for many diseases.
+What crop management reduces late blight risk in potatoes?,"Improve drainage, avoid overhead irrigation, use resistant varieties, and timely fungicide application."
+How to label images for supervised weed detection models?,Use bounding boxes or segmentation masks labeling weed instances vs crop background.
+What is a common symptom of bacterial spot in tomato?,"Small, water-soaked spots on leaves and fruits that may become necrotic."
+How can NDVI thresholds be used to create training labels?,Set crop baseline NDVI and flag significant deviations as possible stress/weed presence for label creation.
+What's the difference between spot treatment and broadcast spray?,Spot treatment targets small areas; broadcast spray treats the entire field uniformly.
+What data should be collected for disease prediction models?,"Weather (temp/humidity), leaf wetness, crop stage, NDVI, prior disease history, and field practices."
+How to handle class imbalance for disease datasets?,"Use oversampling, synthetic examples (SMOTE), class weighting, or collect more minority-class samples."
+What action when pesticide application_rate is 0 in dataset?,It usually indicates no treatment; verify label 'Healthy' or 'Monitor' in recommended_treatment.
+How to validate a weed detection model in the field?,"Use unseen field images, ground truth counts, and compare detection precision/recall and density estimations."
+Which preprocessing is recommended for plant images?,"Resize, normalize, augment (flips/rotations), and histogram equalization for lighting variance."
+What is the benefit of combining multispectral + RGB imagery?,"Multispectral adds physiological info (NDVI, red-edge) while RGB gives texture and color for detection."
+What does a severity_percent > 30 typically imply?,Moderate to severe infection — management actions are usually recommended.
+How to reduce false positives in weed segmentation?,"Improve dataset diversity, add hard negative examples, and refine annotation quality."
+When to recommend crop rotation to manage diseases?,When soil-borne pathogens or recurring disease pressure is linked to monoculture practices.
+What's a field-friendly method to estimate weed density?,"Use fixed-area quadrats (e.g., 0.25 m2) and count plants, then scale to plants/m2."
+Why include 'image_path' in datasets?,To link tabular metadata to the actual images used for supervised training and validation.
+How to treat herbicide-resistant Amaranthus?,"Use integrated approaches: mechanical removal, alternative modes of action, and cultural controls."
+What is 'leaf wetness hours' and how is it measured?,Duration leaves stay wet; measured by leaf wetness sensors or estimated from humidity and dewpoint models.
+Should you spray herbicide when rainfall is expected within 2 hours?,No — rain can wash off chemicals; follow label guidance and wait for suitable conditions.
+How to handle missing sensor data in training?,"Impute using interpolation, model-based imputation, or drop rows if missingness is small and random."
+What's a practical alert threshold for NDVI drop indicating stress?,Depends on crop — a relative drop of 10-20% from baseline often flags concern.
+How are Q/A datasets used for ML in agriculture?,They train retrieval-based or generative QA systems that assist agronomists and farmers with explanations.
+What metadata helps track disease outbreaks over time?,"Date, location (field ID), crop variety, previous treatments, and weather observations."
+How to prepare dataset for object detection (weeds)?,Provide images with bounding boxes and a CSV mapping image filenames to bbox coordinates and labels.
+What should I do if pesticide in dataset is 'None' but severity is high?,Investigate data quality; perhaps treatment not applied; field visit recommended.
+Why include growth_stage in datasets?,Many diseases and weed responses are stage-specific; models perform better when stage is included.
+How to incorporate farmer-reported sightings into datasets?,"Add fields for reporter_id, report_confidence, and timestamp; validate with ground truth where possible."
+How to balance model performance vs farmer-usable recommendations?,Optimize for explainability: prefer clear rules and actionable outputs alongside model scores.
+When is cultural control preferred over chemical control?,"When cultural methods (crop rotation, cover crops) sustainably reduce pressure and chemical costs are high."
+How to label 'Healthy' vs 'Early infection' in ambiguous images?,"Use expert consensus, multiple annotators, and record annotator confidence for soft labels."
+What is an example of a monitoring action in weed management?,"Increase scouting frequency, map hotspots, and mark them for spot treatment."
+How to record GPS location precision in datasets?,Include lat/lon and an accuracy field (meters) from GPS device for quality filtering.
+What's the first step after detecting a new disease in a field?,"Confirm diagnosis (lab or expert), quarantine movement of plant material, and notify relevant stakeholders."
+What is the threshold of weed_density_plants_per_m2 for tomato greenhouse?,Thresholds depend on crop and region; consult local guidelines. Typical weed_density_plants_per_m2 threshold: 10-30% (crop dependent).
+How frequently should I measure weed_density_plants_per_m2 during flowering stage?,Measure weed_density_plants_per_m2 at least weekly during ripening; increase frequency after weather events.
+Which sensors are used to measure weed_density_plants_per_m2?,Common sensors: ground quadrat counts or machine-vision counts.
+What is the threshold of weed_density_plants_per_m2 for rainfed rice?,Thresholds depend on crop and region; consult local guidelines. Typical weed_density_plants_per_m2 threshold: 10-30% (crop dependent).
+How frequently should I measure weed_density_plants_per_m2 during vegetative stage?,Measure weed_density_plants_per_m2 at least weekly during flowering; increase frequency after weather events.
+What is the threshold of ndvi for irrigated wheat?,Thresholds depend on crop and region; consult local guidelines. Typical ndvi threshold: 10-30% (crop dependent).
+How frequently should I measure ndvi during ripening stage?,Measure ndvi at least weekly during ripening; increase frequency after weather events.
+Which sensors are used to measure ndvi?,Common sensors: multispectral camera or satellite.
+What is the threshold of soil_moisture_pct for tomato greenhouse?,Thresholds depend on crop and region; consult local guidelines. Typical soil_moisture_pct threshold: 10-30% (crop dependent).
+How frequently should I measure soil_moisture_pct during vegetative stage?,Measure soil_moisture_pct at least weekly during vegetative; increase frequency after weather events.
+Which sensors are used to measure soil_moisture_pct?,Common sensors: TDR or capacitance probes.
+How frequently should I measure weed_density_plants_per_m2 during vegetative stage?,Measure weed_density_plants_per_m2 at least weekly during ripening; increase frequency after weather events.
+What is the threshold of soil_moisture_pct for rainfed rice?,Thresholds depend on crop and region; consult local guidelines. Typical soil_moisture_pct threshold: 10-30% (crop dependent).
+How frequently should I measure soil_moisture_pct during vegetative stage?,Measure soil_moisture_pct at least weekly during ripening; increase frequency after weather events.
+How frequently should I measure soil_moisture_pct during flowering stage?,Measure soil_moisture_pct at least weekly during vegetative; increase frequency after weather events.
+How frequently should I measure ndvi during ripening stage?,Measure ndvi at least weekly during vegetative; increase frequency after weather events.
+How frequently should I measure weed_density_plants_per_m2 during flowering stage?,Measure weed_density_plants_per_m2 at least weekly during vegetative; increase frequency after weather events.
+What is the threshold of leaf_wetness_hours for rainfed rice?,Thresholds depend on crop and region; consult local guidelines. Typical leaf_wetness_hours threshold: 10-30% (crop dependent).
+How frequently should I measure leaf_wetness_hours during flowering stage?,Measure leaf_wetness_hours at least weekly during flowering; increase frequency after weather events.
+Which sensors are used to measure leaf_wetness_hours?,Common sensors: leaf wetness sensor or modelled from RH/dewpoint.
+What is the threshold of ndvi for tomato greenhouse?,Thresholds depend on crop and region; consult local guidelines. Typical ndvi threshold: 10-30% (crop dependent).
+How frequently should I measure ndvi during flowering stage?,Measure ndvi at least weekly during flowering; increase frequency after weather events.
+What is the threshold of soil_moisture_pct for irrigated wheat?,Thresholds depend on crop and region; consult local guidelines. Typical soil_moisture_pct threshold: 10-30% (crop dependent).
+How frequently should I measure soil_moisture_pct during flowering stage?,Measure soil_moisture_pct at least weekly during ripening; increase frequency after weather events.
+How frequently should I measure soil_moisture_pct during ripening stage?,Measure soil_moisture_pct at least weekly during vegetative; increase frequency after weather events.
+How frequently should I measure leaf_wetness_hours during flowering stage?,Measure leaf_wetness_hours at least weekly during vegetative; increase frequency after weather events.
+How frequently should I measure ndvi during flowering stage?,Measure ndvi at least weekly during vegetative; increase frequency after weather events.
+How frequently should I measure weed_density_plants_per_m2 during ripening stage?,Measure weed_density_plants_per_m2 at least weekly during ripening; increase frequency after weather events.
+How frequently should I measure ndvi during vegetative stage?,Measure ndvi at least weekly during vegetative; increase frequency after weather events.
+How frequently should I measure ndvi during flowering stage?,Measure ndvi at least weekly during ripening; increase frequency after weather events.
+How frequently should I measure ndvi during vegetative stage?,Measure ndvi at least weekly during ripening; increase frequency after weather events.
+What is the threshold of leaf_wetness_hours for maize field?,Thresholds depend on crop and region; consult local guidelines. Typical leaf_wetness_hours threshold: 10-30% (crop dependent).
+What is the threshold of soil_moisture_pct for maize field?,Thresholds depend on crop and region; consult local guidelines. Typical soil_moisture_pct threshold: 10-30% (crop dependent).
+How frequently should I measure leaf_wetness_hours during ripening stage?,Measure leaf_wetness_hours at least weekly during flowering; increase frequency after weather events.
+What is the threshold of weed_density_plants_per_m2 for irrigated wheat?,Thresholds depend on crop and region; consult local guidelines. Typical weed_density_plants_per_m2 threshold: 10-30% (crop dependent).
+How frequently should I measure weed_density_plants_per_m2 during vegetative stage?,Measure weed_density_plants_per_m2 at least weekly during vegetative; increase frequency after weather events.
+What is the threshold of ndvi for maize field?,Thresholds depend on crop and region; consult local guidelines. Typical ndvi threshold: 10-30% (crop dependent).
+What is the threshold of leaf_wetness_hours for tomato greenhouse?,Thresholds depend on crop and region; consult local guidelines. Typical leaf_wetness_hours threshold: 10-30% (crop dependent).
+How frequently should I measure leaf_wetness_hours during vegetative stage?,Measure leaf_wetness_hours at least weekly during flowering; increase frequency after weather events.
+What is the threshold of ndvi for rainfed rice?,Thresholds depend on crop and region; consult local guidelines. Typical ndvi threshold: 10-30% (crop dependent).
+How frequently should I measure leaf_wetness_hours during ripening stage?,Measure leaf_wetness_hours at least weekly during ripening; increase frequency after weather events.
+How frequently should I measure soil_moisture_pct during vegetative stage?,Measure soil_moisture_pct at least weekly during flowering; increase frequency after weather events.
+How frequently should I measure leaf_wetness_hours during vegetative stage?,Measure leaf_wetness_hours at least weekly during vegetative; increase frequency after weather events.
+How frequently should I measure soil_moisture_pct during ripening stage?,Measure soil_moisture_pct at least weekly during flowering; increase frequency after weather events.
+How frequently should I measure leaf_wetness_hours during flowering stage?,Measure leaf_wetness_hours at least weekly during ripening; increase frequency after weather events.
+What is the threshold of leaf_wetness_hours for irrigated wheat?,Thresholds depend on crop and region; consult local guidelines. Typical leaf_wetness_hours threshold: 10-30% (crop dependent).
+How frequently should I measure soil_moisture_pct during flowering stage?,Measure soil_moisture_pct at least weekly during flowering; increase frequency after weather events.
+How frequently should I measure leaf_wetness_hours during ripening stage?,Measure leaf_wetness_hours at least weekly during vegetative; increase frequency after weather events.
+How frequently should I measure soil_moisture_pct during ripening stage?,Measure soil_moisture_pct at least weekly during ripening; increase frequency after weather events.
+How frequently should I measure leaf_wetness_hours during vegetative stage?,Measure leaf_wetness_hours at least weekly during ripening; increase frequency after weather events.
+What is the threshold of weed_density_plants_per_m2 for maize field?,Thresholds depend on crop and region; consult local guidelines. Typical weed_density_plants_per_m2 threshold: 10-30% (crop dependent).
+How frequently should I measure ndvi during vegetative stage?,Measure ndvi at least weekly during flowering; increase frequency after weather events.

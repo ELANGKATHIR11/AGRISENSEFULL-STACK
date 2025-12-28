@@ -1,0 +1,273 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* AgriSense Smart Agriculture Design System - AI & IoT Integrated Green Theme
+Modern farmer-friendly interface with intelligent technology integration
+*/
+
+@layer base {
+  :root {
+    /* Agricultural Green Theme - Enhanced for Smart Farming */
+    --background: 115 30% 97%;
+    --foreground: 125 20% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 125 20% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 125 20% 12%;
+
+    /* Smart Agriculture Primary - Modern Forest Green */
+    --primary: 135 45% 28%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 135 50% 32%;
+    --primary-glow: 135 55% 40%;
+
+    /* AI Accent - Tech Blue-Green */
+    --ai-accent: 180 65% 35%;
+    --ai-accent-light: 180 55% 45%;
+    --ai-accent-glow: 180 70% 50%;
+
+    /* IoT Orange - Smart Device Integration */
+    --iot-accent: 25 85% 55%;
+    --iot-accent-light: 25 75% 65%;
+    --iot-accent-glow: 25 90% 60%;
+
+    /* Fresh Growth Secondary */
+    --secondary: 118 35% 88%;
+    --secondary-foreground: 135 45% 28%;
+
+    /* Modern Agricultural Neutrals */
+    --muted: 120 25% 94%;
+    --muted-foreground: 125 18% 48%;
+
+    /* Vibrant Accent - Fresh Leaf Green */
+    --accent: 120 45% 82%;
+    --accent-foreground: 135 45% 28%;
+
+    /* Success - Healthy Crop Green */
+    --success: 140 60% 45%;
+    --success-foreground: 0 0% 100%;
+    --success-light: 140 50% 92%;
+
+    /* Warning - Attention Orange */
+    --warning: 35 85% 58%;
+    --warning-foreground: 0 0% 100%;
+    --warning-light: 35 75% 92%;
+
+    /* Destructive - Alert Red */
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --destructive-light: 0 65% 92%;
+
+    /* Modern Borders & Inputs */
+    --border: 120 30% 85%;
+    --input: 120 25% 90%;
+    --ring: 135 45% 28%;
+
+    /* Premium Gradients for Smart Agriculture */
+    --gradient-primary: linear-gradient(135deg, hsl(135 45% 28%), hsl(135 55% 40%));
+    --gradient-ai: linear-gradient(120deg, hsl(180 65% 35%), hsl(180 70% 50%));
+    --gradient-iot: linear-gradient(60deg, hsl(25 85% 55%), hsl(25 90% 60%));
+    --gradient-hero: linear-gradient(135deg, hsl(135 45% 28%) 0%, hsl(140 50% 35%) 50%, hsl(180 65% 35%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(120 25% 98%) 100%);
+    --gradient-accent: linear-gradient(45deg, hsl(120 50% 85%), hsl(125 45% 82%));
+    
+    /* Smart Agriculture Shadows - Enhanced Depth */
+    --shadow-card: 0 4px 12px hsl(135 45% 28% / 0.08);
+    --shadow-elevated: 0 8px 24px hsl(135 45% 28% / 0.12);
+    --shadow-floating: 0 12px 32px hsl(135 45% 28% / 0.16);
+    --shadow-ai-glow: 0 0 20px hsl(180 70% 50% / 0.25);
+    --shadow-iot-glow: 0 0 20px hsl(25 90% 60% / 0.25);
+    --shadow-success-glow: 0 0 16px hsl(140 60% 45% / 0.3);
+
+    /* Modern Transitions - Smooth & Responsive */
+    --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-spring: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    --transition-bounce: all 0.45s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    --radius: 0.875rem;
+    --radius-lg: 1.125rem;
+    --radius-xl: 1.5rem;
+
+    /* Sidebar - Modern Dark Theme */
+    --sidebar-background: 135 45% 15%;
+    --sidebar-foreground: 120 25% 95%;
+    --sidebar-primary: 135 55% 40%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 135 35% 20%;
+    --sidebar-accent-foreground: 120 25% 90%;
+    --sidebar-border: 135 30% 25%;
+    --sidebar-ring: 135 55% 40%;
+  }
+
+  .dark {
+    /* Dark Mode for Smart Agriculture Dashboard */
+    --background: 135 30% 8%;
+    --foreground: 120 25% 92%;
+
+    --card: 135 25% 12%;
+    --card-foreground: 120 25% 90%;
+
+    --popover: 135 25% 12%;
+    --popover-foreground: 120 25% 90%;
+
+    --primary: 135 55% 45%;
+    --primary-foreground: 135 30% 8%;
+    --primary-hover: 135 60% 50%;
+
+    --secondary: 135 20% 18%;
+    --secondary-foreground: 120 25% 85%;
+
+    --muted: 135 20% 15%;
+    --muted-foreground: 120 20% 65%;
+
+    --accent: 135 30% 22%;
+    --accent-foreground: 120 25% 85%;
+
+    --border: 135 25% 20%;
+    --input: 135 25% 18%;
+    --ring: 135 55% 45%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  /* Enhanced Animations for Smart Agriculture */
+  @keyframes agriPulse {
+    0%, 100% { 
+      box-shadow: 0 0 0 0 hsl(135 55% 40% / 0.4);
+      transform: scale(1);
+    }
+    50% { 
+      box-shadow: 0 0 0 12px hsl(135 55% 40% / 0);
+      transform: scale(1.02);
+    }
+  }
+  
+  @keyframes aiGlow {
+    0%, 100% { 
+      box-shadow: 0 0 8px hsl(180 70% 50% / 0.3);
+    }
+    50% { 
+      box-shadow: 0 0 24px hsl(180 70% 50% / 0.6);
+    }
+  }
+
+  @keyframes iotPulse {
+    0%, 100% { 
+      background: hsl(25 85% 55%);
+      box-shadow: 0 0 0 0 hsl(25 90% 60% / 0.4);
+    }
+    50% { 
+      background: hsl(25 90% 60%);
+      box-shadow: 0 0 0 8px hsl(25 90% 60% / 0);
+    }
+  }
+
+  @keyframes leafGrow {
+    0% { 
+      transform: scale(0.95) rotate(-1deg);
+      opacity: 0.8;
+    }
+    50% { 
+      transform: scale(1.02) rotate(0.5deg);
+      opacity: 1;
+    }
+    100% { 
+      transform: scale(1) rotate(0deg);
+      opacity: 0.95;
+    }
+  }
+
+  @keyframes dataFlow {
+    0% { 
+      transform: translateX(-100%) scale(0.8);
+      opacity: 0;
+    }
+    50% { 
+      transform: translateX(0%) scale(1);
+      opacity: 1;
+    }
+    100% { 
+      transform: translateX(100%) scale(0.8);
+      opacity: 0;
+    }
+  }
+  
+  /* Interactive Elements */
+  .agri-pulse:hover {
+    animation: agriPulse 2s ease-in-out infinite;
+  }
+
+  .ai-glow {
+    animation: aiGlow 3s ease-in-out infinite;
+  }
+
+  .iot-pulse {
+    animation: iotPulse 2.5s ease-in-out infinite;
+  }
+
+  .leaf-grow:hover {
+    animation: leafGrow 1.2s ease-out;
+  }
+
+  .data-flow {
+    animation: dataFlow 4s linear infinite;
+  }
+
+  /* Smart Card Hover Effects */
+  .smart-card {
+    @apply transition-all duration-300 ease-out hover:-translate-y-1;
+  }
+
+  .smart-card:hover {
+    box-shadow: var(--shadow-elevated);
+  }
+
+  /* AI Enhanced Buttons */
+  .btn-ai {
+    @apply bg-gradient-to-r from-cyan-600 to-teal-600;
+    @apply hover:from-cyan-500 hover:to-teal-500;
+    @apply shadow-lg hover:shadow-xl;
+    @apply transform transition-all duration-200;
+    @apply hover:scale-105 active:scale-95;
+  }
+
+  .btn-iot {
+    @apply bg-gradient-to-r from-orange-500 to-amber-500;
+    @apply hover:from-orange-400 hover:to-amber-400;
+    @apply shadow-lg hover:shadow-xl;
+    @apply transform transition-all duration-200;
+    @apply hover:scale-105 active:scale-95;
+  }
+
+  /* Modern Typography */
+  .text-gradient {
+    background: var(--gradient-hero);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Glass Effect for Premium Cards */
+  .glass-card {
+    @apply backdrop-blur-lg bg-white/80 border border-white/20;
+    @apply shadow-lg hover:shadow-xl transition-all duration-300;
+  }
+
+  .glass-card-dark {
+    @apply backdrop-blur-lg bg-slate-900/80 border border-slate-700/20;
+    @apply shadow-lg hover:shadow-xl transition-all duration-300;
+  }
+}

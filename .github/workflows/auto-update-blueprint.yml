@@ -1,0 +1,57 @@
+name: Auto Update AGRISENSE Blueprint
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'agrisense_app/backend/**'
+      - 'datasets/**'
+      - 'ml_models/**'
+      - 'scripts/generate_blueprint.py'
+      - 'AGRISENSE_BLUEPRINT.md'
+  schedule:
+    - cron: '0 2 * * *'  # Daily 02:00 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  update-blueprint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+            python-version: '3.11'
+
+      - name: Install backend dependencies (lightweight)
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip
+          if [ -f agrisense_app/backend/requirements.txt ]; then pip install -r agrisense_app/backend/requirements.txt || true; fi
+          # Avoid heavy ML loading
+          echo "AGRISENSE_DISABLE_ML=1" >> $GITHUB_ENV
+
+      - name: Generate blueprint
+        run: |
+          source .venv/bin/activate
+          python scripts/generate_blueprint.py
+
+      - name: Commit changes if any
+        run: |
+          if git diff --quiet AGRISENSE_BLUEPRINT.md; then
+            echo "No blueprint changes."
+          else
+            git config user.name "github-actions"
+            git config user.email "actions@users.noreply.github.com"
+            git add AGRISENSE_BLUEPRINT.md
+            git commit -m "chore: auto-update blueprint [skip ci]"
+            git push
+          fi

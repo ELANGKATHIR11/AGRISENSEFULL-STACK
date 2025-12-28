@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgriSense - Offline Mode</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #f0fdf4 0%, #e6fffa 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #065f46;
+        }
+        
+        .offline-container {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+        
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            background: #14532d;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        
+        h1 {
+            font-size: 1.875rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #14532d;
+        }
+        
+        p {
+            font-size: 1.125rem;
+            color: #047857;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        
+        .features {
+            background: #f0fdf4;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            text-align: left;
+        }
+        
+        .features h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #14532d;
+        }
+        
+        .features ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .features li {
+            padding: 0.5rem 0;
+            color: #047857;
+            position: relative;
+            padding-left: 1.5rem;
+        }
+        
+        .features li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #10b981;
+            font-weight: bold;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+            font-size: 1rem;
+        }
+        
+        .btn-primary {
+            background: #14532d;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #166534;
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: #14532d;
+            border: 2px solid #14532d;
+        }
+        
+        .btn-secondary:hover {
+            background: #14532d;
+            color: white;
+        }
+        
+        .status {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            color: #92400e;
+        }
+        
+        .status.online {
+            background: #d1fae5;
+            border-color: #10b981;
+            color: #065f46;
+        }
+        
+        .connection-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+            background: #f59e0b;
+            animation: pulse 2s infinite;
+        }
+        
+        .connection-indicator.online {
+            background: #10b981;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .cached-data {
+            margin-top: 2rem;
+            text-align: left;
+        }
+        
+        .cached-data h4 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #14532d;
+        }
+        
+        .data-item {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .data-label {
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .data-value {
+            color: #10b981;
+            font-weight: 600;
+        }
+        
+        @media (max-width: 480px) {
+            .offline-container {
+                padding: 1.5rem;
+            }
+            
+            .actions {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <div class="logo">AS</div>
+        <h1>AgriSense Offline Mode</h1>
+        <p>You're currently offline, but AgriSense continues to work with cached data and offline capabilities.</p>
+        
+        <div class="features">
+            <h3>Available Offline Features:</h3>
+            <ul>
+                <li>View cached sensor readings</li>
+                <li>Access stored recommendations</li>
+                <li>Review irrigation history</li>
+                <li>Browse crop management guides</li>
+                <li>Submit data (synced when online)</li>
+            </ul>
+        </div>
+        
+        <div class="status" id="connectionStatus">
+            <span class="connection-indicator" id="connectionDot"></span>
+            <span id="connectionText">Checking connection...</span>
+        </div>
+        
+        <div class="cached-data" id="cachedData" style="display: none;">
+            <h4>Last Known Data:</h4>
+            <div class="data-item">
+                <span class="data-label">Soil Moisture</span>
+                <span class="data-value" id="soilMoisture">--</span>
+            </div>
+            <div class="data-item">
+                <span class="data-label">Temperature</span>
+                <span class="data-value" id="temperature">--</span>
+            </div>
+            <div class="data-item">
+                <span class="data-label">Tank Level</span>
+                <span class="data-value" id="tankLevel">--</span>
+            </div>
+        </div>
+        
+        <div class="actions">
+            <button class="btn btn-primary" onclick="tryReconnect()">Try Reconnect</button>
+            <a href="/ui/" class="btn btn-secondary">Go to Dashboard</a>
+        </div>
+    </div>
+
+    <script>
+        // Check connection status
+        function updateConnectionStatus() {
+            const isOnline = navigator.onLine;
+            const statusEl = document.getElementById('connectionStatus');
+            const dotEl = document.getElementById('connectionDot');
+            const textEl = document.getElementById('connectionText');
+            
+            if (isOnline) {
+                statusEl.className = 'status online';
+                dotEl.className = 'connection-indicator online';
+                textEl.textContent = 'Connection restored! You can continue using AgriSense.';
+                
+                // Auto-redirect after 3 seconds
+                setTimeout(() => {
+                    window.location.href = '/ui/';
+                }, 3000);
+            } else {
+                statusEl.className = 'status';
+                dotEl.className = 'connection-indicator';
+                textEl.textContent = 'You are currently offline. AgriSense will sync when connection is restored.';
+            }
+        }
+        
+        // Try to reconnect
+        function tryReconnect() {
+            const button = event.target;
+            button.textContent = 'Checking...';
+            button.disabled = true;
+            
+            // Simple connectivity check
+            fetch('/api/health', { method: 'HEAD', cache: 'no-cache' })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.href = '/ui/';
+                    } else {
+                        throw new Error('Server not available');
+                    }
+                })
+                .catch(() => {
+                    button.textContent = 'Still Offline';
+                    setTimeout(() => {
+                        button.textContent = 'Try Reconnect';
+                        button.disabled = false;
+                    }, 2000);
+                });
+        }
+        
+        // Load cached data from localStorage
+        function loadCachedData() {
+            try {
+                const cachedSensorData = localStorage.getItem('agrisense-last-sensor-data');
+                const cachedTankData = localStorage.getItem('agrisense-last-tank-data');
+                
+                if (cachedSensorData || cachedTankData) {
+                    document.getElementById('cachedData').style.display = 'block';
+                    
+                    if (cachedSensorData) {
+                        const sensorData = JSON.parse(cachedSensorData);
+                        document.getElementById('soilMoisture').textContent = 
+                            sensorData.soil_moisture ? `${sensorData.soil_moisture}%` : '--';
+                        document.getElementById('temperature').textContent = 
+                            sensorData.temperature ? `${sensorData.temperature}°C` : '--';
+                    }
+                    
+                    if (cachedTankData) {
+                        const tankData = JSON.parse(cachedTankData);
+                        document.getElementById('tankLevel').textContent = 
+                            tankData.level_percent ? `${tankData.level_percent}%` : '--';
+                    }
+                }
+            } catch (error) {
+                console.log('No cached data available');
+            }
+        }
+        
+        // Register service worker if not already registered
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw-v2.js')
+                .then(registration => {
+                    console.log('SW registered:', registration);
+                })
+                .catch(error => {
+                    console.log('SW registration failed:', error);
+                });
+        }
+        
+        // Listen for online/offline events
+        window.addEventListener('online', updateConnectionStatus);
+        window.addEventListener('offline', updateConnectionStatus);
+        
+        // Initialize
+        updateConnectionStatus();
+        loadCachedData();
+        
+        // Periodic connection check
+        setInterval(updateConnectionStatus, 30000);
+    </script>
+</body>
+</html>

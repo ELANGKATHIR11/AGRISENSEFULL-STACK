@@ -1,0 +1,25 @@
+<!-- AgriSense Monochrome Logo (for single-color or emboss applications) -->
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="120" viewBox="0 0 420 120" role="img" aria-label="AgriSense Monochrome Logo">
+  <g fill="#14532d" stroke="#14532d" stroke-width="2">
+    <circle cx="60" cy="60" r="44" fill="none" stroke-width="6" stroke-dasharray="14 8" />
+    <path d="M60 30 C46 42 40 56 40 70 c0 12 8 22 20 30 c12 -8 20 -18 20 -30 C80 56 74 42 60 30 z" fill="#14532d" stroke="none" />
+    <path d="M60 38 C56 46 52 54 52 62 a10 10 0 0 0 20 0 c0 -8 -4 -16 -8 -24 z" fill="#0f3822" />
+    <g fill="#ffffff" stroke="#14532d" stroke-width="2">
+      <circle cx="76" cy="48" r="5" />
+      <circle cx="84" cy="66" r="5" />
+      <circle cx="70" cy="80" r="5" />
+      <circle cx="52" cy="82" r="5" />
+      <path d="M76 48 L84 66 L70 80 L52 82 L76 48" fill="none" stroke="#14532d" />
+    </g>
+    <g stroke="#14532d" stroke-width="3" fill="none">
+      <path d="M96 60 q14 0 20 12" />
+      <path d="M96 52 q20 0 28 18" />
+    </g>
+  </g>
+  <g transform="translate(150 35)" fill="#14532d" font-family="'Segoe UI', system-ui, -apple-system, sans-serif">
+    <text x="0" y="28" font-size="48" font-weight="700" letter-spacing="1">Agri</text>
+    <text x="140" y="28" font-size="48" font-weight="600">Sense</text>
+    <rect x="0" y="40" width="255" height="4" rx="2" fill="#14532d" opacity="0.25" />
+    <text x="2" y="62" font-size="16" font-weight="500" letter-spacing="2">SMART  FARMING  INTELLIGENCE</text>
+  </g>
+</svg>

@@ -1,0 +1,557 @@
+{
+  "timestamp": "2025-12-03T17:37:19.698808",
+  "total_score": 9.81,
+  "max_score": 10.0,
+  "percentage": 98.10000000000001,
+  "grade": "A+ (Excellent)",
+  "scores": {
+    "structure": 2.0,
+    "backend_quality": 2.0,
+    "frontend_quality": 1.5,
+    "ml_features": 2.31,
+    "api_design": 1.5,
+    "documentation": 0.5
+  },
+  "test_summary": {
+    "total": 19,
+    "passed": 27,
+    "success_rate": 142.10526315789474
+  },
+  "recommendations": [],
+  "detailed_results": {
+    "structure": {
+      "root": "D:\\AGRISENSE FULL-STACK\\AGRISENSEFULL-STACK",
+      "backend": {
+        "path": "D:\\AGRISENSE FULL-STACK\\AGRISENSEFULL-STACK\\agrisense_app\\backend",
+        "files": 33,
+        "main_exists": true,
+        "requirements_exists": true
+      },
+      "frontend": {
+        "path": "D:\\AGRISENSE FULL-STACK\\AGRISENSEFULL-STACK\\agrisense_app\\frontend\\farm-fortune-frontend-main",
+        "package_json": true,
+        "src_dir": true,
+        "components": 13,
+        "pages": 17
+      },
+      "documentation": {
+        "path": "D:\\AGRISENSE FULL-STACK\\AGRISENSEFULL-STACK\\documentation",
+        "count": 68
+      },
+      "tests": {
+        "path": "D:\\AGRISENSE FULL-STACK\\AGRISENSEFULL-STACK\\tests",
+        "count": 9
+      },
+      "ml_models": {
+        "path": "D:\\AGRISENSE FULL-STACK\\AGRISENSEFULL-STACK\\ml_models",
+        "count": 18,
+        "total_size_mb": 394.93047428131104
+      },
+      "datasets": null
+    },
+    "backend": {
+      "main_py": {
+        "lines": 5166,
+        "size_kb": 203.8720703125,
+        "imports": 110,
+        "endpoints": 72,
+        "models": 44
+      },
+      "requirements": {
+        "count": 45,
+        "packages": [
+          "fastapi>=0.118.0",
+          "uvicorn[standard]==0.32.0",
+          "pydantic==2.9.0",
+          "python-multipart==0.0.9",
+          "starlette>=0.48.0",
+          "numpy==1.26.4",
+          "pandas==2.2.2",
+          "scikit-learn>=1.6.1",
+          "joblib==1.4.2",
+          "lightgbm==4.5.0"
+        ]
+      },
+      "api_endpoints": [
+        "GET /diagnostics/cache",
+        "GET /health",
+        "GET /live",
+        "GET /ready",
+        "GET /diagnostics/disease-model",
+        "GET /diagnostics/weed-management",
+        "GET /diagnostics/system",
+        "GET /health/enhanced",
+        "GET /metrics",
+        "GET /status/websocket",
+        "GET /status/tensorflow-serving",
+        "GET /status/rate-limits",
+        "POST /admin/reset",
+        "POST /admin/weather/refresh",
+        "POST /admin/notify",
+        "GET /edge/health",
+        "POST /ingest",
+        "POST /edge/capture",
+        "GET /recent",
+        "POST /recommend",
+        "POST /suggest_crop",
+        "POST /tank/level",
+        "GET /tank/status",
+        "GET /tank/history",
+        "GET /valves/events",
+        "GET /dashboard/summary",
+        "POST /irrigation/start",
+        "POST /irrigation/stop",
+        "GET /alerts",
+        "POST /alerts",
+        "GET /plants",
+        "GET /soil/types",
+        "GET /crops",
+        "POST /chat",
+        "POST /chat/ask",
+        "POST /rainwater/log",
+        "GET /rainwater/summary",
+        "GET /rainwater/recent",
+        "POST /alerts/ack",
+        "GET /reco/recent",
+        "POST /reco/log",
+        "POST /disease/detect",
+        "POST /weed/analyze",
+        "POST /api/disease/detect",
+        "POST /api/weed/analyze",
+        "POST /api/vlm/analyze",
+        "GET /api/vlm/status",
+        "POST /health/assess",
+        "GET /health/trends",
+        "POST /api/frontend/analyze",
+        "GET /health/status",
+        "GET /sensors/recent",
+        "GET /recommend/latest",
+        "POST /edge/ingest",
+        "POST /arduino/ingest",
+        "GET /arduino/status",
+        "GET /debug",
+        "GET /",
+        "GET /ui/{path:path}",
+        "GET /simple-metrics",
+        "GET /version",
+        "POST /chatbot/ask",
+        "GET /chatbot/ask",
+        "GET /chatbot/greeting",
+        "GET /chatbot/metrics",
+        "POST /chatbot/reload",
+        "POST /chatbot/tune"
+      ],
+      "ml_integration": true,
+      "error_handling": true
+    },
+    "frontend": {
+      "package_json": {
+        "name": "agrisense-frontend",
+        "version": "0.0.0",
+        "dependencies": 66,
+        "devDependencies": 26
+      },
+      "components": [
+        "AgriSenseLogo",
+        "ArduinoSerialConnection",
+        "CropDetector",
+        "LanguageSwitcher",
+        "Navigation",
+        "PWAComponents",
+        "TankGauge"
+      ],
+      "pages": [
+        "Admin",
+        "Arduino",
+        "Chatbot",
+        "Crops",
+        "Dashboard",
+        "Dashboard_backup",
+        "DiseaseManagement",
+        "Harvesting",
+        "Home",
+        "ImpactGraphs",
+        "Irrigation",
+        "LiveStats",
+        "NotFound",
+        "Recommend",
+        "SoilAnalysis",
+        "Tank",
+        "WeedManagement"
+      ],
+      "styling": "Tailwind CSS",
+      "routing": true
+    },
+    "ml_features": {
+      "recommendation_engine": {
+        "status": "\u2713 Working",
+        "water_liters": 596.3,
+        "tips_count": 0
+      },
+      "disease_detection": {
+        "status": "\u2713 Working",
+        "model": "unknown",
+        "confidence": 0
+      },
+      "weed_management": {
+        "status": "\u2713 Working",
+        "severity": "unknown"
+      },
+      "crop_suggestion": {
+        "status": "\u2713 Working",
+        "suggestions_count": 5,
+        "top_crop": "Wheat"
+      },
+      "chatbot": {
+        "status": "\u26a0 File exists",
+        "error": "'charmap' codec can't decode byte 0x9d in position 318554: character maps to <undefined>"
+      },
+      "water_optimization": {
+        "status": "\u2713 Model exists",
+        "size_mb": 83.36825656890869
+      }
+    },
+    "api_design": {
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/diagnostics/cache",
+          "function": "cache_diagnostics"
+        },
+        {
+          "method": "GET",
+          "path": "/health",
+          "function": "health"
+        },
+        {
+          "method": "GET",
+          "path": "/live",
+          "function": "live"
+        },
+        {
+          "method": "GET",
+          "path": "/ready",
+          "function": "ready"
+        },
+        {
+          "method": "GET",
+          "path": "/diagnostics/disease-model",
+          "function": "disease_model_diagnostics"
+        },
+        {
+          "method": "GET",
+          "path": "/diagnostics/weed-management",
+          "function": "weed_management_diagnostics"
+        },
+        {
+          "method": "GET",
+          "path": "/diagnostics/system",
+          "function": "system_diagnostics"
+        },
+        {
+          "method": "GET",
+          "path": "/health/enhanced",
+          "function": "enhanced_health"
+        },
+        {
+          "method": "GET",
+          "path": "/metrics",
+          "function": "get_metrics"
+        },
+        {
+          "method": "GET",
+          "path": "/status/websocket",
+          "function": "websocket_status"
+        },
+        {
+          "method": "GET",
+          "path": "/status/tensorflow-serving",
+          "function": "tensorflow_serving_status"
+        },
+        {
+          "method": "GET",
+          "path": "/status/rate-limits",
+          "function": "rate_limit_status"
+        },
+        {
+          "method": "POST",
+          "path": "/admin/reset",
+          "function": "admin_reset"
+        },
+        {
+          "method": "POST",
+          "path": "/admin/weather/refresh",
+          "function": "admin_weather_refresh"
+        },
+        {
+          "method": "POST",
+          "path": "/admin/notify",
+          "function": "admin_notify"
+        },
+        {
+          "method": "GET",
+          "path": "/edge/health",
+          "function": "edge_health"
+        },
+        {
+          "method": "POST",
+          "path": "/ingest",
+          "function": "ingest"
+        },
+        {
+          "method": "POST",
+          "path": "/edge/capture",
+          "function": "edge_capture"
+        },
+        {
+          "method": "GET",
+          "path": "/recent",
+          "function": "get_recent"
+        },
+        {
+          "method": "POST",
+          "path": "/recommend",
+          "function": "recommend"
+        },
+        {
+          "method": "POST",
+          "path": "/suggest_crop",
+          "function": "suggest_crop"
+        },
+        {
+          "method": "POST",
+          "path": "/tank/level",
+          "function": "post_tank_level"
+        },
+        {
+          "method": "GET",
+          "path": "/tank/status",
+          "function": "get_tank_status"
+        },
+        {
+          "method": "GET",
+          "path": "/tank/history",
+          "function": "get_tank_history"
+        },
+        {
+          "method": "GET",
+          "path": "/valves/events",
+          "function": "get_valve_events"
+        },
+        {
+          "method": "GET",
+          "path": "/dashboard/summary",
+          "function": "dashboard_summary"
+        },
+        {
+          "method": "POST",
+          "path": "/irrigation/start",
+          "function": "irrigation_start"
+        },
+        {
+          "method": "POST",
+          "path": "/irrigation/stop",
+          "function": "irrigation_stop"
+        },
+        {
+          "method": "GET",
+          "path": "/alerts",
+          "function": "get_alerts"
+        },
+        {
+          "method": "POST",
+          "path": "/alerts",
+          "function": "post_alert"
+        },
+        {
+          "method": "GET",
+          "path": "/plants",
+          "function": "get_plants"
+        },
+        {
+          "method": "GET",
+          "path": "/soil/types",
+          "function": "get_soil_types"
+        },
+        {
+          "method": "GET",
+          "path": "/crops",
+          "function": "get_crops_full"
+        },
+        {
+          "method": "POST",
+          "path": "/chat",
+          "function": "chat"
+        },
+        {
+          "method": "POST",
+          "path": "/chat/ask",
+          "function": "chat_ask"
+        },
+        {
+          "method": "POST",
+          "path": "/rainwater/log",
+          "function": "rainwater_log"
+        },
+        {
+          "method": "GET",
+          "path": "/rainwater/summary",
+          "function": "rainwater_summary_api"
+        },
+        {
+          "method": "GET",
+          "path": "/rainwater/recent",
+          "function": "rainwater_recent_api"
+        },
+        {
+          "method": "POST",
+          "path": "/alerts/ack",
+          "function": "alerts_ack"
+        },
+        {
+          "method": "GET",
+          "path": "/reco/recent",
+          "function": "get_reco_recent"
+        },
+        {
+          "method": "POST",
+          "path": "/reco/log",
+          "function": "log_reco_snapshot"
+        },
+        {
+          "method": "POST",
+          "path": "/disease/detect",
+          "function": "detect_plant_disease"
+        },
+        {
+          "method": "POST",
+          "path": "/weed/analyze",
+          "function": "analyze_weeds"
+        },
+        {
+          "method": "POST",
+          "path": "/api/disease/detect",
+          "function": "detect_disease_vlm"
+        },
+        {
+          "method": "POST",
+          "path": "/api/weed/analyze",
+          "function": "analyze_weeds_vlm"
+        },
+        {
+          "method": "POST",
+          "path": "/api/vlm/analyze",
+          "function": "comprehensive_vlm_analysis"
+        },
+        {
+          "method": "GET",
+          "path": "/api/vlm/status",
+          "function": "vlm_status"
+        },
+        {
+          "method": "POST",
+          "path": "/health/assess",
+          "function": "comprehensive_health_assessment"
+        },
+        {
+          "method": "GET",
+          "path": "/health/trends",
+          "function": "get_health_trends"
+        },
+        {
+          "method": "POST",
+          "path": "/api/frontend/analyze",
+          "function": "frontend_analyze"
+        },
+        {
+          "method": "GET",
+          "path": "/health/status",
+          "function": "get_health_system_status"
+        },
+        {
+          "method": "GET",
+          "path": "/sensors/recent",
+          "function": "iot_sensors_recent"
+        },
+        {
+          "method": "GET",
+          "path": "/recommend/latest",
+          "function": "iot_recommend_latest"
+        },
+        {
+          "method": "POST",
+          "path": "/edge/ingest",
+          "function": "edge_ingest"
+        },
+        {
+          "method": "POST",
+          "path": "/arduino/ingest",
+          "function": "arduino_ingest"
+        },
+        {
+          "method": "GET",
+          "path": "/arduino/status",
+          "function": "arduino_status"
+        },
+        {
+          "method": "GET",
+          "path": "/debug",
+          "function": "debug_page"
+        },
+        {
+          "method": "GET",
+          "path": "/",
+          "function": "root"
+        },
+        {
+          "method": "GET",
+          "path": "/ui/{path:path}",
+          "function": "serve_spa"
+        },
+        {
+          "method": "GET",
+          "path": "/simple-metrics",
+          "function": "get_simple_metrics"
+        },
+        {
+          "method": "GET",
+          "path": "/version",
+          "function": "version"
+        },
+        {
+          "method": "POST",
+          "path": "/chatbot/ask",
+          "function": "chatbot_ask"
+        },
+        {
+          "method": "GET",
+          "path": "/chatbot/ask",
+          "function": "chatbot_ask_get"
+        },
+        {
+          "method": "GET",
+          "path": "/chatbot/greeting",
+          "function": "chatbot_greeting"
+        },
+        {
+          "method": "GET",
+          "path": "/chatbot/metrics",
+          "function": "chatbot_metrics"
+        },
+        {
+          "method": "POST",
+          "path": "/chatbot/reload",
+          "function": "chatbot_reload"
+        },
+        {
+          "method": "POST",
+          "path": "/chatbot/tune",
+          "function": "chatbot_tune"
+        }
+      ],
+      "authentication": true,
+      "error_handling": true,
+      "documentation": true
+    }
+  }
+}
